@@ -1,5 +1,5 @@
-npx create-expo-app my-app
-cd my-app
+npx create-expo-app silicon
+cd silicon
 
 npm install -g eas-cli
 eas login
