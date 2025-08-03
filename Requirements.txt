@@ -1,0 +1,7 @@
+npx create-expo-app my-app
+cd my-app
+
+npm install -g eas-cli
+eas login
+eas init
+eas build --platform android profile --preview --local
