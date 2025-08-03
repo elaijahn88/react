@@ -1,4 +1,4 @@
-npx create-expo-app silicon
+npx expo init silicon 
 cd silicon
 !cp -r /path/to/source_folder/* /path/to/destination_folder/
 npm install -g eas-cli
