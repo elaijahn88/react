@@ -44,7 +44,7 @@ export default function TabLayout() {
         name="details"
         options={{
           title: 'video',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name="tv.fill" color={color} />,
         }}
       />
 
