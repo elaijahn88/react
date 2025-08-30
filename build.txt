@@ -4,9 +4,9 @@
 ...........v2.........
 
 # 1. Get your project into Colab (clone from GitHub or upload zip)
-!git clone https://github.com/yourname/your-expo-project.git
-%cd project
-
+! git clone 
+https://github.com/elaijahn88/raect.git
+! cd raect
 # 2. Install dependencies
 !npm install
 
