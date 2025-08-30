@@ -1,1 +1,19 @@
 !npm install --global eas-cli && eas login  && eas build --platform android --profile preview --non-interactive && eas build:status
+
+
+...........v2.........
+
+# 1. Get your project into Colab (clone from GitHub or upload zip)
+!git clone https://github.com/yourname/your-expo-project.git
+%cd project
+
+# 2. Install dependencies
+!npm install
+
+# 3. Install EAS CLI
+!npm install --global eas-cli
+
+# 4. Login and build (APK instead of AAB if you configured eas.json)
+!eas login --token $EAS_TOKEN && \
+eas build --platform android --profile production --non-interactive && \
+eas build:status
