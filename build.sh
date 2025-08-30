@@ -1,6 +1,6 @@
 
 # 🚀 Expo/React Native → APK build pipeline in Colab (from GitHub repo)
-!git clone https://github.com/your-username/your-expo-project.git && \
+!git clone   https://github.com/elaijahn88/raect.git   && \
 cd raect && \
 npm install && \
 npm install -g eas-cli && \
