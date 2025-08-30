@@ -1,1 +1,0 @@
-!npm install --global eas-cli && eas login --token $EAS_TOKEN && eas build --platform android --profile preview --non-interactive && eas build:status
