@@ -1,0 +1,4 @@
+"android": {
+  "googleServicesFile": "./google-services.json",
+  "useNextNotificationsApi": true
+}
