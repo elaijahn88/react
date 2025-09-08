@@ -1,1 +1,1 @@
-expo install expo-notifications expo-device
+"deps":"expo install expo-notifications expo-device"
