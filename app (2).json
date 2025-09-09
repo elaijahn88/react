@@ -12,7 +12,13 @@
       "supportsTablet": true
     },
     "android": {
-      "adaptiveIcon": {
+            "permissions": [
+        "INTERNET",
+        "READ_MEDIA_VIDEO",   // Android 13+
+        "READ_EXTERNAL_STORAGE", // older Android versions
+        "WRITE_EXTERNAL_STORAGE"
+      ]
+    "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
