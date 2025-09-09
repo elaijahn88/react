@@ -12,7 +12,7 @@
       "supportsTablet": true
     },
     "android": {
-            "permissions": [
+    "permissions": [
         "INTERNET",
         "READ_MEDIA_VIDEO", 
         "READ_EXTERNAL_STORAGE",
