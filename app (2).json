@@ -14,8 +14,8 @@
     "android": {
             "permissions": [
         "INTERNET",
-        "READ_MEDIA_VIDEO",   // Android 13+
-        "READ_EXTERNAL_STORAGE", // older Android versions
+        "READ_MEDIA_VIDEO", 
+        "READ_EXTERNAL_STORAGE",
         "WRITE_EXTERNAL_STORAGE"
       ]
     "adaptiveIcon": {
