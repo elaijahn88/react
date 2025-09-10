@@ -4,5 +4,6 @@
   "react-native-video",
   "expo-build-properties",
   "react-native:0.79.5"
+  "expo-ads-admob"
   
 }
