@@ -1,8 +1,8 @@
 "dependencies": {
   "expo-cli",
-  "eas-cli"
-  "react-native",
+  "eas-cli",
+  "react-native-video",
   "expo-build-properties",
-  ""
+  "react-native:0.79.5"
   
 }
