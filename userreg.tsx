@@ -1,155 +1,136 @@
-// SignupPage.tsx
-import React, { useState, ChangeEvent, FormEvent } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import React, { useState } from "react";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator } from "react-native";
+import { useNavigation } from "@react-navigation/native";
 
-// 1. Define the type for your form data
-interface SignUpFormState {
-  username: string;
-  email: string;
-  password: string;
-  confirmPassword: string;
-}
+const SignupPage = () => {
+  const navigation = useNavigation();
 
-// 2. Define the React component
-const SignupPage: React.FC = () => {
-  const navigate = useNavigate();
-
-  // 3. Initialize state for form data and errors
-  const [formData, setFormData] = useState<SignUpFormState>({
-    username: '',
-    email: '',
-    password: '',
-    confirmPassword: '',
+  const [formData, setFormData] = useState({
+    username: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
   });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState<boolean>(false);
-
-  // 4. Handle input changes and update state
-  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData(prevState => ({
-      ...prevState,
+  const handleChange = (name, value) => {
+    setFormData((prev) => ({
+      ...prev,
       [name]: value,
     }));
   };
 
-  // 5. Handle form submission using fetch
-  const handleSignup = async (e: FormEvent) => {
-    e.preventDefault();
-    setError(null);
+  const handleSignup = async () => {
     setLoading(true);
-
-    // Basic client-side validation
-    if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match.');
-      setLoading(false);
-      return;
-    }
+    setError("");
 
     try {
-      // Send data to the backend API using fetch
-      const response = await fetch('http://your-backend-api.com/register', {
-        method: 'POST', // Specify the HTTP method
-        headers: {
-          'Content-Type': 'application/json', // Set the content type header
-        },
-        body: JSON.stringify({ // Stringify the data to send as a JSON body
-          username: formData.username,
-          email: formData.email,
-          password: formData.password,
-        }),
-      });
-
-      // 6. Manual error handling for server response status codes (e.g., 400, 500)
-      // fetch() does not automatically throw an error for non-200 responses
-      if (!response.ok) {
-        // Attempt to parse a JSON error message from the response body
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Registration failed. Please try again.');
+      if (formData.password !== formData.confirmPassword) {
+        setError("Passwords do not match");
+        return;
       }
 
-      // 7. Parse the successful JSON response manually
-      const data = await response.json();
-      console.log('Registration successful:', data);
-      alert('Registration successful! You can now log in.');
-      navigate('/login'); // Redirect to login page upon success
-    } catch (err: any) {
-      // 8. Handle network errors or other issues
-      console.error('Registration failed:', err);
-      setError(err.message || 'An unexpected error occurred.');
+      // TODO: Replace with actual API request
+      console.log("Signup data:", formData);
+
+      // Navigate to login after successful signup
+      navigation.navigate("Login");
+    } catch (err) {
+      setError("Something went wrong. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
-  // 9. Render the registration form
   return (
-    <div style={{ padding: '20px', maxWidth: '400px', margin: 'auto', fontFamily: 'Arial, sans-serif' }}>
-      <h2>Create an Account</h2>
-      {error && <p style={{ color: 'red' }}>{error}</p>}
-      <form onSubmit={handleSignup} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-        <div>
-          <label htmlFor="username" style={{ display: 'block', marginBottom: '5px' }}>Username:</label>
-          <input
-            type="text"
-            id="username"
-            name="username"
-            value={formData.username}
-            onChange={handleChange}
-            required
-            style={{ width: '100%', padding: '8px', boxSizing: 'border-box' }}
-          />
-        </div>
-        <div>
-          <label htmlFor="email" style={{ display: 'block', marginBottom: '5px' }}>Email:</label>
-          <input
-            type="email"
-            id="email"
-            name="email"
-            value={formData.email}
-            onChange={handleChange}
-            required
-            style={{ width: '100%', padding: '8px', boxSizing: 'border-box' }}
-          />
-        </div>
-        <div>
-          <label htmlFor="password" style={{ display: 'block', marginBottom: '5px' }}>Password:</label>
-          <input
-            type="password"
-            id="password"
-            name="password"
-            value={formData.password}
-            onChange={handleChange}
-            required
-            style={{ width: '100%', padding: '8px', boxSizing: 'border-box' }}
-          />
-        </div>
-        <div>
-          <label htmlFor="confirmPassword" style={{ display: 'block', marginBottom: '5px' }}>Confirm Password:</label>
-          <input
-            type="password"
-            id="confirmPassword"
-            name="confirmPassword"
-            value={formData.confirmPassword}
-            onChange={handleChange}
-            required
-            style={{ width: '100%', padding: '8px', boxSizing: 'border-box' }}
-          />
-        </div>
-        <button
-          type="submit"
-          disabled={loading}
-          style={{ padding: '10px', backgroundColor: '#007bff', color: 'white', border: 'none', cursor: 'pointer' }}
-        >
-          {loading ? 'Registering...' : 'Sign Up'}
-        </button>
-      </form>
-      <p style={{ marginTop: '15px', textAlign: 'center' }}>
-        Already have an account? <Link to="/login">Log in here</Link>
-      </p>
-    </div>
+    <View style={styles.container}>
+      <Text style={styles.heading}>Create an Account</Text>
+      {error ? <Text style={styles.error}>{error}</Text> : null}
+
+      <TextInput
+        style={styles.input}
+        placeholder="Username"
+        value={formData.username}
+        onChangeText={(text) => handleChange("username", text)}
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Email"
+        value={formData.email}
+        onChangeText={(text) => handleChange("email", text)}
+        keyboardType="email-address"
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Password"
+        value={formData.password}
+        onChangeText={(text) => handleChange("password", text)}
+        secureTextEntry
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Confirm Password"
+        value={formData.confirmPassword}
+        onChangeText={(text) => handleChange("confirmPassword", text)}
+        secureTextEntry
+      />
+
+      <TouchableOpacity style={styles.button} onPress={handleSignup} disabled={loading}>
+        {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Sign Up</Text>}
+      </TouchableOpacity>
+
+      <Text style={styles.linkText}>
+        Already have an account?{" "}
+        <Text style={styles.link} onPress={() => navigation.navigate("Login")}>
+          Log in here
+        </Text>
+      </Text>
+    </View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    padding: 20,
+    maxWidth: 400,
+    alignSelf: "center",
+  },
+  heading: {
+    fontSize: 22,
+    fontWeight: "bold",
+    marginBottom: 15,
+  },
+  error: {
+    color: "red",
+    marginBottom: 10,
+  },
+  input: {
+    width: "100%",
+    padding: 10,
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 5,
+    marginBottom: 15,
+  },
+  button: {
+    backgroundColor: "#007bff",
+    padding: 12,
+    borderRadius: 5,
+    alignItems: "center",
+  },
+  buttonText: {
+    color: "#fff",
+    fontWeight: "bold",
+  },
+  linkText: {
+    marginTop: 15,
+    textAlign: "center",
+  },
+  link: {
+    color: "#007bff",
+    fontWeight: "600",
+  },
+});
 
 export default SignupPage;
