@@ -1,6 +1,8 @@
 "dependencies": {
-  "expo": "~50.0.0",
-  "expo-av": "~13.0.0",
-  "react": "18.2.0",
-  "react-native": "0.73.0"
+  "expo-cli",
+  "eas-cli"
+  "react-native",
+  "expo-build-properties",
+  ""
+  
 }
