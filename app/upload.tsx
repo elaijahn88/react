@@ -1,90 +1,146 @@
-import React, { useState, ChangeEvent, MouseEvent } from 'react';
+import React, { useState } from "react";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  ActivityIndicator,
+  StyleSheet,
+} from "react-native";
+import DocumentPicker from "react-native-document-picker";
 
-// Define the types for the component's state
-type UploadStatus = 'idle' | 'uploading' | 'successful' | 'failed';
+type UploadStatus = "idle" | "uploading" | "successful" | "failed";
 
 const VideoUploader: React.FC = () => {
-  // Specify that selectedFile can be a File object or null
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [uploadStatus, setUploadStatus] = useState<UploadStatus>('idle');
-  const [message, setMessage] = useState<string>('');
+  const [selectedFile, setSelectedFile] = useState<any | null>(null);
+  const [uploadStatus, setUploadStatus] = useState<UploadStatus>("idle");
+  const [message, setMessage] = useState<string>("");
 
-  // The event handler is typed as a React.ChangeEvent for an HTMLInputElement
-  const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
-    // Access the files property from the event target
-    const file = event.target.files?.[0] || null;
-    setSelectedFile(file);
-    setMessage('');
-    setUploadStatus('idle');
+  const handleFileSelect = async () => {
+    try {
+      const res = await DocumentPicker.pickSingle({
+        type: [DocumentPicker.types.video],
+      });
+      setSelectedFile(res);
+      setMessage("");
+      setUploadStatus("idle");
+    } catch (err: any) {
+      if (DocumentPicker.isCancel(err)) {
+        console.log("User cancelled file picker");
+      } else {
+        console.error("DocumentPicker error:", err);
+      }
+    }
   };
 
-  // The event handler is typed as a React.MouseEvent for an HTMLButtonElement
-  const handleUpload = async (event: MouseEvent<HTMLButtonElement>) => {
-    event.preventDefault(); // Prevent default form submission behavior
-
+  const handleUpload = async () => {
     if (!selectedFile) {
-      setMessage('Please select a video file first!');
+      setMessage("Please select a video file first!");
       return;
     }
 
-    setUploadStatus('uploading');
-    setMessage('');
+    setUploadStatus("uploading");
+    setMessage("");
 
-    // Create a FormData object to send the file
     const formData = new FormData();
-    formData.append('video', selectedFile, selectedFile.name);
+    formData.append("video", {
+      uri: selectedFile.uri,
+      name: selectedFile.name || "video.mp4",
+      type: selectedFile.type || "video/mp4",
+    });
 
-    const uploadUrl = 'YOUR_UPLOAD_ENDPOINT_URL'; // Replace with your server's endpoint
+    const uploadUrl = "YOUR_UPLOAD_ENDPOINT_URL"; // Replace with your server's endpoint
 
     try {
-      // Use the fetch API to send the file
       const response = await fetch(uploadUrl, {
-        method: 'POST',
+        method: "POST",
         body: formData,
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
       });
 
       if (response.ok) {
         const result = await response.json();
-        setUploadStatus('successful');
+        setUploadStatus("successful");
         setMessage(`Upload successful! Server response: ${JSON.stringify(result)}`);
-        // Reset state after a successful upload
         setSelectedFile(null);
       } else {
         const errorText = await response.text();
-        throw new Error(errorText || 'Video upload failed.');
+        throw new Error(errorText || "Video upload failed.");
       }
-    } catch (error) {
-      setUploadStatus('failed');
-      if (error instanceof Error) {
-        setMessage(`Error: ${error.message}`);
-      } else {
-        setMessage('An unexpected error occurred.');
-      }
-      console.error('Upload error:', error);
+    } catch (error: any) {
+      setUploadStatus("failed");
+      setMessage(error?.message || "An unexpected error occurred.");
+      console.error("Upload error:", error);
     }
   };
 
   return (
-    <div>
-      <h3>Upload a Video</h3>
-      <input 
-        type="file" 
-        accept="video/*" 
-        onChange={handleFileChange} 
-      />
-      
+    <View style={styles.container}>
+      <Text style={styles.heading}>Upload a Video</Text>
+
+      <TouchableOpacity style={styles.selectButton} onPress={handleFileSelect}>
+        <Text style={styles.buttonText}>Choose Video</Text>
+      </TouchableOpacity>
+
       {selectedFile && (
-        <p>Selected file: <strong>{selectedFile.name}</strong></p>
+        <Text style={styles.fileText}>
+          Selected file: <Text style={{ fontWeight: "bold" }}>{selectedFile.name}</Text>
+        </Text>
       )}
 
-      <button onClick={handleUpload} disabled={!selectedFile || uploadStatus === 'uploading'}>
-        {uploadStatus === 'uploading' ? 'Uploading...' : 'Upload Video'}
-      </button>
+      <TouchableOpacity
+        style={[styles.uploadButton, !selectedFile && { backgroundColor: "#aaa" }]}
+        onPress={handleUpload}
+        disabled={!selectedFile || uploadStatus === "uploading"}
+      >
+        {uploadStatus === "uploading" ? (
+          <ActivityIndicator color="#fff" />
+        ) : (
+          <Text style={styles.buttonText}>Upload Video</Text>
+        )}
+      </TouchableOpacity>
 
-      {uploadStatus !== 'idle' && <p>Status: {uploadStatus}</p>}
-      {message && <p>{message}</p>}
-    </div>
+      {uploadStatus !== "idle" && <Text>Status: {uploadStatus}</Text>}
+      {message ? <Text>{message}</Text> : null}
+    </View>
   );
 };
 
 export default VideoUploader;
+
+const styles = StyleSheet.create({
+  container: {
+    padding: 20,
+    alignItems: "center",
+    flex: 1,
+    justifyContent: "center",
+    backgroundColor: "#fff",
+  },
+  heading: {
+    fontSize: 20,
+    fontWeight: "bold",
+    marginBottom: 20,
+  },
+  selectButton: {
+    backgroundColor: "#007bff",
+    padding: 12,
+    borderRadius: 5,
+    marginBottom: 10,
+  },
+  uploadButton: {
+    backgroundColor: "#28a745",
+    padding: 12,
+    borderRadius: 5,
+    marginVertical: 15,
+  },
+  buttonText: {
+    color: "#fff",
+    fontWeight: "bold",
+  },
+  fileText: {
+    marginTop: 10,
+    marginBottom: 10,
+    fontSize: 14,
+  },
+});
