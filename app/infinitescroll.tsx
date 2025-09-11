@@ -17,7 +17,7 @@ const fetchVideos = async (page: number): Promise<VideoItem[]> => {
   const end = start + videosPerPage;
 
   const dummyVideos: VideoItem[] = [
-    { id: "1", url: "https://www.w3schools.com/html/mov_bbb.mp4", title: "Big Buck Bunny #1" },
+    { id: "1", url: "https://xlijah.com/soso.mp4", title: "**soso**" },
     { id: "2", url: "https://www.w3schools.com/html/mov_bbb.mp4", title: "Big Buck Bunny #2" },
     { id: "3", url: "https://www.w3schools.com/html/mov_bbb.mp4", title: "Big Buck Bunny #3" },
     { id: "4", url: "https://www.w3schools.com/html/mov_bbb.mp4", title: "Big Buck Bunny #4" },
