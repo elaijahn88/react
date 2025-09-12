@@ -7,7 +7,7 @@ const { width } = Dimensions.get("window");
 // Sample video list
 const videos = [
   "https://xlijah.com/soso.mp4",
-  "https://xlijah.com/soso.mp4",
+  "https://youtu.be/Cnp04kWVBuI",
   "https://www.youtube.com/shorts/UjkFlamFSoU?feature=share.mp4",
 ];
 
