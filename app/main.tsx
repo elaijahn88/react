@@ -8,7 +8,7 @@ const { width } = Dimensions.get("window");
 const videos = [
   "https://xlijah.com/soso.mp4",
   "https://xlijah.com/soso.mp4",
-  "https://www.w3schools.com/html/movie.mp4",
+  "https://www.youtube.com/shorts/UjkFlamFSoU?feature=share.mp4",
 ];
 
 export default function CustomVideoPlayer() {
