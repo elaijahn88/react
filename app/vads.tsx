@@ -76,4 +76,21 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     borderRadius: 5,
   },
-  playPauseText:
+    playPauseText: {
+    color: "#000",
+    fontWeight: "bold",
+  },
+  finishedContainer: {
+    width: "100%",
+    height: "100%",
+    backgroundColor: "#000",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  finishedText: {
+    color: "#fff",
+    fontSize: 18,
+    fontWeight: "bold",
+  },
+});
+
