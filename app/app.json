@@ -16,7 +16,9 @@
         "INTERNET",
         "READ_MEDIA_VIDEO", 
         "READ_EXTERNAL_STORAGE",
-        "WRITE_EXTERNAL_STORAGE"
+        "WRITE_EXTERNAL_STORAGE",
+      "RECORD_AUDIO",
+      "ACCESS_FINE_LOCATION"
       ]
     "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
