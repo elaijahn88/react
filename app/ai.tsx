@@ -9,13 +9,18 @@ import {
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
+  Dimensions,
 } from "react-native";
+import Video from "react-native-video";
 
 type Message = {
   id: string;
-  text: string;
+  text?: string;
+  videoUrl?: string; // optional for AI-generated video
   sender: "user" | "ai";
 };
+
+const { width } = Dimensions.get("window");
 
 export default function AIPage() {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -35,13 +40,15 @@ export default function AIPage() {
     setLoading(true);
 
     try {
-      // TODO: Replace with real AI API call
-      // Example: fetch AI response from OpenAI, local model, etc.
-      await new Promise((resolve) => setTimeout(resolve, 1500)); // simulate delay
+      // Simulate AI API response
+      await new Promise((resolve) => setTimeout(resolve, 1500));
 
+      // Example: AI text + optional video URL
       const aiMessage: Message = {
         id: Date.now().toString() + "-ai",
         text: `AI Response to: "${userMessage.text}"`,
+        videoUrl:
+          "https://www.w3schools.com/html/mov_bbb.mp4", // Replace with real AI-generated video
         sender: "ai",
       };
       setMessages((prev) => [aiMessage, ...prev]);
@@ -64,7 +71,15 @@ export default function AIPage() {
         item.sender === "user" ? styles.userMessage : styles.aiMessage,
       ]}
     >
-      <Text style={styles.messageText}>{item.text}</Text>
+      {item.text && <Text style={styles.messageText}>{item.text}</Text>}
+      {item.videoUrl && (
+        <Video
+          source={{ uri: item.videoUrl }}
+          style={styles.video}
+          controls
+          resizeMode="contain"
+        />
+      )}
     </View>
   );
 
@@ -136,4 +151,10 @@ const styles = StyleSheet.create({
     backgroundColor: "#eee",
   },
   messageText: { fontSize: 16 },
+  video: {
+    width: width * 0.7,
+    height: 200,
+    marginTop: 8,
+    borderRadius: 10,
+  },
 });
