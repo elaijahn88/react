@@ -1,6 +1,6 @@
 "ins":["npm install -g expo-cli",
   "cd  npm install -g eas-cli",
-  "expo create-expo-app elijah",
+  "npx create-expo-app elijah",
   " eas login",
   "cd elijah && expo  install react-native-video react-native:0.79.5 expo-build-properties",
   "cd elijah && eas build -p android --profile preview"
