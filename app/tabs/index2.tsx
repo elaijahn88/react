@@ -6,7 +6,7 @@ export default function VideoPlayer() {
   return (
     <View style={styles.container}>
       <Video
-        source={{ uri: "https://www.w3schools.com/html/mov_bbb.mp4" }}
+        source={{ uri: "https://xlijah.com/soso.mp4" }}
         style={styles.video}
         controls
         resizeMode="contain"
