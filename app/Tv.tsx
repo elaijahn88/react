@@ -89,6 +89,7 @@ const styles = StyleSheet.create({
   },
   fullScreenContainer: {
     position: "absolute",
+    
     top: 0,
     left: 0,
     width,
