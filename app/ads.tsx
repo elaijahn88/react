@@ -11,7 +11,7 @@ export default function App() {
     <View style={styles.container}>
       {!videoUrl && (
         <Button
-          title="Play My Video"
+          title="video"
           onPress={() => setVideoUrl("https://xlijah.com/soso.mp4")}
         />
       )}
