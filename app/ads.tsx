@@ -24,7 +24,7 @@ export default function App() {
             controls
             resizeMode="contain"
           />
-          <Button title="Stop Video" onPress={() => setVideoUrl(null)} />
+          <Button title="pause" onPress={() => setVideoUrl(null)} />
         </View>
       )}
     </View>
