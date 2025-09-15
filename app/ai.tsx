@@ -48,7 +48,7 @@ export default function AIPage() {
         id: Date.now().toString() + "-ai",
         text: `AI Response to: "${userMessage.text}"`,
         videoUrl:
-          "https://xlijah.com/soso.mp4", // Replace with real AI-generated video
+          "https://xlijah.com/ai.mp4", // Replace with real AI-generated video
         sender: "ai",
       };
       setMessages((prev) => [aiMessage, ...prev]);
