@@ -20,9 +20,9 @@ type Transaction = {
 
 const sampleTransactions: Transaction[] = [
   { id: "1", title: "Salary", amount: 1200, type: "income", date: "2025-09-01" },
-  { id: "2", title: "Coffee", amount: 4.5, type: "expense", date: "2025-09-02" },
-  { id: "3", title: "Freelance Project", amount: 450, type: "income", date: "2025-09-03" },
-  { id: "4", title: "Groceries", amount: 65, type: "expense", date: "2025-09-04" },
+  { id: "2", title: "Coffee", amount: 4500, type: "expense", date: "2025-09-02" },
+  { id: "3", title: "Tutur", amount: 4500, type: "income", date: "2025-09-03" },
+  { id: "4", title: "Iphones", amount: 65000, type: "expense", date: "2025-09-04" },
 ];
 
 export default function FinanceDashboard() {
