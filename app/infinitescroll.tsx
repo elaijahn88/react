@@ -82,7 +82,7 @@ const VideoFeed: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.header}>Video Feed</Text>
+      <Text style={styles.header}>Joyplay</Text>
 
       <FlatList
         data={videos}
