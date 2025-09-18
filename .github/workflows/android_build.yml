@@ -27,14 +27,13 @@ jobs:
 
       - name: Install dependencies
         run: npm install
-      - name: variable.......
-        run:export EXPO_TOKEN=""
+      
 
       - name: Install EAS CLI
         run: npm install -g eas-cli
        
       - name: ........login eas user..........
-        run: eas login $Expo --noninteractive 
+        run: eas login $EXPO_TOKEN --noninteractive 
       
 
       - name: Build Android app
