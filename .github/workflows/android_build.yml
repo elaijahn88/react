@@ -32,7 +32,7 @@ jobs:
         run: npm install -g eas-cli
        
       - name: ........login eas user..........
-        run: eas login $Expo 
+        run: eas login $Expo --noninteractive 
       
 
       - name: Build Android app
