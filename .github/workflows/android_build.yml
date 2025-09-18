@@ -16,8 +16,13 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-      - name: Install EAS CLI
+      - name: Install Expo CLI
         run: npm install -g expo-cli
+      - name: CREATE PROJECT
+        run: npx create-expo-app elijah
+
+      - name: Install react-native-video
+        run: cd elijah && expo install react-native-video
       
 
       - name: Install dependencies
