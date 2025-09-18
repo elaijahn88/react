@@ -1,0 +1,30 @@
+name: Submit Android app
+
+on:
+  push:
+    branches: ['main']
+
+jobs:
+  submit_android:
+    name: Submit Android
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Install EAS CLI
+        run: npm install -g eas-cli
+
+      - name: Log in to EAS
+        run: eas login --token ${{ secrets.EXPO_TOKEN }}
+
+      - name: Submit to Google Play Store
+        run: eas submit --platform android --latest --non-interactive
