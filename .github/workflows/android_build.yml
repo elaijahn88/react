@@ -31,12 +31,7 @@ jobs:
       - name: Install EAS CLI
         run: npm install -g eas-cli
        
-      - name: Log in to EAS
-        run: eas login
-        env:
-          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-      - name: Log in to EAS
-        run: eas login --help
+      
       
 
       - name: Build Android app
