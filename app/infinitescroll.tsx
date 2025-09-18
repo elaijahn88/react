@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { View, Text, StyleSheet, FlatList, ActivityIndicator } from "react-native";
-import Video from "react-native-video"; // install with: npm install react-native-video
+import Video from "react-native-video"; // install with: expo install react-native-video
 
 // 1. Define the type for a video item
 interface VideoItem {
