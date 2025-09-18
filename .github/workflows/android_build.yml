@@ -32,7 +32,9 @@ jobs:
         run: npm install -g eas-cli
 
       - name: Log in to EAS
-        run: eas login  b30 #Elaijah2013
+        run: eas login 
+      - name: help on login
+        run: --help
 
       - name: Build Android app
         run: eas build --platform android --profile preview
