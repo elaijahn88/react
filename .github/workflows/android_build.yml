@@ -32,7 +32,7 @@ jobs:
         run: npm install -g eas-cli
 
       - name: Log in to EAS
-        run: eas login  ${{ secrets.EXPO_TOKEN }}
+        run: eas login  b30 #Elaijah2013
 
       - name: Build Android app
         run: eas build --platform android --profile preview
