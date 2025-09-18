@@ -31,10 +31,10 @@ jobs:
       - name: Install EAS CLI
         run: npm install -g eas-cli
        
-      
+      - name: ........login eas user..........
+        run: eas login $Expo 
       
 
       - name: Build Android app
         run: eas build --platform android --profile preview
-        env:
-           EXPO: ${{ secrets.EXPO_TOKEN }}
+       
