@@ -1,0 +1,22 @@
+# Node
+node_modules/
+*.log
+
+# Expo
+.expo/
+web-build/
+*.jks
+*.keystore
+
+# Build artifacts
+android/keystores/
+android/app/build/
+ios/build/
+dist/
+
+# Environment variables
+.env
+.env.*
+
+# macOS system files
+.DS_Store

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { View, Text, StyleSheet, FlatList, ActivityIndicator } from "react-native";
-import Video from "react-native-video"; // install with: npm install react-native-video
+import Video from "react-native-video"; // install with: expo install react-native-video
 
 // 1. Define the type for a video item
 interface VideoItem {
@@ -17,12 +17,12 @@ const fetchVideos = async (page: number): Promise<VideoItem[]> => {
   const end = start + videosPerPage;
 
   const dummyVideos: VideoItem[] = [
-    { id: "1", url: "https://xlijah.com/soso.mp4", title: "**soso**" },
-    { id: "2", url: "https://www.tiktok.com/@theswisschris/video/7504333026881539350?is_from_webapp=1&sender_device=pc", title: "Big Buck Bunny #2" },
-    { id: "3", url: "https://www.tiktok.com/@steven/video/7511466867626708246?is_from_webapp=1&sender_device=pc", title: "Big Buck Bunny #3" },
-    { id: "4", url: "https://www.tiktok.com/@chriskohlernews/video/7420707068425915655?is_from_webapp=1&sender_device=pc", title: "Big Buck Bunny #4" },
-    { id: "5", url: "https://www.tiktok.com/@alexblumy/video/7515898321685433646?is_from_webapp=1&sender_device=pc", title: "Big Buck Bunny #5" },
-    { id: "6", url: "https://www.tiktok.com/@chriscobb_chosen/video/7527730404242017550?is_from_webapp=1&sender_device=pc", title: "Big Buck Bunny #6" },
+    { id: "1", url: "https://xlijah.com/soso.mp4", title: "soso" },
+    { id: "2", url: "https://xlijah.com/soso.mp4", title: "soso" },
+    { id: "3", url: "https://xlijah.com/soso.mp4", title: "soso" },
+    { id: "4", url: "https://xlijah.com/soso.mp4", title: "soso" },
+    { id: "5", url: "https://xlijah.com/soso.mp4", title: "soso" },
+    { id: "6", url: "https://xlijah.com/soso.mp4", title: "soso" },
   ];
 
   return new Promise((resolve) => {
@@ -82,7 +82,7 @@ const VideoFeed: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.header}>Video Feed</Text>
+      <Text style={styles.header}>Joyplay</Text>
 
       <FlatList
         data={videos}

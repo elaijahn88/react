@@ -1,7 +1,12 @@
 {
   "expo": {
-    "name": "apple",
-    "slug": "apple",
+     "extra": {
+      "eas": {
+        "projectId": "41e5b47f-d59e-4d0f-b21d-f2f3579c1ea1"
+      }
+    },
+    "name": "ela",
+    "slug": "ela",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -12,6 +17,7 @@
       "supportsTablet": true
     },
     "android": {
+      "package": "com.elijah.atom",
     "permissions": [
         "INTERNET",
         "READ_MEDIA_VIDEO", 
@@ -19,7 +25,7 @@
         "WRITE_EXTERNAL_STORAGE",
       "RECORD_AUDIO",
       "ACCESS_FINE_LOCATION"
-      ]
+      ],
     "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"

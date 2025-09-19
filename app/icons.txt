@@ -1,0 +1,19 @@
+Home: home, house (Represents the main page or dashboard)
+
+Search: search, magnifying-glass (A magnifying glass for finding content)
+
+Settings: settings, gear, cog (A gear icon for application settings)
+
+Profile / User: user, person, account, profile (Represents a user's profile)
+
+Menu: menu, hamburger, bars (The three horizontal lines for a side menu)
+
+Notifications: bell, notification (A bell for alerts and updates)
+
+Messages / Chat: message, chat, comment (A speech bubble for communication)
+
+Heart: heart, favorite (For liking or favoriting an item)
+
+Bookmark: bookmark, star (For saving content for later)
+
+Add / Create: plus, add, plus-circle (A plus sign for adding a new item)
