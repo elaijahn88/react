@@ -12,6 +12,7 @@
       "supportsTablet": true
     },
     "android": {
+      "package": "com.elijah.atom",
     "permissions": [
         "INTERNET",
         "READ_MEDIA_VIDEO", 
