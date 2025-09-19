@@ -1,5 +1,10 @@
 {
   "expo": {
+     "extra": {
+      "eas": {
+        "projectId": "dee02204-c691-4610-8599-adc2521dc451"
+      }
+    },
     "name": "apple",
     "slug": "apple",
     "version": "1.0.0",
