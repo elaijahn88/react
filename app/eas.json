@@ -1,18 +1,18 @@
 {
-  
-  "cli": {
-    "appVersionSource": "remote"
-  },
- 
-
   "build": {
-    "development": {
-      "developmentClient": true,
-      "distribution": "internal"
-    },
-    "preview": {
-      "distribution": "internal"
-    },
-    "production": {}
+    "production": {
+      "android": {
+        "buildType": "apk",
+        "keystore": {
+          "keystorePath": "app/elijah.jks",
+          "keystorePassword": "$ANDROID_KEYSTORE_PASSWORD",
+          "keyAlias": "$ANDROID_KEY_ALIAS",
+          "keyPassword": "$ANDROID_KEY_PASSWORD"
+        }
+      },
+      "ios": {
+        "buildType": "simulator"
+      }
+    }
   }
 }
