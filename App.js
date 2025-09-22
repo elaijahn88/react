@@ -12,6 +12,8 @@ const App = () => {
   return (
     <View style={styles.container}>
       <ScrollView>
+        {/* Homepage Name */}
+        <Text style={styles.homepage}>elijah</Text>
         <Text style={styles.header}>🎥 Xlijah Video List</Text>
 
         {videoUrls.map((url, index) => (
@@ -56,6 +58,15 @@ const styles = StyleSheet.create({
     backgroundColor: '#000',
     paddingTop: 40,
     paddingHorizontal: 10,
+  },
+  homepage: {
+    fontSize: 32,
+    color: '#FFD700',
+    textAlign: 'center',
+    marginVertical: 20,
+    fontWeight: 'bold',
+    letterSpacing: 3,
+    textTransform: 'uppercase',
   },
   header: {
     fontSize: 24,
