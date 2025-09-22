@@ -40,7 +40,7 @@ export default function VideoScreens() {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>2 Video Screens</Text>
+      <Text style={styles.title}>.......</Text>
       {videos.map((video, idx) => (
         <View key={idx} style={styles.screen}>
           <Text style={styles.videoTitle}>{video.title}</Text>
