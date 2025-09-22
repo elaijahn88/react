@@ -3,6 +3,7 @@
     "production": {
       "android": {
         "buildType": "apk",
+        "credentialsSource": "remote",
         "keystore": {
           "keystorePath": "app/elijah.jks",
           "keystorePassword": "$ANDROID_KEYSTORE_PASSWORD",
