@@ -42,8 +42,8 @@ jobs:
        
         env:
           EXPO_TOKEN: ${{ secrets.EAS_TOKEN }}
-      - name: add keystore
-         run:eas credentials --platform android --profile preview
+      - name: Set up Android Keystore
+        run: echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > app/elijah.jks
 
       - name: Build Android app
         run: eas build --platform android --profile preview
