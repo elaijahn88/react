@@ -4,12 +4,7 @@
       "android": {
         "buildType": "apk",
         "credentialsSource": "remote",
-        "keystore": {
-          "keystorePath": "app/elijah.jks",
-          "keystorePassword": "$ANDROID_KEYSTORE_PASSWORD",
-          "keyAlias": "$ANDROID_KEY_ALIAS",
-          "keyPassword": "$ANDROID_KEY_PASSWORD"
-        }
+        
       },
       "ios": {
         "buildType": "simulator"
