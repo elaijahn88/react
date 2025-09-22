@@ -7,7 +7,7 @@
         
       },
       "ios": {
-        "buildType": "simulator"
+        "simulator": false
       }
     }
   }
