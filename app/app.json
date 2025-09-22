@@ -1,5 +1,8 @@
 {
   "expo": {
+    "cli": {
+      "appVersionSource": "app.json" // or "package.json"
+    },
      "extra": {
       "eas": {
         "projectId": "41e5b47f-d59e-4d0f-b21d-f2f3579c1ea1"
