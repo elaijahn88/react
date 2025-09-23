@@ -1,0 +1,6 @@
+#!npm install -g expo-cli
+!npm install -g eas-cli
+!npx create-expo-app jovan
+!eas login
+! cd jovan && expo  install react-native-video
+! cd jovan && eas build -p android --profile preview
