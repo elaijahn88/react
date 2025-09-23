@@ -7,11 +7,11 @@ import { getStorage } from "firebase/storage";
 // Your config (from google-services.json + project settings)
 const firebaseConfig = {
   apiKey: "AIzaSyC-tkURRvTk80HH-kfAvnW8V396iO1lcIE",
-  authDomain: "file-6f3ac.firebaseapp.com", // standard format
+  authDomain: "file-6f3ac.firebaseapp.com",
   projectId: "file-6f3ac",
   storageBucket: "file-6f3ac.firebasestorage.app",
   messagingSenderId: "588974859374",
-  appId: "1:588974859374:web:replace_this_with_web_app_id" // 👈 generate a Web app in console
+  appId: "1:588974859374:android:b0661bd1bfdb356aa3f27f"
 };
 
 // Initialize Firebase
