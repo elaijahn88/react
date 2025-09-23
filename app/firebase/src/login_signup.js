@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { View, TextInput, Button, Alert, StyleSheet } from "react-native";
 import { auth } from "./firebase";
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth";
 
@@ -9,27 +10,58 @@ export default function AuthDemo() {
   const signUp = async () => {
     try {
       await createUserWithEmailAndPassword(auth, email, password);
-      alert("User registered!");
+      Alert.alert("Success", "User registered!");
     } catch (err) {
-      alert(err.message);
+      Alert.alert("Error", err.message);
     }
   };
 
   const signIn = async () => {
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      alert("User signed in!");
+      Alert.alert("Success", "User signed in!");
     } catch (err) {
-      alert(err.message);
+      Alert.alert("Error", err.message);
     }
   };
 
   return (
-    <div>
-      <input placeholder="Email" onChange={(e) => setEmail(e.target.value)} />
-      <input type="password" placeholder="Password" onChange={(e) => setPassword(e.target.value)} />
-      <button onClick={signUp}>Sign Up</button>
-      <button onClick={signIn}>Sign In</button>
-    </div>
+    <View style={styles.container}>
+      <TextInput
+        style={styles.input}
+        placeholder="Email"
+        value={email}
+        onChangeText={setEmail}
+        keyboardType="email-address"
+        autoCapitalize="none"
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Password"
+        value={password}
+        onChangeText={setPassword}
+        secureTextEntry
+      />
+      <Button title="Sign Up" onPress={signUp} />
+      <View style={{ height: 10 }} />
+      <Button title="Sign In" onPress={signIn} />
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: "center",
+    padding: 20,
+    backgroundColor: "#fff",
+  },
+  input: {
+    height: 50,
+    borderColor: "#ccc",
+    borderWidth: 1,
+    marginBottom: 15,
+    paddingHorizontal: 10,
+    borderRadius: 5,
+  },
+});
