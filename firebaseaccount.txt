@@ -1,0 +1,1 @@
+firebase-adminsdk-fbsvc@file-6f3ac.iam.gserviceaccount.com
