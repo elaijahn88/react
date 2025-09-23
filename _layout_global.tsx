@@ -13,15 +13,27 @@ export default function RootLayout() {
   });
 
   if (!loaded) {
-    // Async font loading only occurs in development.
-    return null;
+    return null; // Wait for fonts to load
   }
 
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        {/* Main tab navigator */}
+        <Stack.Screen name="explorer" options={{ headerShown: false }} />
+
+        {/* Not found screen */}
         <Stack.Screen name="+not-found" />
+
+        {/* Additional screens */}
+        <Stack.Screen 
+          name="DashboardScreen" 
+          options={{ title: 'D', headerShown: true }} 
+        />
+        <Stack.Screen 
+          name="ProfileScreen" 
+          options={{ title: 'Profile', headerShown: true }} 
+        />
       </Stack>
       <StatusBar style="auto" />
     </ThemeProvider>
