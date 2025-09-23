@@ -8,6 +8,7 @@ import {
   ScrollView,
   Switch,
   TouchableOpacity,
+  Linking,
 } from "react-native";
 import Video from "react-native-video";
 
@@ -90,15 +91,93 @@ export default function CombinedVideoScreen() {
   // Entry: Show list mode
   if (currentIndex === null) {
     return (
-      <ScrollView contentContainerStyle={[styles.container, { backgroundColor: theme.background }]}>\n        <View style={styles.headerRow}>\n          <Text style={[styles.title, { color: theme.text }]}>TV Shows & Custom Player</Text>\n          <View style={styles.switchRow}>\n            <Text style={{ color: theme.text, marginRight: 8 }}>\n              {darkMode ? "Dark" : "Light"} Mode\n            </Text>\n            <Switch\n              value={darkMode}\n              onValueChange={setDarkMode}\n              thumbColor={darkMode ? "#fff" : "#222"}\n              trackColor={{ false: "#aaa", true: "#444" }}\n            />\n          </View>\n        </View>\n        {videos.map((video, idx) => (\n          <View key={idx} style={[styles.card, { backgroundColor: theme.card }]}>\n            <Text style={[styles.videoTitle, { color: theme.text }]}>{video.title}</Text>\n            <Text style={[styles.desc, { color: theme.text }]}>{video.desc}</Text>\n            <Button\n              title="Play Episode"\n              color={theme.button}\n              onPress={() => {\n                setCurrentIndex(idx);\n                setPaused(false);\n              }}\n            />\n          </View>\n        ))}\n      </ScrollView>\n    );\n  }
+      <ScrollView contentContainerStyle={[styles.container, { backgroundColor: theme.background }]}>
+        <View style={styles.headerRow}>
+          <Text style={[styles.title, { color: theme.text }]}>TV Shows & Custom Player</Text>
+          <View style={styles.switchRow}>
+            <Text style={{ color: theme.text, marginRight: 8 }}>
+              {darkMode ? "Dark" : "Light"} Mode
+            </Text>
+            <Switch
+              value={darkMode}
+              onValueChange={setDarkMode}
+              thumbColor={darkMode ? "#fff" : "#222"}
+              trackColor={{ false: "#aaa", true: "#444" }}
+            />
+          </View>
+        </View>
+        {/* Payment Links */}
+        <View style={{ flexDirection: "row", justifyContent: "center", marginBottom: 18 }}>
+          <Button title="Bank" onPress={() => Linking.openURL("https://samplebank.com") } />
+          <View style={{ width: 10 }} />
+          <Button title="Mobile Money" onPress={() => Linking.openURL("https://mobilemoney.com") } />
+          <View style={{ width: 10 }} />
+          <Button title="International Payments" onPress={() => Linking.openURL("https://internationalpayments.com") } />
+        </View>
+        {/* Rest of episode cards */}
+        {videos.map((video, idx) => (
+          <View key={idx} style={[styles.card, { backgroundColor: theme.card }]}>
+            <Text style={[styles.videoTitle, { color: theme.text }]}>{video.title}</Text>
+            <Text style={[styles.desc, { color: theme.text }]}>{video.desc}</Text>
+            <Button
+              title="Play Episode"
+              color={theme.button}
+              onPress={() => {
+                setCurrentIndex(idx);
+                setPaused(false);
+              }}
+            />
+          </View>
+        ))}
+      </ScrollView>
+    );
+  }
 
   // Player (fullscreen overlay) mode
   const currentVideo = videos[currentIndex];
   return (
-    <View style={[styles.fullScreenContainer, { backgroundColor: theme.background }]}>\n      <Video\n        ref={videoRef}\n        source={{ uri: currentVideo.uri }}\n        style={styles.fullScreenVideo}\n        resizeMode="contain"\n        paused={paused}\n        onEnd={nextVideo}\n      />\n
-      {/* Timed text overlay */}\n      {showText && (\n        <View style={styles.textOverlay}>\n          <Text style={styles.overlayText}>\n            {currentVideo.title}\n          </Text>\n        </View>\n      )}\n
-      {/* Controls */}\n      <View style={styles.playerControls}>\n        <TouchableOpacity style={styles.controlButton} onPress={prevVideo}>\n          <Text style={styles.buttonText}>⏮ Prev</Text>\n        </TouchableOpacity>\n        <TouchableOpacity style={styles.controlButton} onPress={playPause}>\n          <Text style={styles.buttonText}>{paused ? "▶ Play" : "⏸ Pause"}</Text>\n        </TouchableOpacity>\n        <TouchableOpacity style={styles.controlButton} onPress={nextVideo}>\n          <Text style={styles.buttonText}>Next ⏭</Text>\n        </TouchableOpacity>\n      </View>\n
-      {/* Close */}\n      <TouchableOpacity\n        style={styles.closeButton}\n        onPress={() => {\n          setCurrentIndex(null);\n          setPaused(true);\n        }}\n      >\n        <Text style={styles.buttonText}>✖ Close</Text>\n      </TouchableOpacity>\n    </View>\n  );\n}
+    <View style={[styles.fullScreenContainer, { backgroundColor: theme.background }]}>
+      <Video
+        ref={videoRef}
+        source={{ uri: currentVideo.uri }}
+        style={styles.fullScreenVideo}
+        resizeMode="contain"
+        paused={paused}
+        onEnd={nextVideo}
+      />
+      {/* Timed text overlay */}
+      {showText && (
+        <View style={styles.textOverlay}>
+          <Text style={styles.overlayText}>
+            {currentVideo.title}
+          </Text>
+        </View>
+      )}
+      {/* Controls */}
+      <View style={styles.playerControls}>
+        <TouchableOpacity style={styles.controlButton} onPress={prevVideo}>
+          <Text style={styles.buttonText}>⏮ Prev</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.controlButton} onPress={playPause}>
+          <Text style={styles.buttonText}>{paused ? "▶ Play" : "⏸ Pause"}</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.controlButton} onPress={nextVideo}>
+          <Text style={styles.buttonText}>Next ⏭</Text>
+        </TouchableOpacity>
+      </View>
+      {/* Close */}
+      <TouchableOpacity
+        style={styles.closeButton}
+        onPress={() => {
+          setCurrentIndex(null);
+          setPaused(true);
+        }}
+      >
+        <Text style={styles.buttonText}>✖ Close</Text>
+      </TouchableOpacity>
+    </View>
+  );
+}
 
 const styles = StyleSheet.create({
   container: {
