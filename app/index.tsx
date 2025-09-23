@@ -12,7 +12,7 @@ const videos = [
   },
   {
     title: "Second Video",
-    uri: "https://www.youtube.com/shorts/UjkFlamFSoU?feature=share.mp4",
+    uri: "https://xlijah.com/ai.mp4",
   },
 ];
 
