@@ -4,26 +4,35 @@ import { auth, db } from "./firebase";
 import { 
   createUserWithEmailAndPassword, 
   signInWithEmailAndPassword, 
-  onAuthStateChanged 
+  onAuthStateChanged,
+  User
 } from "firebase/auth";
-import { doc, setDoc, getDoc } from "firebase/firestore";
+import { doc, setDoc, getDoc, DocumentData } from "firebase/firestore";
+
+interface IUserData {
+  email: string;
+  createdAt?: string;
+}
 
 export default function AuthDemo() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [userData, setUserData] = useState(null);
+  const [email, setEmail] = useState<string>("");
+  const [password, setPassword] = useState<string>("");
+  const [userData, setUserData] = useState<IUserData | null>(null);
 
   // Listen for auth state changes
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+    const unsubscribe = onAuthStateChanged(auth, async (user: User | null) => {
       if (user) {
-        // Retrieve user data from Firestore
-        const docRef = doc(db, "users", user.uid);
-        const docSnap = await getDoc(docRef);
-        if (docSnap.exists()) {
-          setUserData(docSnap.data());
-        } else {
-          setUserData({ email: user.email });
+        try {
+          const docRef = doc(db, "users", user.uid);
+          const docSnap = await getDoc(docRef);
+          if (docSnap.exists()) {
+            setUserData(docSnap.data() as IUserData);
+          } else {
+            setUserData({ email: user.email || "" });
+          }
+        } catch (err) {
+          console.error("Error fetching user data:", err);
         }
       } else {
         setUserData(null);
@@ -45,7 +54,7 @@ export default function AuthDemo() {
       });
 
       Alert.alert("Success", "User registered!");
-    } catch (err) {
+    } catch (err: any) {
       Alert.alert("Error", err.message);
     }
   };
@@ -54,7 +63,7 @@ export default function AuthDemo() {
     try {
       await signInWithEmailAndPassword(auth, email, password);
       Alert.alert("Success", "User signed in!");
-    } catch (err) {
+    } catch (err: any) {
       Alert.alert("Error", err.message);
     }
   };
