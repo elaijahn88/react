@@ -61,7 +61,7 @@ export default function DashboardScreen() {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.sectionTitle}>🎬 Video Player</Text>
+      <Text style={styles.sectionTitle}>..........</Text>
       {videos.map((video, idx) => (
         <View key={idx} style={styles.card}>
           <Text style={styles.videoTitle}>{video.title}</Text>
