@@ -1,23 +1,116 @@
-// Import Firebase SDK functions you need
-import { initializeApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
-import { getStorage } from "firebase/storage";
+import React, { useState, useEffect } from "react";
+import { View, TextInput, Button, Alert, StyleSheet, Text } from "react-native";
+import { auth, db } from "./firebase";
+import { 
+  createUserWithEmailAndPassword, 
+  signInWithEmailAndPassword, 
+  onAuthStateChanged,
+  User
+} from "firebase/auth";
+import { doc, setDoc, getDoc, DocumentData } from "firebase/firestore";
 
-// Your config (from google-services.json + project settings)
-const firebaseConfig = {
-  apiKey: "AIzaSyC-tkURRvTk80HH-kfAvnW8V396iO1lcIE",
-  authDomain: "file-6f3ac.firebaseapp.com",
-  projectId: "file-6f3ac",
-  storageBucket: "file-6f3ac.firebasestorage.app",
-  messagingSenderId: "588974859374",
-  appId: "1:588974859374:android:b0661bd1bfdb356aa3f27f"
-};
+interface IUserData {
+  email: string;
+  createdAt?: string;
+}
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
+export default function AuthDemo() {
+  const [email, setEmail] = useState<string>("");
+  const [password, setPassword] = useState<string>("");
+  const [userData, setUserData] = useState<IUserData | null>(null);
 
-// Export services for use in your app
-export const auth = getAuth(app);
-export const db = getFirestore(app);
-export const storage = getStorage(app);
+  // Listen for auth state changes
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (user: User | null) => {
+      if (user) {
+        try {
+          const docRef = doc(db, "users", user.uid);
+          const docSnap = await getDoc(docRef);
+          if (docSnap.exists()) {
+            setUserData(docSnap.data() as IUserData);
+          } else {
+            setUserData({ email: user.email || "" });
+          }
+        } catch (err) {
+          console.error("Error fetching user data:", err);
+        }
+      } else {
+        setUserData(null);
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  const signUp = async () => {
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      // Create user document in Firestore
+      await setDoc(doc(db, "users", user.uid), {
+        email: user.email,
+        createdAt: new Date().toISOString(),
+      });
+
+      Alert.alert("Success", "User registered!");
+    } catch (err: any) {
+      Alert.alert("Error", err.message);
+    }
+  };
+
+  const signIn = async () => {
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      Alert.alert("Success", "User signed in!");
+    } catch (err: any) {
+      Alert.alert("Error", err.message);
+    }
+  };
+
+  return (
+    <View style={styles.container}>
+      {userData ? (
+        <Text>Welcome, {userData.email}</Text>
+      ) : (
+        <>
+          <TextInput
+            style={styles.input}
+            placeholder="Email"
+            value={email}
+            onChangeText={setEmail}
+            keyboardType="email-address"
+            autoCapitalize="none"
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="Password"
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry
+          />
+          <Button title="Sign Up" onPress={signUp} />
+          <View style={{ height: 10 }} />
+          <Button title="Sign In" onPress={signIn} />
+        </>
+      )}
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: "center",
+    padding: 20,
+    backgroundColor: "#fff",
+  },
+  input: {
+    height: 50,
+    borderColor: "#ccc",
+    borderWidth: 1,
+    marginBottom: 15,
+    paddingHorizontal: 10,
+    borderRadius: 5,
+  },
+});
