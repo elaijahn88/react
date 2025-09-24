@@ -13,8 +13,8 @@ import { Ionicons } from "@expo/vector-icons";
 
 export default function App() {
   const [user, setUser] = useState({
-    name: "Elijah Nabimanya",
-    email: "elijah@example.com",
+    name: "Atom services",
+    email: "jah@example.com",
     avatar: "https://via.placeholder.com/120",
   });
 
