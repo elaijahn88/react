@@ -25,7 +25,7 @@ const { width } = Dimensions.get("window");
 
 export default function AIChat() {
   const [messages, setMessages] = useState<Message[]>([
-    { id: "welcome", text: "Welcome to the Royal Society AI Chat!", sender: "ai" },
+    { id: "welcome", text: "WELCOME...aTOM", sender: "ATOM" },
   ]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -51,13 +51,13 @@ export default function AIChat() {
         id: Date.now().toString() + "-ai",
         text: `AI Response to: "${userMessage.text}"`,
         videoUrl: "https://xlijah.com/ai.mp4", // Replace with real AI video URL
-        sender: "ai",
+        sender: "ATOM",
       };
       setMessages((prev) => [aiMessage, ...prev]);
     } catch (err) {
       const errorMessage: Message = {
         id: Date.now().toString() + "-err",
-        text: "❌ Failed to get AI response. Try again.",
+        text: "❌ RESP_FAIL_TRY_AGAIN.",
         sender: "ai",
       };
       setMessages((prev) => [errorMessage, ...prev]);
@@ -95,7 +95,7 @@ export default function AIChat() {
       <View style={styles.header}>
         <Ionicons name="person-circle" size={40} color="#fff" />
         <View style={{ marginLeft: 10 }}>
-          <Text style={styles.headerText}>Royal Society AI</Text>
+          <Text style={styles.headerText}>ATOM</Text>
           <View style={styles.statusRow}>
             <View
               style={[
@@ -127,7 +127,7 @@ export default function AIChat() {
           value={input}
           onChangeText={setInput}
           style={styles.input}
-          placeholder="Ask AI something..."
+          placeholder="CHAT_ATOM..."
           placeholderTextColor="#999"
         />
         <TouchableOpacity onPress={sendMessage} style={styles.sendButton}>
