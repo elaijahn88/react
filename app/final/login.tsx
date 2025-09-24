@@ -78,7 +78,7 @@ export default function AuthDemo({ navigation }: any) {
       }
 
       Alert.alert("Success", "User signed in!");
-      navigation.replace("HomeScreen"); // redirect after login
+      navigation.replace("explore"); // redirect after login
     } catch (err: any) {
       Alert.alert("Error", err.message);
     }
