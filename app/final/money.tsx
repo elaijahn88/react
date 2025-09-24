@@ -19,11 +19,18 @@ type Transaction = {
   date: string;
 };
 
+// 🔹 Utility: get current datetime
+const getCurrentDateTime = () => {
+  const now = new Date();
+  return now.toLocaleString(); // Example: "9/24/2025, 11:32:45 AM"
+};
+
+// 🔹 Sample transactions with updated time
 const sampleTransactions: Transaction[] = [
-  { id: "1", title: "Salary", amount: 1200, type: "income", date: "2025-09-01" },
-  { id: "2", title: "Coffee", amount: 4500, type: "expense", date: "2025-09-02" },
-  { id: "3", title: "Tutur", amount: 4500, type: "income", date: "2025-09-03" },
-  { id: "4", title: "Iphones", amount: 65000, type: "expense", date: "2025-09-04" },
+  { id: "1", title: "Salary", amount: 1200, type: "income", date: getCurrentDateTime() },
+  { id: "2", title: "Coffee", amount: 4500, type: "expense", date: getCurrentDateTime() },
+  { id: "3", title: "Tutur", amount: 4500, type: "income", date: getCurrentDateTime() },
+  { id: "4", title: "Iphones", amount: 65000, type: "expense", date: getCurrentDateTime() },
 ];
 
 export default function FinanceDashboard() {
@@ -63,8 +70,8 @@ export default function FinanceDashboard() {
       <Video
         source={{ uri: "https://xlijah.com/ai.mp4" }} // replace with real 2-min video
         style={styles.video}
-        controls={false}
-        paused={false}
+        controls={false} // 🔹 disables controls
+        paused={false}   // 🔹 plays automatically
         resizeMode="contain"
       />
 
