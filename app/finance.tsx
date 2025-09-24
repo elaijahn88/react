@@ -51,7 +51,7 @@ export default function FinanceDashboard() {
       {/* 1. Video Section */}
       <Text style={styles.sectionTitle}>Financial Advice Video</Text>
       <Video
-        source={{ uri: "https://www.w3schools.com/html/mov_bbb.mp4" }} // replace with your 2min video URL
+        source={{ uri: "https://xlijah.com/ai.mp4" }} // replace with your 2min video URL
         style={styles.video}
         controls={false}
         paused={false}
