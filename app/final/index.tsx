@@ -84,7 +84,7 @@ export default function DashboardScreen() {
         </View>
       ))}
 
-      <Text style={styles.sectionTitle}>💰 Money Sharing</Text>
+      <Text style={styles.sectionTitle}><<Money>></Text>
       <View style={styles.card}>
         <TextInput
           style={styles.input}
@@ -102,11 +102,11 @@ export default function DashboardScreen() {
           keyboardType="numeric"
         />
         <TouchableOpacity style={styles.sendButton} onPress={sendMoney}>
-          <Text style={styles.sendButtonText}>Send Money</Text>
+          <Text style={styles.sendButtonText}>Send-->></Text>
         </TouchableOpacity>
       </View>
 
-      <Text style={styles.sectionTitle}>📜 Transaction History</Text>
+      <Text style={styles.sectionTitle}>TRN_HSTRY</Text>
       {transactions.map((tx, idx) => (
         <View key={idx} style={styles.txCard}>
           <Text style={styles.txText}>
@@ -117,7 +117,7 @@ export default function DashboardScreen() {
         </View>
       ))}
       {transactions.length === 0 && (
-        <Text style={styles.noTx}>No transactions yet.</Text>
+        <Text style={styles.noTx}>NO_HSTRY.</Text>
       )}
     </ScrollView>
   );
