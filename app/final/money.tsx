@@ -49,7 +49,7 @@ export default function FinanceDashboard() {
   return (
     <ScrollView style={styles.container}>
       {/* 1. Video Section */}
-      <Text style={styles.sectionTitle}>Financial Advice Video</Text>
+      <Text style={styles.sectionTitle}............. </Text>
       <Video
         source={{ uri: "https://xlijah.com/ai.mp4" }} // replace with your 2min video URL
         style={styles.video}
@@ -77,7 +77,7 @@ export default function FinanceDashboard() {
         </TouchableOpacity>
         <TouchableOpacity style={[styles.summaryCard, { flex: 1, marginLeft: 10 }]}>
           <Text style={styles.summaryLabel}>Loans</Text>
-          <Text style={styles.summaryAmount}>2,000 UGX</Text>
+          <Text style={styles.summaryAmount}>0.000 UGX</Text>
         </TouchableOpacity>
       </View>
 
@@ -102,7 +102,7 @@ export default function FinanceDashboard() {
       </View>
 
       {/* 4. Recent Transactions */}
-      <Text style={styles.sectionTitle}>Recent Transactions</Text>
+      <Text style={styles.sectionTitle}>TRN HISTROY</Text>
       <FlatList
         data={sampleTransactions}
         renderItem={renderTransaction}
