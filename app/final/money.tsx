@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   ScrollView,
   Dimensions,
+  Image,
 } from "react-native";
 import Video from "react-native-video";
 
@@ -26,7 +27,7 @@ const sampleTransactions: Transaction[] = [
 ];
 
 export default function FinanceDashboard() {
-  const accountBalance = 120000; // UGX, for example threshold logic
+  const accountBalance = 120000;
   const balanceThreshold = 100000;
 
   const renderTransaction = ({ item }: { item: Transaction }) => (
@@ -41,17 +42,26 @@ export default function FinanceDashboard() {
           item.type === "income" ? styles.income : styles.expense,
         ]}
       >
-        {item.type === "income" ? "+" : "-"}${item.amount.toFixed(2)}
+        {item.type === "income" ? "+" : "-"}UGX {item.amount.toLocaleString()}
       </Text>
     </View>
   );
 
   return (
     <ScrollView style={styles.container}>
+      {/* 🔹 Header with Profile Picture */}
+      <View style={styles.header}>
+        <Image
+          source={{ uri: "https://via.placeholder.com/60" }} // replace with user profile image
+          style={styles.profilePic}
+        />
+        <Text style={styles.headerText}>My Finance Dashboard</Text>
+      </View>
+
       {/* 1. Video Section */}
-      <Text style={styles.sectionTitle}............. </Text>
+      <Text style={styles.sectionTitle}>Financial Advice</Text>
       <Video
-        source={{ uri: "https://xlijah.com/ai.mp4" }} // replace with your 2min video URL
+        source={{ uri: "https://xlijah.com/ai.mp4" }} // replace with real 2-min video
         style={styles.video}
         controls={false}
         paused={false}
@@ -102,7 +112,7 @@ export default function FinanceDashboard() {
       </View>
 
       {/* 4. Recent Transactions */}
-      <Text style={styles.sectionTitle}>TRN HISTROY</Text>
+      <Text style={styles.sectionTitle}>Transaction History</Text>
       <FlatList
         data={sampleTransactions}
         renderItem={renderTransaction}
@@ -117,9 +127,27 @@ export default function FinanceDashboard() {
 const { width } = Dimensions.get("window");
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 15, backgroundColor: "#000" }, // black background
+  container: { flex: 1, padding: 15, backgroundColor: "#000" },
+
+  // 🔹 Header
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 15,
+  },
+  profilePic: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    marginRight: 12,
+    borderWidth: 2,
+    borderColor: "#fff",
+  },
+  headerText: { fontSize: 20, fontWeight: "bold", color: "#fff" },
+
   sectionTitle: { fontSize: 18, fontWeight: "bold", marginVertical: 10, color: "#fff" },
   video: { width: width - 30, height: 200, marginBottom: 15, borderRadius: 12 },
+
   summaryCard: {
     borderRadius: 12,
     padding: 20,
@@ -129,15 +157,24 @@ const styles = StyleSheet.create({
   summaryLabel: { color: "#fff", fontSize: 16 },
   summaryAmount: { color: "#fff", fontSize: 24, fontWeight: "bold", marginTop: 5 },
   summaryRow: { flexDirection: "row", marginBottom: 20 },
-  actions: { flexDirection: "row", flexWrap: "wrap", justifyContent: "space-around", marginBottom: 20 },
+
+  actions: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-around",
+    marginBottom: 20,
+  },
   actionButton: {
     backgroundColor: "#eee",
     paddingVertical: 12,
     paddingHorizontal: 15,
     borderRadius: 12,
     marginBottom: 10,
+    minWidth: "40%",
+    alignItems: "center",
   },
   actionText: { fontWeight: "600", fontSize: 16 },
+
   transactionCard: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -151,6 +188,6 @@ const styles = StyleSheet.create({
   transactionTitle: { fontSize: 16, fontWeight: "500", color: "#fff" },
   transactionDate: { fontSize: 12, color: "#aaa" },
   transactionAmount: { fontSize: 16, fontWeight: "bold" },
-  income: { color: "green" },
+  income: { color: "limegreen" },
   expense: { color: "red" },
 });
