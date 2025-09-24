@@ -14,8 +14,8 @@ const { width } = Dimensions.get("window");
 
 // Sample videos
 const videos = [
-  { title: "First Video", uri: "https://xlijah.com/soso.mp4" },
-  { title: "Second Video", uri: "https://xlijah.com/ai.mp4" },
+  { title: "Music", uri: "https://xlijah.com/soso.mp4" },
+  { title: "AI", uri: "https://xlijah.com/ai.mp4" },
 ];
 
 export default function DashboardScreen() {
@@ -61,7 +61,7 @@ export default function DashboardScreen() {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.sectionTitle}>..........</Text>
+      <Text style={styles.sectionTitle}>[.]..[.]..[.]</Text>
       {videos.map((video, idx) => (
         <View key={idx} style={styles.card}>
           <Text style={styles.videoTitle}>{video.title}</Text>
@@ -78,7 +78,7 @@ export default function DashboardScreen() {
             onPress={() => togglePause(idx)}
           >
             <Text style={styles.playButtonText}>
-              {pausedStates[idx] ? "▶ Play" : "⏸ Pause"}
+              {pausedStates[idx] ? "▶" : "⏸"}
             </Text>
           </TouchableOpacity>
         </View>
