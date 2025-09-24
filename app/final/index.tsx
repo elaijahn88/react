@@ -70,6 +70,8 @@ export default function DashboardScreen() {
             source={{ uri: video.uri }}
             style={styles.video}
             resizeMode="contain"
+            controls={false}
+          
             paused={pausedStates[idx]}
             onEnd={() => onEnd(idx)}
           />
