@@ -7,7 +7,7 @@ import {
   onAuthStateChanged,
   User
 } from "firebase/auth";
-import { doc, setDoc, getDoc, DocumentData } from "firebase/firestore";
+import { doc, setDoc, getDoc } from "firebase/firestore";
 
 interface IUserData {
   email: string;
@@ -42,12 +42,13 @@ export default function AuthDemo() {
     return () => unsubscribe();
   }, []);
 
+  // SIGN UP (create user + Firestore doc)
   const signUp = async () => {
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
-      // Create user document in Firestore
+      // Create Firestore user doc
       await setDoc(doc(db, "users", user.uid), {
         email: user.email,
         createdAt: new Date().toISOString(),
@@ -59,9 +60,24 @@ export default function AuthDemo() {
     }
   };
 
+  // SIGN IN (check Firestore, create doc if missing)
   const signIn = async () => {
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      // Check Firestore user doc
+      const docRef = doc(db, "users", user.uid);
+      const docSnap = await getDoc(docRef);
+
+      if (!docSnap.exists()) {
+        await setDoc(docRef, {
+          email: user.email,
+          createdAt: new Date().toISOString(),
+        });
+        console.log("User doc created on first sign in");
+      }
+
       Alert.alert("Success", "User signed in!");
     } catch (err: any) {
       Alert.alert("Error", err.message);
