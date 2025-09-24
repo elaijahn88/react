@@ -1,0 +1,139 @@
+import React from 'react';
+import {
+  View,
+  FlatList,
+  Text,
+  Image,
+  TouchableOpacity,
+  StyleSheet,
+  Dimensions,
+} from 'react-native';
+
+type Product = {
+  id: string;
+  name: string;
+  price: number;
+  image: string;
+};
+
+const products: Product[] = [
+  {
+    id: '1',
+    name: 'Nike Sneakers',
+    price: 120,
+    image: 'https://via.placeholder.com/150',
+  },
+  {
+    id: '2',
+    name: 'Apple Watch',
+    price: 250,
+    image: 'https://via.placeholder.com/150',
+  },
+  {
+    id: '3',
+    name: 'Bluetooth Headphones',
+    price: 80,
+    image: 'https://via.placeholder.com/150',
+  },
+  {
+    id: '4',
+    name: 'Leather Bag',
+    price: 150,
+    image: 'https://via.placeholder.com/150',
+  },
+  {
+    id: '5',
+    name: 'Sunglasses',
+    price: 50,
+    image: 'https://via.placeholder.com/150',
+  },
+];
+
+const { width } = Dimensions.get('window');
+const CARD_WIDTH = (width - 40) / 2;
+
+const ProductCard = ({ item }: { item: Product }) => (
+  <TouchableOpacity style={styles.card}>
+    <Image source={{ uri: item.image }} style={styles.image} />
+    <Text style={styles.title} numberOfLines={2}>{item.name}</Text>
+    <Text style={styles.price}>${item.price.toFixed(2)}</Text>
+    <TouchableOpacity style={styles.button}>
+      <Text style={styles.buttonText}>+Cart</Text>
+    </TouchableOpacity>
+  </TouchableOpacity>
+);
+
+export default function Marketplace() {
+  return (
+    <View style={styles.container}>
+      <Text style={styles.header}>Market</Text>
+      <FlatList
+        data={products}
+        renderItem={({ item }) => <ProductCard item={item} />}
+        keyExtractor={(item) => item.id}
+        numColumns={2}
+        contentContainerStyle={styles.list}
+        showsVerticalScrollIndicator={false}
+      />
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#f2f2f2',
+    paddingTop: 50,
+  },
+  header: {
+    fontSize: 26,
+    fontWeight: 'bold',
+    paddingHorizontal: 16,
+    paddingBottom: 10,
+  },
+  list: {
+    paddingHorizontal: 10,
+    paddingBottom: 20,
+  },
+  card: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    margin: 10,
+    width: CARD_WIDTH,
+    padding: 12,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    elevation: 5, // for Android shadow
+  },
+  image: {
+    width: CARD_WIDTH - 24,
+    height: CARD_WIDTH - 24,
+    borderRadius: 12,
+  },
+  title: {
+    fontSize: 16,
+    marginTop: 10,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  price: {
+    fontSize: 16,
+    color: '#00a650',
+    fontWeight: 'bold',
+    marginTop: 6,
+  },
+  button: {
+    marginTop: 10,
+    backgroundColor: '#007aff',
+    borderRadius: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 20,
+  },
+  buttonText: {
+    color: '#fff',
+    fontWeight: '600',
+  },
+});
