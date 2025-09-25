@@ -1,4 +1,4 @@
-#!npm install -g expo-cli
+!npm install -g expo-cli
 !npm install -g eas-cli
 !npx create-expo-app jovan
 !eas login
