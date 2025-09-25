@@ -66,7 +66,7 @@ export default function FinanceDashboard() {
       </View>
 
       {/* 1. Video Section */}
-      <Text style={styles.sectionTitle}>Financial Advice</Text>
+      <Text style={styles.sectionTitle}>Economy</Text>
       <Video
         source={{ uri: "https://xlijah.com/ai.mp4" }} // replace with real 2-min video
         style={styles.video}
@@ -76,7 +76,7 @@ export default function FinanceDashboard() {
       />
 
       {/* 2. Account Summary */}
-      <Text style={styles.sectionTitle}>Account Summary</Text>
+      <Text style={styles.sectionTitle}>Account..</Text>
       <View
         style={[
           styles.summaryCard,
@@ -99,7 +99,7 @@ export default function FinanceDashboard() {
       </View>
 
       {/* 3. Quick Actions */}
-      <Text style={styles.sectionTitle}>Quick Actions</Text>
+      <Text style={styles.sectionTitle}>FST_ACT</Text>
       <View style={styles.actions}>
         <TouchableOpacity style={styles.actionButton}>
           <Text style={styles.actionText}>Send</Text>
@@ -119,7 +119,7 @@ export default function FinanceDashboard() {
       </View>
 
       {/* 4. Recent Transactions */}
-      <Text style={styles.sectionTitle}>Transaction History</Text>
+      <Text style={styles.sectionTitle}>Trn_Hstry</Text>
       <FlatList
         data={sampleTransactions}
         renderItem={renderTransaction}
