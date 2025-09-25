@@ -48,8 +48,8 @@ export default function AIChat() {
       await new Promise((resolve) => setTimeout(resolve, 1500));
 
       const aiMessage: Message = {
-        id: Date.now().toString() + "-ai",
-        text: `AI Response to: "${userMessage.text}"`,
+        id: Date.now().toString() + "..",
+        text: `sms: "${userMessage.text}"`,
         videoUrl: "https://xlijah.com/ai.mp4", // Replace with real AI video URL
         sender: "ATOM",
       };
