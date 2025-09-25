@@ -59,10 +59,10 @@ export default function FinanceDashboard() {
       {/* 🔹 Header with Profile Picture */}
       <View style={styles.header}>
         <Image
-          source={{ uri: "https://via.placeholder.com/60" }} // replace with user profile image
+          source={{ uri: "https://xlijah/pics/icon.png" }} // replace with user profile image
           style={styles.profilePic}
         />
-        <Text style={styles.headerText}>My Finance Dashboard</Text>
+        <Text style={styles.headerText}>MONEY_GRAM</Text>
       </View>
 
       {/* 1. Video Section */}
