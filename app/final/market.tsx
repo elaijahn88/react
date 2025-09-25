@@ -26,31 +26,31 @@ const products: Product[] = [
   {
     id: '2',
     name: 'Apple Watch',
-    price: 250,
+    price: 100000,
     image: 'https://xlijah.com/pics/apple_watch.jpg',
   },
   {
     id: '3',
     name: 'Bluetooth Headphones',
-    price: 80,
+    price: 80000,
     image: 'https://xlijah.com/pics/bluetooth.webp',
   },
   {
     id: '4',
     name: 'Leather Bag',
-    price: 150,
+    price: 70000,
     image: 'https://xlijah.com/pics/bag.webp',
   },
   {
     id: '5',
     name: 'Sunglasses',
-    price: 50,
+    price: 150000,
     image: 'https://xlijah.com/pics/sunglasses.jpg',
   },
   {
     id: '6',
     name: 'iphone.12',
-    price: 50,
+    price: 800000,
     image: 'https://xlijah.com/pics/iphone.jpg',
   },
 ];
