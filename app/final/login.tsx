@@ -1,5 +1,14 @@
 import React, { useState, useEffect } from "react";
-import { View, TextInput, Button, Alert, StyleSheet, Text } from "react-native";
+import { 
+  View, 
+  TextInput, 
+  Button, 
+  Alert, 
+  StyleSheet, 
+  Text, 
+  useColorScheme, 
+  StatusBar 
+} from "react-native";
 import { auth, db } from "./firebase";
 import { 
   createUserWithEmailAndPassword, 
@@ -20,6 +29,9 @@ export default function AuthDemo({ navigation }: any) {
   const [userData, setUserData] = useState<IUserData | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === "dark"; // true if system dark mode enabled
+
   // Listen for auth state changes
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user: User | null) => {
@@ -32,7 +44,6 @@ export default function AuthDemo({ navigation }: any) {
           } else {
             setUserData({ email: user.email || "" });
           }
-          // Navigate to main screen if logged in
           navigation.replace("explore"); 
         } catch (err) {
           console.error("Error fetching user data:", err);
@@ -78,7 +89,7 @@ export default function AuthDemo({ navigation }: any) {
       }
 
       Alert.alert("Success", "User signed in!");
-      navigation.replace("explore"); // redirect after login
+      navigation.replace("explore"); 
     } catch (err: any) {
       Alert.alert("Error", err.message);
     }
@@ -87,29 +98,48 @@ export default function AuthDemo({ navigation }: any) {
   if (loading) return <Text style={{ flex: 1, textAlign: "center", marginTop: 50 }}>Loading...</Text>;
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: isDark ? "#000" : "#fff" }]}>
+      <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />
       {userData ? (
-        <Text>Welcome, {userData.email}</Text>
+        <Text style={[styles.text, { color: isDark ? "#f5f5f5" : "#000" }]}>
+          Welcome, {userData.email}
+        </Text>
       ) : (
         <>
           <TextInput
-            style={styles.input}
+            style={[
+              styles.input,
+              { 
+                backgroundColor: isDark ? "#1c1c1e" : "#fff",
+                color: isDark ? "#f5f5f5" : "#000",
+                borderColor: isDark ? "#333" : "#ccc"
+              }
+            ]}
             placeholder="Email"
+            placeholderTextColor={isDark ? "#888" : "#666"}
             value={email}
             onChangeText={setEmail}
             keyboardType="email-address"
             autoCapitalize="none"
           />
           <TextInput
-            style={styles.input}
+            style={[
+              styles.input,
+              { 
+                backgroundColor: isDark ? "#1c1c1e" : "#fff",
+                color: isDark ? "#f5f5f5" : "#000",
+                borderColor: isDark ? "#333" : "#ccc"
+              }
+            ]}
             placeholder="Password"
+            placeholderTextColor={isDark ? "#888" : "#666"}
             value={password}
             onChangeText={setPassword}
             secureTextEntry
           />
-          <Button title="Sign_Up" onPress={signUp} />
+          <Button title="Sign Up" onPress={signUp} />
           <View style={{ height: 10 }} />
-          <Button title="login" onPress={signIn} />
+          <Button title="Login" onPress={signIn} />
         </>
       )}
     </View>
@@ -121,14 +151,16 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     padding: 20,
-    backgroundColor: "#fff",
   },
   input: {
     height: 50,
-    borderColor: "#ccc",
     borderWidth: 1,
     marginBottom: 15,
     paddingHorizontal: 10,
     borderRadius: 5,
+  },
+  text: {
+    fontSize: 18,
+    fontWeight: "600",
   },
 });
