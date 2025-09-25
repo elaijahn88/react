@@ -15,7 +15,6 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import Video from "react-native-video";
-import messaging from "@react-native-firebase/messaging";
 import { auth, db } from "./firebase";
 import { doc, getDoc } from "firebase/firestore";
 
@@ -35,35 +34,9 @@ export default function AIChat() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [isActive, setIsActive] = useState(true);
-  const [fcmToken, setFcmToken] = useState<string | null>(null);
 
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
-
-  // Fetch FCM token from Firestore
-  const fetchFcmToken = async () => {
-    try {
-      const user = auth.currentUser;
-      if (!user) return;
-
-      const docRef = doc(db, "users", user.uid);
-      const docSnap = await getDoc(docRef);
-
-      if (docSnap.exists()) {
-        const data = docSnap.data();
-        if (data.fcmToken) {
-          setFcmToken(data.fcmToken);
-          console.log("Fetched FCM Token from DB:", data.fcmToken);
-        }
-      }
-    } catch (err) {
-      console.error("Error fetching FCM token:", err);
-    }
-  };
-
-  useEffect(() => {
-    fetchFcmToken();
-  }, []);
 
   const sendMessage = async () => {
     if (!input.trim()) return;
@@ -88,25 +61,6 @@ export default function AIChat() {
         sender: "ATOM",
       };
       setMessages((prev) => [aiMessage, ...prev]);
-
-      // 🔔 Send push notification via FCM server (backend/API call)
-      if (fcmToken) {
-        await fetch("https://fcm.googleapis.com/fcm/send", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `key=YOUR_SERVER_KEY`, // <-- from Firebase console
-          },
-          body: JSON.stringify({
-            to: fcmToken,
-            notification: {
-              title: "ATOM Reply",
-              body: aiMessage.text,
-            },
-            data: { screen: "chat" },
-          }),
-        });
-      }
     } catch (err) {
       const errorMessage: Message = {
         id: Date.now().toString() + "-err",
