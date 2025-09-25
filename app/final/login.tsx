@@ -33,7 +33,7 @@ export default function AuthDemo({ navigation }: any) {
             setUserData({ email: user.email || "" });
           }
           // Navigate to main screen if logged in
-          navigation.replace("HomeScreen"); 
+          navigation.replace("explore"); 
         } catch (err) {
           console.error("Error fetching user data:", err);
         }
