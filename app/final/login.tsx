@@ -17,10 +17,12 @@ import {
   User
 } from "firebase/auth";
 import { doc, setDoc, getDoc } from "firebase/firestore";
+import messaging from '@react-native-firebase/messaging';
 
 interface IUserData {
   email: string;
   createdAt?: string;
+  fcmToken?: string;
 }
 
 export default function AuthDemo({ navigation }: any) {
@@ -30,7 +32,44 @@ export default function AuthDemo({ navigation }: any) {
   const [loading, setLoading] = useState(true);
 
   const colorScheme = useColorScheme();
-  const isDark = colorScheme === "dark"; // true if system dark mode enabled
+  const isDark = colorScheme === "dark";
+
+  // Register device for push notifications and save token
+  const registerForPushNotifications = async (uid: string) => {
+    try {
+      const authStatus = await messaging().requestPermission();
+      const enabled =
+        authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
+        authStatus === messaging.AuthorizationStatus.PROVISIONAL;
+
+      if (!enabled) {
+        console.log("Notification permission denied");
+        return;
+      }
+
+      const fcmToken = await messaging().getToken();
+      console.log("FCM Token:", fcmToken);
+
+      // Save token with user info in Firestore
+      await setDoc(
+        doc(db, "users", uid),
+        { fcmToken, updatedAt: new Date().toISOString() },
+        { merge: true }
+      );
+
+      // Listen for token refresh
+      messaging().onTokenRefresh(async newToken => {
+        console.log("FCM Token refreshed:", newToken);
+        await setDoc(
+          doc(db, "users", uid),
+          { fcmToken: newToken, updatedAt: new Date().toISOString() },
+          { merge: true }
+        );
+      });
+    } catch (err) {
+      console.error("FCM registration error:", err);
+    }
+  };
 
   // Listen for auth state changes
   useEffect(() => {
@@ -44,7 +83,11 @@ export default function AuthDemo({ navigation }: any) {
           } else {
             setUserData({ email: user.email || "" });
           }
-          navigation.replace("explore"); 
+
+          // Register device for push notifications
+          await registerForPushNotifications(user.uid);
+
+          navigation.replace("explore");
         } catch (err) {
           console.error("Error fetching user data:", err);
         }
@@ -57,6 +100,7 @@ export default function AuthDemo({ navigation }: any) {
     return () => unsubscribe();
   }, []);
 
+  // Sign up user
   const signUp = async () => {
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
@@ -67,12 +111,16 @@ export default function AuthDemo({ navigation }: any) {
         createdAt: new Date().toISOString(),
       });
 
+      // Register device for push notifications
+      await registerForPushNotifications(user.uid);
+
       Alert.alert("Success", "User registered!");
     } catch (err: any) {
       Alert.alert("Error", err.message);
     }
   };
 
+  // Sign in user
   const signIn = async () => {
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
@@ -88,8 +136,11 @@ export default function AuthDemo({ navigation }: any) {
         });
       }
 
+      // Register device for push notifications
+      await registerForPushNotifications(user.uid);
+
       Alert.alert("Success", "User signed in!");
-      navigation.replace("explore"); 
+      navigation.replace("explore");
     } catch (err: any) {
       Alert.alert("Error", err.message);
     }
@@ -109,7 +160,7 @@ export default function AuthDemo({ navigation }: any) {
           <TextInput
             style={[
               styles.input,
-              { 
+              {
                 backgroundColor: isDark ? "#1c1c1e" : "#fff",
                 color: isDark ? "#f5f5f5" : "#000",
                 borderColor: isDark ? "#333" : "#ccc"
@@ -125,7 +176,7 @@ export default function AuthDemo({ navigation }: any) {
           <TextInput
             style={[
               styles.input,
-              { 
+              {
                 backgroundColor: isDark ? "#1c1c1e" : "#fff",
                 color: isDark ? "#f5f5f5" : "#000",
                 borderColor: isDark ? "#333" : "#ccc"
@@ -147,20 +198,7 @@ export default function AuthDemo({ navigation }: any) {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: "center",
-    padding: 20,
-  },
-  input: {
-    height: 50,
-    borderWidth: 1,
-    marginBottom: 15,
-    paddingHorizontal: 10,
-    borderRadius: 5,
-  },
-  text: {
-    fontSize: 18,
-    fontWeight: "600",
-  },
+  container: { flex: 1, justifyContent: "center", padding: 20 },
+  input: { height: 50, borderWidth: 1, marginBottom: 15, paddingHorizontal: 10, borderRadius: 5 },
+  text: { fontSize: 18, fontWeight: "600" },
 });
