@@ -34,7 +34,7 @@ const sampleTransactions: Transaction[] = [
 ];
 
 export default function FinanceDashboard() {
-  const accountBalance = 120000;
+  const accountBalance = 500;
   const balanceThreshold = 100000;
 
   const renderTransaction = ({ item }: { item: Transaction }) => (
@@ -90,7 +90,7 @@ export default function FinanceDashboard() {
       <View style={styles.summaryRow}>
         <TouchableOpacity style={[styles.summaryCard, { flex: 1, marginRight: 10 }]}>
           <Text style={styles.summaryLabel}>Savings</Text>
-          <Text style={styles.summaryAmount}>5,600 UGX</Text>
+          <Text style={styles.summaryAmount}>0.000 UGX</Text>
         </TouchableOpacity>
         <TouchableOpacity style={[styles.summaryCard, { flex: 1, marginLeft: 10 }]}>
           <Text style={styles.summaryLabel}>Loans</Text>
