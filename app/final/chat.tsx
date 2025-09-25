@@ -15,7 +15,7 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import Video from "react-native-video";
-import { auth, db } from "./firebase";
+import { auth, db } from "../firebase";
 import { doc, getDoc } from "firebase/firestore";
 
 type Message = {
