@@ -17,12 +17,10 @@ import {
   User
 } from "firebase/auth";
 import { doc, setDoc, getDoc } from "firebase/firestore";
-import messaging from '@react-native-firebase/messaging';
 
 interface IUserData {
   email: string;
   createdAt?: string;
-  fcmToken?: string;
 }
 
 export default function AuthDemo({ navigation }: any) {
@@ -33,43 +31,6 @@ export default function AuthDemo({ navigation }: any) {
 
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
-
-  // Register device for push notifications and save token
-  const registerForPushNotifications = async (uid: string) => {
-    try {
-      const authStatus = await messaging().requestPermission();
-      const enabled =
-        authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
-        authStatus === messaging.AuthorizationStatus.PROVISIONAL;
-
-      if (!enabled) {
-        console.log("Notification permission denied");
-        return;
-      }
-
-      const fcmToken = await messaging().getToken();
-      console.log("FCM Token:", fcmToken);
-
-      // Save token with user info in Firestore
-      await setDoc(
-        doc(db, "users", uid),
-        { fcmToken, updatedAt: new Date().toISOString() },
-        { merge: true }
-      );
-
-      // Listen for token refresh
-      messaging().onTokenRefresh(async newToken => {
-        console.log("FCM Token refreshed:", newToken);
-        await setDoc(
-          doc(db, "users", uid),
-          { fcmToken: newToken, updatedAt: new Date().toISOString() },
-          { merge: true }
-        );
-      });
-    } catch (err) {
-      console.error("FCM registration error:", err);
-    }
-  };
 
   // Listen for auth state changes
   useEffect(() => {
@@ -83,9 +44,6 @@ export default function AuthDemo({ navigation }: any) {
           } else {
             setUserData({ email: user.email || "" });
           }
-
-          // Register device for push notifications
-          await registerForPushNotifications(user.uid);
 
           navigation.replace("explore");
         } catch (err) {
@@ -111,9 +69,6 @@ export default function AuthDemo({ navigation }: any) {
         createdAt: new Date().toISOString(),
       });
 
-      // Register device for push notifications
-      await registerForPushNotifications(user.uid);
-
       Alert.alert("Success", "User registered!");
     } catch (err: any) {
       Alert.alert("Error", err.message);
@@ -135,9 +90,6 @@ export default function AuthDemo({ navigation }: any) {
           createdAt: new Date().toISOString(),
         });
       }
-
-      // Register device for push notifications
-      await registerForPushNotifications(user.uid);
 
       Alert.alert("Success", "User signed in!");
       navigation.replace("explore");
