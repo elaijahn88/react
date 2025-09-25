@@ -29,7 +29,7 @@ const { width } = Dimensions.get("window");
 
 export default function AIChat() {
   const [messages, setMessages] = useState<Message[]>([
-    { id: "welcome", text: "WELCOME...aTOM", sender: "ATOM" },
+    { id: "welcome", text: "WELCOME...aTOM", sender: "***M" },
   ]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
