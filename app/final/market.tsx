@@ -48,7 +48,7 @@ const products: Product[] = [
     image: 'https://xlijah.com/pics/sunglasses.jpg',
   },
   {
-    id: '5',
+    id: '6',
     name: 'iphone.12',
     price: 50,
     image: 'https://xlijah.com/pics/iphone.jpg',
