@@ -78,7 +78,7 @@ export default function AIChat() {
         <Video
           source={{ uri: item.videoUrl }}
           style={styles.video}
-          controls
+          controls={false}
           resizeMode="contain"
         />
       )}
