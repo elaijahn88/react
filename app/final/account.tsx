@@ -86,7 +86,7 @@ export default function DashboardScreen() {
         </View>
       ))}
 
-      <Text style={styles.sectionTitle}><<Money>></Text>
+      <Text style={styles.sectionTitle}>Money</Text>
       <View style={styles.card}>
         <TextInput
           style={styles.input}
