@@ -15,7 +15,7 @@ export default function App() {
   const [user, setUser] = useState({
     name: "Atom services",
     email: "jah@icloud.com",
-    avatar: "https://via.placeholder.com/120",
+    avatar: "https://xlijah/pics/icon.png",
   });
 
   const [editing, setEditing] = useState(false);
@@ -47,12 +47,12 @@ export default function App() {
             onPress={() => setEditing(true)}
           >
             <Ionicons name="create-outline" size={20} color="white" />
-            <Text style={styles.buttonText}>Edit Profile</Text>
+            <Text style={styles.buttonText}>+Prof</Text>
           </TouchableOpacity>
         </>
       ) : (
         <>
-          <Text style={styles.sectionTitle}>Edit Profile</Text>
+          <Text style={styles.sectionTitle}>+Prof</Text>
           <TextInput
             value={name}
             onChangeText={setName}
@@ -74,7 +74,7 @@ export default function App() {
             }}
           >
             <Ionicons name="save-outline" size={20} color="white" />
-            <Text style={styles.buttonText}>Save Changes</Text>
+            <Text style={styles.buttonText}>Save </Text>
           </TouchableOpacity>
         </>
       )}
