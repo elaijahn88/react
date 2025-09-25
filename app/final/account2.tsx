@@ -10,7 +10,7 @@ import {
   Alert,
 } from "react-native";
 import Video from "react-native-video";
-import { db, auth } from "./firebase"; // adjust path
+import { db, auth } from "../firebase"; // adjust path
 import { doc, setDoc, updateDoc, arrayUnion, getDoc } from "firebase/firestore";
 
 const { width } = Dimensions.get("window");
