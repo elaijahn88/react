@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from "react";
 import {
   View,
   FlatList,
@@ -8,8 +8,8 @@ import {
   StyleSheet,
   Dimensions,
   Linking,
-  Alert,
-} from 'react-native';
+} from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 
 type Product = {
   id: string;
@@ -19,150 +19,179 @@ type Product = {
 };
 
 const products: Product[] = [
-  {
-    id: '1',
-    name: 'Nike Sneakers',
-    price: 120,
-    image: 'https://xlijah.com/pics/sneaker.jpg',
-  },
-  {
-    id: '2',
-    name: 'Apple Watch',
-    price: 250,
-    image: 'https://xlijah.com/pics/apple_watch.jpg',
-  },
-  {
-    id: '3',
-    name: 'Bluetooth Headphones',
-    price: 80,
-    image: 'https://xlijah.com/pics/bluetooth.webp',
-  },
-  {
-    id: '4',
-    name: 'Leather Bag',
-    price: 150,
-    image: 'https://xlijah.com/pics/bag.webp',
-  },
-  {
-    id: '5',
-    name: 'Sunglasses',
-    price: 50,
-    image: 'https://xlijah.com/pics/sunglasses.jpg',
-  },
-  {
-    id: '6',
-    name: 'iPhone 12',
-    price: 999,
-    image: 'https://xlijah.com/pics/iphone.jpg',
-  },
+  { id: "1", name: "Nike Sneakers", price: 120, image: "https://xlijah.com/pics/sneaker.jpg" },
+  { id: "2", name: "Apple Watch", price: 250, image: "https://xlijah.com/pics/apple_watch.jpg" },
+  { id: "3", name: "Bluetooth Headphones", price: 80, image: "https://xlijah.com/pics/bluetooth.webp" },
+  { id: "4", name: "Leather Bag", price: 150, image: "https://xlijah.com/pics/bag.webp" },
+  { id: "5", name: "Sunglasses", price: 50, image: "https://xlijah.com/pics/sunglasses.jpg" },
+  { id: "6", name: "iPhone 12", price: 999, image: "https://xlijah.com/pics/iphone.jpg" },
 ];
 
-const { width } = Dimensions.get('window');
+const { width } = Dimensions.get("window");
 const CARD_WIDTH = (width - 40) / 2;
+const phoneNumber = "0746524088"; // Local phone number to call
 
-const phoneNumber = '256746524088'; // Uganda (+256) international format
-
-// Function to open WhatsApp
-const sendWhatsAppMessage = (item: Product) => {
-  const message = `Hello, I'm interested in buying *${item.name}* for $${item.price}`;
-  const url = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
-  
-  Linking.canOpenURL(url)
-    .then((supported) => {
-      if (supported) {
-        Linking.openURL(url);
-      } else {
-        Alert.alert('Error', 'WhatsApp is not installed on this device.');
-      }
-    })
-    .catch((err) => console.error('An error occurred', err));
+// Function to call seller
+const callSeller = () => {
+  Linking.openURL(`tel:${phoneNumber}`).catch(() =>
+    console.error("Phone app not available")
+  );
 };
 
-const ProductCard = ({ item }: { item: Product }) => (
-  <View style={styles.card}>
-    <Image source={{ uri: item.image }} style={styles.image} />
-    <Text style={styles.title} numberOfLines={2}>{item.name}</Text>
-    <Text style={styles.price}>${item.price.toFixed(2)}</Text>
-    <TouchableOpacity
-      style={styles.button}
-      onPress={() => sendWhatsAppMessage(item)}
-    >
-      <Text style={styles.buttonText}>+Cart</Text>
-    </TouchableOpacity>
-  </View>
-);
+const ProductCard = ({
+  item,
+  onQuantityChange,
+}: {
+  item: Product;
+  onQuantityChange: (id: string, qty: number) => void;
+}) => {
+  const [quantity, setQuantity] = useState(0);
+
+  const updateQuantity = (newQty: number) => {
+    const safeQty = Math.max(newQty, 0);
+    setQuantity(safeQty);
+    onQuantityChange(item.id, safeQty);
+  };
+
+  return (
+    <View style={styles.card}>
+      <Image source={{ uri: item.image }} style={styles.image} />
+      <Text style={styles.title} numberOfLines={2}>
+        {item.name}
+      </Text>
+      <Text style={styles.price}>${item.price.toFixed(2)}</Text>
+
+      {/* Quantity Selector */}
+      <View style={styles.quantityRow}>
+        <TouchableOpacity
+          style={styles.qtyButton}
+          onPress={() => updateQuantity(quantity - 1)}
+        >
+          <Text style={styles.qtyButtonText}>-</Text>
+        </TouchableOpacity>
+
+        <Text style={styles.qtyText}>{quantity}</Text>
+
+        <TouchableOpacity
+          style={styles.qtyButton}
+          onPress={() => updateQuantity(quantity + 1)}
+        >
+          <Text style={styles.qtyButtonText}>+</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Call Seller */}
+      <TouchableOpacity
+        style={[styles.button, quantity === 0 && { backgroundColor: "#ccc" }]}
+        onPress={callSeller}
+        disabled={quantity === 0}
+      >
+        <Text style={styles.buttonText}>+Cart</Text>
+      </TouchableOpacity>
+    </View>
+  );
+};
 
 export default function Marketplace() {
+  const [cart, setCart] = useState<{ [key: string]: number }>({});
+
+  const handleQuantityChange = (id: string, qty: number) => {
+    setCart((prev) => {
+      const updated = { ...prev, [id]: qty };
+      if (qty === 0) delete updated[id]; // remove if qty = 0
+      return updated;
+    });
+  };
+
+  const totalItems = Object.values(cart).reduce((sum, qty) => sum + qty, 0);
+
   return (
     <View style={styles.container}>
       <Text style={styles.header}>Market</Text>
       <FlatList
         data={products}
-        renderItem={({ item }) => <ProductCard item={item} />}
+        renderItem={({ item }) => (
+          <ProductCard item={item} onQuantityChange={handleQuantityChange} />
+        )}
         keyExtractor={(item) => item.id}
         numColumns={2}
         contentContainerStyle={styles.list}
         showsVerticalScrollIndicator={false}
       />
+
+      {/* Floating Cart Icon */}
+      {totalItems > 0 && (
+        <TouchableOpacity style={styles.cartIcon} onPress={callSeller}>
+          <Ionicons name="cart" size={28} color="#fff" />
+          <View style={styles.cartBadge}>
+            <Text style={styles.cartBadgeText}>{totalItems}</Text>
+          </View>
+        </TouchableOpacity>
+      )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f2f2f2',
-    paddingTop: 50,
-  },
-  header: {
-    fontSize: 26,
-    fontWeight: 'bold',
-    paddingHorizontal: 16,
-    paddingBottom: 10,
-  },
-  list: {
-    paddingHorizontal: 10,
-    paddingBottom: 20,
-  },
+  container: { flex: 1, backgroundColor: "#f2f2f2", paddingTop: 50 },
+  header: { fontSize: 26, fontWeight: "bold", paddingHorizontal: 16, paddingBottom: 10 },
+  list: { paddingHorizontal: 10, paddingBottom: 20 },
   card: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderRadius: 12,
     margin: 10,
     width: CARD_WIDTH,
     padding: 12,
-    alignItems: 'center',
-    shadowColor: '#000',
+    alignItems: "center",
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.1,
     shadowRadius: 5,
-    elevation: 5, // for Android shadow
+    elevation: 5,
   },
-  image: {
-    width: CARD_WIDTH - 24,
-    height: CARD_WIDTH - 24,
-    borderRadius: 12,
-  },
-  title: {
-    fontSize: 16,
-    marginTop: 10,
-    fontWeight: '600',
-    textAlign: 'center',
-  },
-  price: {
-    fontSize: 16,
-    color: '#00a650',
-    fontWeight: 'bold',
-    marginTop: 6,
-  },
+  image: { width: CARD_WIDTH - 24, height: CARD_WIDTH - 24, borderRadius: 12 },
+  title: { fontSize: 16, marginTop: 10, fontWeight: "600", textAlign: "center" },
+  price: { fontSize: 16, color: "#00a650", fontWeight: "bold", marginTop: 6 },
   button: {
     marginTop: 10,
-    backgroundColor: '#007aff',
+    backgroundColor: "#007aff",
     borderRadius: 8,
     paddingVertical: 8,
     paddingHorizontal: 20,
   },
-  buttonText: {
-    color: '#fff',
-    fontWeight: '600',
+  buttonText: { color: "#fff", fontWeight: "600" },
+  quantityRow: { flexDirection: "row", alignItems: "center", marginTop: 8 },
+  qtyButton: {
+    backgroundColor: "#007aff",
+    borderRadius: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
   },
+  qtyButtonText: { color: "#fff", fontSize: 18, fontWeight: "bold" },
+  qtyText: { marginHorizontal: 12, fontSize: 16, fontWeight: "600" },
+
+  // Floating cart icon
+  cartIcon: {
+    position: "absolute",
+    bottom: 30,
+    right: 20,
+    backgroundColor: "#007aff",
+    borderRadius: 30,
+    padding: 15,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  cartBadge: {
+    position: "absolute",
+    top: 5,
+    right: 5,
+    backgroundColor: "red",
+    borderRadius: 10,
+    paddingHorizontal: 5,
+    paddingVertical: 2,
+  },
+  cartBadgeText: { color: "#fff", fontSize: 12, fontWeight: "bold" },
 });
