@@ -61,7 +61,7 @@ export default function DashboardScreen() {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.sectionTitle}>[.]..[.]..[.]</Text>
+      <Text style={styles.sectionTitle}>..</Text>
       {videos.map((video, idx) => (
         <View key={idx} style={styles.card}>
           <Text style={styles.videoTitle}>{video.title}</Text>
@@ -104,7 +104,7 @@ export default function DashboardScreen() {
           keyboardType="numeric"
         />
         <TouchableOpacity style={styles.sendButton} onPress={sendMoney}>
-          <Text style={styles.sendButtonText}>Send-->></Text>
+          <Text style={styles.sendButtonText}>Send</Text>
         </TouchableOpacity>
       </View>
 
