@@ -7,7 +7,11 @@ import {
   TouchableOpacity,
   StyleSheet,
   Dimensions,
-  Linking,
+  TextInput,
+  Modal,
+  ScrollView,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
@@ -29,16 +33,7 @@ const initialProducts: Product[] = [
 
 const { width } = Dimensions.get("window");
 const CARD_WIDTH = (width - 40) / 2;
-const phoneNumber = "0746524088";
 
-// Call seller
-const callSeller = () => {
-  Linking.openURL(`tel:${phoneNumber}`).catch(() =>
-    console.error("Phone app not available")
-  );
-};
-
-// Product Card Component
 const ProductCard = ({
   item,
   onQuantityChange,
@@ -86,7 +81,7 @@ const ProductCard = ({
       {/* Add to Cart */}
       <TouchableOpacity
         style={[styles.button, quantity === 0 && { backgroundColor: "#ccc" }]}
-        onPress={callSeller}
+        onPress={() => onQuantityChange(item.id, quantity)} // Just keep quantity update here
         disabled={quantity === 0}
       >
         <Text style={styles.buttonText}>+Cart</Text>
@@ -103,10 +98,17 @@ const ProductCard = ({
   );
 };
 
-// Marketplace Component
 export default function Marketplace() {
   const [cart, setCart] = useState<{ [key: string]: number }>({});
   const [productList, setProductList] = useState<Product[]>(initialProducts);
+
+  // Payment Modal State
+  const [paymentVisible, setPaymentVisible] = useState(false);
+
+  // Payment form state
+  const [cardNumber, setCardNumber] = useState("");
+  const [expiry, setExpiry] = useState("");
+  const [cvv, setCvv] = useState("");
 
   const handleQuantityChange = (id: string, qty: number) => {
     setCart((prev) => {
@@ -124,7 +126,7 @@ export default function Marketplace() {
               ...product,
               name: "RANGE_ROVER",
               price: 2000,
-              image: "https://xlijah.com/pics/range_rover.jpg", // Replace with any new image URL
+              image: "https://xlijah.com/pics/range_rover.jpg",
             }
           : product
       )
@@ -132,6 +134,24 @@ export default function Marketplace() {
   };
 
   const totalItems = Object.values(cart).reduce((sum, qty) => sum + qty, 0);
+
+  // Payment submit handler (just fake here)
+  const handlePaymentSubmit = () => {
+    if (cardNumber.length < 16 || expiry.length < 4 || cvv.length < 3) {
+      alert("Please enter valid payment details.");
+      return;
+    }
+    alert("Payment successful! Thank you for your purchase.");
+    setPaymentVisible(false);
+
+    // Clear payment form
+    setCardNumber("");
+    setExpiry("");
+    setCvv("");
+
+    // Clear cart after payment
+    setCart({});
+  };
 
   return (
     <View style={styles.container}>
@@ -154,13 +174,74 @@ export default function Marketplace() {
 
       {/* Floating Cart Icon */}
       {totalItems > 0 && (
-        <TouchableOpacity style={styles.cartIcon} onPress={callSeller}>
+        <TouchableOpacity
+          style={styles.cartIcon}
+          onPress={() => setPaymentVisible(true)}
+        >
           <Ionicons name="cart" size={28} color="#fff" />
           <View style={styles.cartBadge}>
             <Text style={styles.cartBadgeText}>{totalItems}</Text>
           </View>
         </TouchableOpacity>
       )}
+
+      {/* Payment Modal */}
+      <Modal
+        visible={paymentVisible}
+        animationType="slide"
+        transparent
+        onRequestClose={() => setPaymentVisible(false)}
+      >
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : undefined}
+          style={styles.modalContainer}
+        >
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Payment Details</Text>
+
+            <ScrollView>
+              <TextInput
+                style={styles.input}
+                placeholder="Card Number"
+                keyboardType="number-pad"
+                maxLength={16}
+                value={cardNumber}
+                onChangeText={setCardNumber}
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Expiry MM/YY"
+                maxLength={5}
+                value={expiry}
+                onChangeText={setExpiry}
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="CVV"
+                keyboardType="number-pad"
+                maxLength={4}
+                secureTextEntry
+                value={cvv}
+                onChangeText={setCvv}
+              />
+
+              <TouchableOpacity
+                style={[styles.button, { marginTop: 20 }]}
+                onPress={handlePaymentSubmit}
+              >
+                <Text style={styles.buttonText}>Pay Now</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.button, { backgroundColor: "#888", marginTop: 12 }]}
+                onPress={() => setPaymentVisible(false)}
+              >
+                <Text style={styles.buttonText}>Cancel</Text>
+              </TouchableOpacity>
+            </ScrollView>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
     </View>
   );
 }
@@ -194,7 +275,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 20,
   },
-  buttonText: { color: "#fff", fontWeight: "600" },
+  buttonText: { color: "#fff", fontWeight: "600", textAlign: "center" },
 
   quantityRow: { flexDirection: "row", alignItems: "center", marginTop: 8 },
   qtyButton: {
@@ -230,4 +311,32 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
   },
   cartBadgeText: { color: "#fff", fontSize: 12, fontWeight: "bold" },
+
+  // Modal styles
+  modalContainer: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    paddingHorizontal: 20,
+  },
+  modalContent: {
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    padding: 20,
+    maxHeight: "80%",
+  },
+  modalTitle: {
+    fontSize: 22,
+    fontWeight: "bold",
+    marginBottom: 20,
+    textAlign: "center",
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 16,
+    fontSize: 16,
+  },
 });
