@@ -20,14 +20,18 @@ type Message = {
   id: string;
   text?: string;
   videoUrl?: string;
-  sender: "user" | "ai" | "ATOM" | "system";
+  sender: "user" | "ai" | "ATOM" | string; // allow string for random names
 };
 
 const { width } = Dimensions.get("window");
 
+const randomNames = ["Alice", "Bob", "Charlie", "Diana", "Eve"];
+
 export default function AIChat() {
+  const initialSender = randomNames[Math.floor(Math.random() * randomNames.length)];
+
   const [messages, setMessages] = useState<Message[]>([
-    { id: "welcome", text: "👋 Welcome to ATOM", sender: "system" },
+    { id: "1", text: "👋 Welcome to ATOM", sender: initialSender },
   ]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
