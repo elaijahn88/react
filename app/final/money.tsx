@@ -29,7 +29,7 @@ const getCurrentDateTime = () => {
 const sampleTransactions: Transaction[] = [
   { id: "1", title: "Salary", amount: 1200, type: "income", date: getCurrentDateTime() },
   { id: "2", title: "Coffee", amount: 4500, type: "expense", date: getCurrentDateTime() },
-  { id: "3", title: "Tutur", amount: 4500, type: "income", date: getCurrentDateTime() },
+  { id: "3", title: "Kfc", amount: 4500, type: "income", date: getCurrentDateTime() },
   { id: "4", title: "Iphones", amount: 65000, type: "expense", date: getCurrentDateTime() },
 ];
 
