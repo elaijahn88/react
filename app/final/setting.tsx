@@ -11,15 +11,17 @@ import {
   useColorScheme,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
 
 export default function ProfileScreen() {
+  const navigation = useNavigation();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
 
   const [user, setUser] = useState({
     name: "Atom",
     email: "jah@icloud.com",
-    avatar: "https://xlijah.com/pics/icon.png", // Updated avatar link
+    avatar: "https://xlijah.com/pics/icon.png",
   });
 
   const [editing, setEditing] = useState(false);
@@ -28,6 +30,9 @@ export default function ProfileScreen() {
 
   const [notifications, setNotifications] = useState(true);
   const [darkMode, setDarkMode] = useState(isDark);
+
+  const [hobby, setHobby] = useState(""); // New state for hobby input
+  const [askingHobby, setAskingHobby] = useState(false); // Toggle input visibility
 
   const bgColor = isDark ? "#121212" : "#f9f9f9";
   const cardBg = isDark ? "#1c1c1e" : "#fff";
@@ -85,7 +90,47 @@ export default function ProfileScreen() {
             }}
           >
             <Ionicons name="save-outline" size={20} color="white" />
-            <Text style={styles.buttonText}>Save </Text>
+            <Text style={styles.buttonText}>Save</Text>
+          </TouchableOpacity>
+        </>
+      )}
+
+      {/* Ask Hobby Button */}
+      <TouchableOpacity
+        style={styles.button}
+        onPress={() => setAskingHobby(true)}
+      >
+        <Ionicons name="chatbubble-ellipses-outline" size={20} color="white" />
+        <Text style={styles.buttonText}>Ask Hobby</Text>
+      </TouchableOpacity>
+
+      {/* Hobby Input Field */}
+      {askingHobby && (
+        <>
+          <TextInput
+            value={hobby}
+            onChangeText={setHobby}
+            placeholder="What's your hobby?"
+            placeholderTextColor={secondaryText}
+            style={[
+              styles.input,
+              {
+                backgroundColor: cardBg,
+                color: textColor,
+                borderColor: isDark ? "#333" : "#ccc",
+              },
+            ]}
+          />
+          <TouchableOpacity
+            style={styles.button}
+            onPress={() => {
+              console.log("User's hobby:", hobby);
+              setHobby("");
+              setAskingHobby(false);
+            }}
+          >
+            <Ionicons name="checkmark-outline" size={20} color="white" />
+            <Text style={styles.buttonText}>Submit Hobby</Text>
           </TouchableOpacity>
         </>
       )}
@@ -127,7 +172,17 @@ export default function ProfileScreen() {
       {/* Logout */}
       <TouchableOpacity
         style={[styles.button, { backgroundColor: "red" }]}
-        onPress={() => alert("Logout feature coming soon!")}
+        onPress={() => {
+          // Do something else on logout
+          setUser({
+            name: "",
+            email: "",
+            avatar: "https://xlijah.com/pics/icon.png",
+          });
+          setNotifications(false);
+          setDarkMode(false);
+          console.log("User logged out — local data cleared.");
+        }}
       >
         <Ionicons name="log-out-outline" size={20} color="white" />
         <Text style={styles.buttonText}>Logout</Text>
@@ -174,6 +229,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 8,
     padding: 10,
+    marginTop: 10,
     marginBottom: 10,
     width: "100%",
   },
