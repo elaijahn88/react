@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -15,21 +15,19 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import Video from "react-native-video";
-import { auth, db } from "../firebase";
-import { doc, getDoc } from "firebase/firestore";
 
 type Message = {
   id: string;
   text?: string;
   videoUrl?: string;
-  sender: "user" | "ai" | "ATOM";
+  sender: "user" | "ai" | "ATOM" | "system";
 };
 
 const { width } = Dimensions.get("window");
 
 export default function AIChat() {
   const [messages, setMessages] = useState<Message[]>([
-    { id: "welcome", text: "", sender: "" },
+    { id: "welcome", text: "👋 Welcome to ATOM", sender: "system" },
   ]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -51,7 +49,7 @@ export default function AIChat() {
     setLoading(true);
 
     try {
-      // Simulate AI API response
+      // Simulate API
       await new Promise((resolve) => setTimeout(resolve, 1500));
 
       const aiMessage: Message = {
@@ -64,8 +62,8 @@ export default function AIChat() {
     } catch (err) {
       const errorMessage: Message = {
         id: Date.now().toString() + "-err",
-        text: "❌ RESP_FAIL_TRY_AGAIN.",
-        sender: "ai",
+        text: "⚠️ Failed to send. Try again.",
+        sender: "system",
       };
       setMessages((prev) => [errorMessage, ...prev]);
     } finally {
@@ -73,26 +71,37 @@ export default function AIChat() {
     }
   };
 
-  const renderItem = ({ item }: { item: Message }) => (
-    <View
-      style={[
-        styles.message,
-        item.sender === "user"
-          ? { ...styles.userMessage, backgroundColor: isDark ? "#056D4E" : "#DCF8C6" }
-          : { ...styles.aiMessage, backgroundColor: isDark ? "#333" : "#ECECEC" },
-      ]}
-    >
-      {item.text && <Text style={{ color: isDark ? "#f5f5f5" : "#000" }}>{item.text}</Text>}
-      {item.videoUrl && (
-        <Video
-          source={{ uri: item.videoUrl }}
-          style={styles.video}
-          controls={false}
-          resizeMode="contain"
-        />
-      )}
-    </View>
-  );
+  const renderItem = ({ item }: { item: Message }) => {
+    const isUser = item.sender === "user";
+    const isSystem = item.sender === "system";
+
+    return (
+      <View
+        style={[
+          styles.message,
+          isSystem
+            ? styles.systemCard
+            : isUser
+            ? { ...styles.userMessage, backgroundColor: isDark ? "#056D4E" : "#DCF8C6" }
+            : { ...styles.aiMessage, backgroundColor: isDark ? "#333" : "#ECECEC" },
+        ]}
+      >
+        {item.text && (
+          <Text style={{ color: isDark && !isSystem ? "#f5f5f5" : "#000" }}>
+            {item.text}
+          </Text>
+        )}
+        {item.videoUrl && (
+          <Video
+            source={{ uri: item.videoUrl }}
+            style={styles.video}
+            controls={false}
+            resizeMode="contain"
+          />
+        )}
+      </View>
+    );
+  };
 
   return (
     <KeyboardAvoidingView
@@ -101,6 +110,7 @@ export default function AIChat() {
       keyboardVerticalOffset={90}
     >
       <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />
+      {/* Header */}
       <View style={[styles.header, { backgroundColor: "#075E54" }]}>
         <Ionicons name="person-circle" size={40} color="#fff" />
         <View style={{ marginLeft: 10 }}>
@@ -117,6 +127,7 @@ export default function AIChat() {
         </View>
       </View>
 
+      {/* Chat Messages */}
       <FlatList
         data={messages}
         renderItem={renderItem}
@@ -127,10 +138,14 @@ export default function AIChat() {
 
       {loading && <ActivityIndicator size="large" color="#25D366" />}
 
+      {/* Input */}
       <View
         style={[
           styles.inputContainer,
-          { backgroundColor: isDark ? "#121212" : "#fff", borderColor: isDark ? "#333" : "#ddd" },
+          {
+            backgroundColor: isDark ? "#121212" : "#fff",
+            borderColor: isDark ? "#333" : "#ddd",
+          },
         ]}
       >
         <TextInput
@@ -138,7 +153,10 @@ export default function AIChat() {
           onChangeText={setInput}
           style={[
             styles.input,
-            { backgroundColor: isDark ? "#1c1c1e" : "#F0F0F0", color: isDark ? "#f5f5f5" : "#000" },
+            {
+              backgroundColor: isDark ? "#1c1c1e" : "#F0F0F0",
+              color: isDark ? "#f5f5f5" : "#000",
+            },
           ]}
           placeholder="CHAT_ATOM..."
           placeholderTextColor={isDark ? "#888" : "#999"}
@@ -165,9 +183,24 @@ const styles = StyleSheet.create({
   statusDot: { width: 10, height: 10, borderRadius: 5, marginRight: 5 },
   statusText: { color: "#fff", fontSize: 12 },
 
-  message: { marginVertical: 5, padding: 10, borderRadius: 10, maxWidth: "75%" },
+  message: {
+    marginVertical: 5,
+    padding: 12,
+    borderRadius: 12,
+    maxWidth: "75%",
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 2,
+  },
   userMessage: { alignSelf: "flex-end" },
   aiMessage: { alignSelf: "flex-start" },
+  systemCard: {
+    alignSelf: "center",
+    backgroundColor: "#FFDDC1",
+    borderWidth: 1,
+    borderColor: "#FF9800",
+  },
   video: { width: width * 0.7, height: 200, marginTop: 8, borderRadius: 10 },
 
   inputContainer: {
@@ -176,7 +209,13 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     alignItems: "center",
   },
-  input: { flex: 1, height: 40, borderRadius: 20, paddingHorizontal: 15, fontSize: 16 },
+  input: {
+    flex: 1,
+    height: 40,
+    borderRadius: 20,
+    paddingHorizontal: 15,
+    fontSize: 16,
+  },
   sendButton: {
     marginLeft: 10,
     backgroundColor: "#25D366",
