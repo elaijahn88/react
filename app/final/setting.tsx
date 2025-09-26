@@ -17,7 +17,7 @@ export default function ProfileScreen() {
   const isDark = colorScheme === "dark";
 
   const [user, setUser] = useState({
-    name: "Atom services",
+    name: "Atom",
     email: "jah@icloud.com",
     avatar: "https://xlijah.com/pics/icon.png", // Updated avatar link
   });
@@ -111,7 +111,7 @@ export default function ProfileScreen() {
       <View style={[styles.toolsContainer, { backgroundColor: cardBg }]}>
         <Text style={[styles.sectionTitle, { color: textColor }]}>Settings</Text>
         <View style={styles.settingRow}>
-          <Text style={[styles.settingLabel, { color: textColor }]}>Enable Notifications</Text>
+          <Text style={[styles.settingLabel, { color: textColor }]}>notify</Text>
           <Switch value={notifications} onValueChange={setNotifications} />
         </View>
         <View style={styles.settingRow}>
@@ -119,7 +119,7 @@ export default function ProfileScreen() {
           <Switch value={darkMode} onValueChange={setDarkMode} />
         </View>
         <View style={styles.settingRow}>
-          <Text style={[styles.settingLabel, { color: textColor }]}>Privacy Mode</Text>
+          <Text style={[styles.settingLabel, { color: textColor }]}>P_Mode</Text>
           <Switch value={false} />
         </View>
       </View>
@@ -181,7 +181,7 @@ const styles = StyleSheet.create({
   toolsContainer: {
     marginTop: 25,
     width: "100%",
-    padding: 15,
+    padding: 16,
     borderRadius: 10,
     shadowColor: "#000",
     shadowOpacity: 0.1,
@@ -195,7 +195,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: "#eee",
   },
-  toolText: { fontSize: 16, marginLeft: 10, color: "#007bff" },
+  toolText: { fontSize: 14, marginLeft: 10, color: "#007bff" },
 
   settingRow: {
     flexDirection: "row",
@@ -204,5 +204,5 @@ const styles = StyleSheet.create({
     marginVertical: 10,
     paddingHorizontal: 10,
   },
-  settingLabel: { fontSize: 16 },
+  settingLabel: { fontSize: 15 },
 });
