@@ -122,9 +122,9 @@ export default function Marketplace() {
         product.id === id
           ? {
               ...product,
-              name: "Updated Product",
-              price: 1234,
-              image: "https://xlijah.com/pics/new.jpg", // Replace with any new image URL
+              name: "RANGE_ROVER",
+              price: 2000,
+              image: "https://xlijah.com/pics/range_rover.jpg", // Replace with any new image URL
             }
           : product
       )
