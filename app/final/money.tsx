@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -25,7 +25,7 @@ const getCurrentDateTime = () => {
   return now.toLocaleString(); // Example: "9/24/2025, 11:32:45 AM"
 };
 
-// 🔹 Sample transactions with updated time
+// 🔹 Sample transactions
 const sampleTransactions: Transaction[] = [
   { id: "1", title: "Salary", amount: 1200, type: "income", date: getCurrentDateTime() },
   { id: "2", title: "Coffee", amount: 4500, type: "expense", date: getCurrentDateTime() },
@@ -36,6 +36,9 @@ const sampleTransactions: Transaction[] = [
 export default function FinanceDashboard() {
   const accountBalance = 500;
   const balanceThreshold = 100000;
+
+  // 🔹 State for selected action
+  const [selectedAction, setSelectedAction] = useState<string | null>(null);
 
   const renderTransaction = ({ item }: { item: Transaction }) => (
     <View style={styles.transactionCard}>
@@ -56,10 +59,10 @@ export default function FinanceDashboard() {
 
   return (
     <ScrollView style={styles.container}>
-      {/* 🔹 Header with Profile Picture */}
+      {/* 🔹 Header */}
       <View style={styles.header}>
         <Image
-          source={{ uri: "https://xlijah/pics/icon.png" }} // replace with user profile image
+          source={{ uri: "https://xlijah/pics/icon.png" }}
           style={styles.profilePic}
         />
         <Text style={styles.headerText}>MONEY_GRAM</Text>
@@ -68,10 +71,10 @@ export default function FinanceDashboard() {
       {/* 1. Video Section */}
       <Text style={styles.sectionTitle}>Economy</Text>
       <Video
-        source={{ uri: "https://xlijah.com/ai.mp4" }} // replace with real 2-min video
+        source={{ uri: "https://xlijah.com/ai.mp4" }}
         style={styles.video}
-        controls={false} // 🔹 disables controls
-        paused={false}   // 🔹 plays automatically
+        controls={false}
+        paused={false}
         resizeMode="contain"
       />
 
@@ -88,11 +91,17 @@ export default function FinanceDashboard() {
       </View>
 
       <View style={styles.summaryRow}>
-        <TouchableOpacity style={[styles.summaryCard, { flex: 1, marginRight: 10 }]}>
+        <TouchableOpacity
+          style={[styles.summaryCard, { flex: 1, marginRight: 10 }]}
+          onPress={() => setSelectedAction("Savings")}
+        >
           <Text style={styles.summaryLabel}>Savings</Text>
           <Text style={styles.summaryAmount}>0.000 UGX</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={[styles.summaryCard, { flex: 1, marginLeft: 10 }]}>
+        <TouchableOpacity
+          style={[styles.summaryCard, { flex: 1, marginLeft: 10 }]}
+          onPress={() => setSelectedAction("Loans")}
+        >
           <Text style={styles.summaryLabel}>Loans</Text>
           <Text style={styles.summaryAmount}>0.000 UGX</Text>
         </TouchableOpacity>
@@ -101,22 +110,29 @@ export default function FinanceDashboard() {
       {/* 3. Quick Actions */}
       <Text style={styles.sectionTitle}>FST_ACT</Text>
       <View style={styles.actions}>
-        <TouchableOpacity style={styles.actionButton}>
+        <TouchableOpacity style={styles.actionButton} onPress={() => setSelectedAction("Send Money")}>
           <Text style={styles.actionText}>Send</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.actionButton}>
+        <TouchableOpacity style={styles.actionButton} onPress={() => setSelectedAction("Receive Money")}>
           <Text style={styles.actionText}>Receive</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.actionButton}>
+        <TouchableOpacity style={styles.actionButton} onPress={() => setSelectedAction("Investments")}>
           <Text style={styles.actionText}>Invest</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.actionButton}>
+        <TouchableOpacity style={styles.actionButton} onPress={() => setSelectedAction("Savings")}>
           <Text style={styles.actionText}>Savings</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.actionButton}>
+        <TouchableOpacity style={styles.actionButton} onPress={() => setSelectedAction("Loans")}>
           <Text style={styles.actionText}>Loans</Text>
         </TouchableOpacity>
       </View>
+
+      {/* 🔹 Action Card that updates */}
+      {selectedAction && (
+        <View style={styles.actionCard}>
+          <Text style={styles.actionCardText}>👉 {selectedAction} selected</Text>
+        </View>
+      )}
 
       {/* 4. Recent Transactions */}
       <Text style={styles.sectionTitle}>Trn_Hstry</Text>
@@ -181,6 +197,18 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   actionText: { fontWeight: "600", fontSize: 16 },
+
+  // 🔹 Dynamic Action Card
+  actionCard: {
+    backgroundColor: "#1e1e1e",
+    padding: 15,
+    borderRadius: 12,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: "#444",
+    alignItems: "center",
+  },
+  actionCardText: { color: "#0f0", fontSize: 16, fontWeight: "600" },
 
   transactionCard: {
     flexDirection: "row",
