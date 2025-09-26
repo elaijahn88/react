@@ -71,7 +71,6 @@ export default function DashboardScreen() {
             style={styles.video}
             resizeMode="contain"
             controls={false}
-          
             paused={pausedStates[idx]}
             onEnd={() => onEnd(idx)}
           />
@@ -164,7 +163,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   sendButton: {
-    backgroundColor: "#03dac6",
+    backgroundColor: "#25D366", // green color for send button
     paddingVertical: 12,
     paddingHorizontal: 25,
     borderRadius: 25,
