@@ -7,7 +7,6 @@ import {
   Dimensions,
   TextInput,
   TouchableOpacity,
-  Alert,
 } from "react-native";
 import Video from "react-native-video";
 import { db, auth } from "../firebase"; // adjust path
@@ -21,6 +20,18 @@ const videos = [
   { title: "AI", uri: "https://xlijah.com/ai.mp4" },
 ];
 
+// Small reusable card for system messages
+const MessageCard = ({ type, message }: { type: "error" | "success" | "info"; message: string }) => {
+  const backgroundColor =
+    type === "error" ? "#ff4d4d" : type === "success" ? "#03dac6" : "#4da6ff";
+
+  return (
+    <View style={[styles.messageCard, { backgroundColor }]}>
+      <Text style={styles.messageText}>{message}</Text>
+    </View>
+  );
+};
+
 export default function DashboardScreen() {
   // Video state
   const [pausedStates, setPausedStates] = useState(videos.map(() => true));
@@ -33,6 +44,9 @@ export default function DashboardScreen() {
     { receiver: string; amount: string; timestamp: string; proof?: string }[]
   >([]);
   const [accountBalance, setAccountBalance] = useState<number>(0);
+
+  // UI feedback
+  const [systemMessage, setSystemMessage] = useState<{ type: "error" | "success" | "info"; text: string } | null>(null);
 
   // Toggle play/pause
   const togglePause = (index: number) => {
@@ -77,6 +91,7 @@ export default function DashboardScreen() {
         });
         setAccountBalance(100000);
         setTransactions([]);
+        setSystemMessage({ type: "info", text: "New account created with balance $100,000." });
       }
     };
 
@@ -85,10 +100,16 @@ export default function DashboardScreen() {
 
   // Send money
   const sendMoney = async () => {
-    if (!receiver || !amount) return Alert.alert("Error", "Enter receiver and amount.");
+    if (!receiver || !amount) {
+      setSystemMessage({ type: "error", text: "Enter receiver and amount." });
+      return;
+    }
 
     const amtNum = parseFloat(amount);
-    if (amtNum > accountBalance) return Alert.alert("Error", "Insufficient balance.");
+    if (amtNum > accountBalance) {
+      setSystemMessage({ type: "error", text: "Insufficient balance." });
+      return;
+    }
 
     const newTx = {
       receiver,
@@ -114,9 +135,11 @@ export default function DashboardScreen() {
         transactions: arrayUnion(newTx),
         accountBalance: accountBalance - amtNum,
       });
+
+      setSystemMessage({ type: "success", text: `Sent $${amount} to ${receiver}` });
     } catch (err: any) {
       console.error("Error updating database:", err.message);
-      Alert.alert("Error", err.message);
+      setSystemMessage({ type: "error", text: `Failed: ${err.message}` });
     }
   };
 
@@ -183,6 +206,11 @@ export default function DashboardScreen() {
       ))}
 
       {transactions.length === 0 && <Text style={styles.noTx}>No transactions yet.</Text>}
+
+      {/* System messages as cards */}
+      {systemMessage && (
+        <MessageCard type={systemMessage.type} message={systemMessage.text} />
+      )}
     </ScrollView>
   );
 }
@@ -240,4 +268,13 @@ const styles = StyleSheet.create({
   },
   txText: { color: "#fff", fontSize: 14, marginBottom: 4 },
   noTx: { color: "#aaa", textAlign: "center", marginVertical: 10 },
+
+  // Message card styles
+  messageCard: {
+    marginTop: 15,
+    borderRadius: 12,
+    padding: 12,
+    alignItems: "center",
+  },
+  messageText: { color: "#fff", fontSize: 15, fontWeight: "600" },
 });
