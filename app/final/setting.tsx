@@ -8,14 +8,18 @@ import {
   TouchableOpacity,
   Image,
   ScrollView,
+  useColorScheme,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
-export default function App() {
+export default function ProfileScreen() {
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === "dark";
+
   const [user, setUser] = useState({
     name: "Atom services",
     email: "jah@icloud.com",
-    avatar: "https://xlijah/pics/icon.png",
+    avatar: "https://xlijah.com/pics/icon.png", // Updated avatar link
   });
 
   const [editing, setEditing] = useState(false);
@@ -23,10 +27,15 @@ export default function App() {
   const [email, setEmail] = useState(user.email);
 
   const [notifications, setNotifications] = useState(true);
-  const [darkMode, setDarkMode] = useState(false);
+  const [darkMode, setDarkMode] = useState(isDark);
+
+  const bgColor = isDark ? "#121212" : "#f9f9f9";
+  const cardBg = isDark ? "#1c1c1e" : "#fff";
+  const textColor = isDark ? "#fff" : "#000";
+  const secondaryText = isDark ? "#aaa" : "gray";
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
+    <ScrollView contentContainerStyle={[styles.container, { backgroundColor: bgColor }]}>
       {/* Avatar */}
       <View style={styles.avatarContainer}>
         <Image source={{ uri: user.avatar }} style={styles.avatar} />
@@ -39,8 +48,8 @@ export default function App() {
       {/* Profile Info */}
       {!editing ? (
         <>
-          <Text style={styles.name}>{user.name}</Text>
-          <Text style={styles.email}>{user.email}</Text>
+          <Text style={[styles.name, { color: textColor }]}>{user.name}</Text>
+          <Text style={[styles.email, { color: secondaryText }]}>{user.email}</Text>
 
           <TouchableOpacity
             style={styles.button}
@@ -52,19 +61,21 @@ export default function App() {
         </>
       ) : (
         <>
-          <Text style={styles.sectionTitle}>+Prof</Text>
+          <Text style={[styles.sectionTitle, { color: textColor }]}>+Prof</Text>
           <TextInput
             value={name}
             onChangeText={setName}
-            style={styles.input}
+            style={[styles.input, { backgroundColor: cardBg, color: textColor, borderColor: isDark ? "#333" : "#ccc" }]}
             placeholder="Name"
+            placeholderTextColor={secondaryText}
           />
           <TextInput
             value={email}
             onChangeText={setEmail}
-            style={styles.input}
+            style={[styles.input, { backgroundColor: cardBg, color: textColor, borderColor: isDark ? "#333" : "#ccc" }]}
             placeholder="Email"
             keyboardType="email-address"
+            placeholderTextColor={secondaryText}
           />
           <TouchableOpacity
             style={styles.button}
@@ -80,8 +91,8 @@ export default function App() {
       )}
 
       {/* Tools Section */}
-      <View style={styles.toolsContainer}>
-        <Text style={styles.sectionTitle}>Tools</Text>
+      <View style={[styles.toolsContainer, { backgroundColor: cardBg }]}>
+        <Text style={[styles.sectionTitle, { color: textColor }]}>Tools</Text>
         <TouchableOpacity style={styles.toolButton}>
           <Ionicons name="bag-outline" size={20} color="#007bff" />
           <Text style={styles.toolText}>My Orders</Text>
@@ -97,18 +108,18 @@ export default function App() {
       </View>
 
       {/* Settings Section */}
-      <View style={styles.toolsContainer}>
-        <Text style={styles.sectionTitle}>Settings</Text>
+      <View style={[styles.toolsContainer, { backgroundColor: cardBg }]}>
+        <Text style={[styles.sectionTitle, { color: textColor }]}>Settings</Text>
         <View style={styles.settingRow}>
-          <Text style={styles.settingLabel}>Enable Notifications</Text>
+          <Text style={[styles.settingLabel, { color: textColor }]}>Enable Notifications</Text>
           <Switch value={notifications} onValueChange={setNotifications} />
         </View>
         <View style={styles.settingRow}>
-          <Text style={styles.settingLabel}>Dark Mode</Text>
+          <Text style={[styles.settingLabel, { color: textColor }]}>Dark Mode</Text>
           <Switch value={darkMode} onValueChange={setDarkMode} />
         </View>
         <View style={styles.settingRow}>
-          <Text style={styles.settingLabel}>Privacy Mode</Text>
+          <Text style={[styles.settingLabel, { color: textColor }]}>Privacy Mode</Text>
           <Switch value={false} />
         </View>
       </View>
@@ -127,7 +138,7 @@ export default function App() {
 
 // ---------------- Styles ----------------
 const styles = StyleSheet.create({
-  container: { flexGrow: 1, alignItems: "center", padding: 20, backgroundColor: "#f9f9f9" },
+  container: { flexGrow: 1, alignItems: "center", padding: 20 },
 
   avatarContainer: { alignItems: "center", marginBottom: 15 },
   avatar: { width: 120, height: 120, borderRadius: 60 },
@@ -161,20 +172,16 @@ const styles = StyleSheet.create({
 
   input: {
     borderWidth: 1,
-    borderColor: "#ccc",
     borderRadius: 8,
     padding: 10,
     marginBottom: 10,
     width: "100%",
-    backgroundColor: "white",
   },
 
   toolsContainer: {
     marginTop: 25,
     width: "100%",
     padding: 15,
-    backgroundColor: "black",
-    color:"white",
     borderRadius: 10,
     shadowColor: "#000",
     shadowOpacity: 0.1,
