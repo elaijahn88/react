@@ -18,7 +18,7 @@ type Product = {
   image: string;
 };
 
-const products: Product[] = [
+const initialProducts: Product[] = [
   { id: "1", name: "Nike Sneakers", price: 120, image: "https://xlijah.com/pics/sneaker.jpg" },
   { id: "2", name: "Apple Watch", price: 250, image: "https://xlijah.com/pics/apple_watch.jpg" },
   { id: "3", name: "Bluetooth Headphones", price: 80, image: "https://xlijah.com/pics/bluetooth.webp" },
@@ -29,21 +29,24 @@ const products: Product[] = [
 
 const { width } = Dimensions.get("window");
 const CARD_WIDTH = (width - 40) / 2;
-const phoneNumber = "0746524088"; // Local phone number to call
+const phoneNumber = "0746524088";
 
-// Function to call seller
+// Call seller
 const callSeller = () => {
   Linking.openURL(`tel:${phoneNumber}`).catch(() =>
     console.error("Phone app not available")
   );
 };
 
+// Product Card Component
 const ProductCard = ({
   item,
   onQuantityChange,
+  onChangeProduct,
 }: {
   item: Product;
   onQuantityChange: (id: string, qty: number) => void;
+  onChangeProduct: (id: string) => void;
 }) => {
   const [quantity, setQuantity] = useState(0);
 
@@ -80,7 +83,7 @@ const ProductCard = ({
         </TouchableOpacity>
       </View>
 
-      {/* Call Seller */}
+      {/* Add to Cart */}
       <TouchableOpacity
         style={[styles.button, quantity === 0 && { backgroundColor: "#ccc" }]}
         onPress={callSeller}
@@ -88,19 +91,44 @@ const ProductCard = ({
       >
         <Text style={styles.buttonText}>+Cart</Text>
       </TouchableOpacity>
+
+      {/* Change Product */}
+      <TouchableOpacity
+        style={[styles.button, { backgroundColor: "#ff9500", marginTop: 8 }]}
+        onPress={() => onChangeProduct(item.id)}
+      >
+        <Text style={styles.buttonText}>Change</Text>
+      </TouchableOpacity>
     </View>
   );
 };
 
+// Marketplace Component
 export default function Marketplace() {
   const [cart, setCart] = useState<{ [key: string]: number }>({});
+  const [productList, setProductList] = useState<Product[]>(initialProducts);
 
   const handleQuantityChange = (id: string, qty: number) => {
     setCart((prev) => {
       const updated = { ...prev, [id]: qty };
-      if (qty === 0) delete updated[id]; // remove if qty = 0
+      if (qty === 0) delete updated[id];
       return updated;
     });
+  };
+
+  const handleChangeProduct = (id: string) => {
+    setProductList((prevList) =>
+      prevList.map((product) =>
+        product.id === id
+          ? {
+              ...product,
+              name: "Updated Product",
+              price: 1234,
+              image: "https://xlijah.com/pics/new.jpg", // Replace with any new image URL
+            }
+          : product
+      )
+    );
   };
 
   const totalItems = Object.values(cart).reduce((sum, qty) => sum + qty, 0);
@@ -108,10 +136,15 @@ export default function Marketplace() {
   return (
     <View style={styles.container}>
       <Text style={styles.header}>Market</Text>
+
       <FlatList
-        data={products}
+        data={productList}
         renderItem={({ item }) => (
-          <ProductCard item={item} onQuantityChange={handleQuantityChange} />
+          <ProductCard
+            item={item}
+            onQuantityChange={handleQuantityChange}
+            onChangeProduct={handleChangeProduct}
+          />
         )}
         keyExtractor={(item) => item.id}
         numColumns={2}
@@ -132,10 +165,12 @@ export default function Marketplace() {
   );
 }
 
+// Styles
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#f2f2f2", paddingTop: 50 },
   header: { fontSize: 26, fontWeight: "bold", paddingHorizontal: 16, paddingBottom: 10 },
   list: { paddingHorizontal: 10, paddingBottom: 20 },
+
   card: {
     backgroundColor: "#fff",
     borderRadius: 12,
@@ -152,14 +187,15 @@ const styles = StyleSheet.create({
   image: { width: CARD_WIDTH - 24, height: CARD_WIDTH - 24, borderRadius: 12 },
   title: { fontSize: 16, marginTop: 10, fontWeight: "600", textAlign: "center" },
   price: { fontSize: 16, color: "#00a650", fontWeight: "bold", marginTop: 6 },
+
   button: {
-    marginTop: 10,
     backgroundColor: "#007aff",
     borderRadius: 8,
     paddingVertical: 8,
     paddingHorizontal: 20,
   },
   buttonText: { color: "#fff", fontWeight: "600" },
+
   quantityRow: { flexDirection: "row", alignItems: "center", marginTop: 8 },
   qtyButton: {
     backgroundColor: "#007aff",
