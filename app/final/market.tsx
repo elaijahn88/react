@@ -36,16 +36,16 @@ const initialProducts: Product[] = [
 ];
 
 const updatedProducts: Product[] = [
-  { id: "7", name: "Range Rover", price: 70000, image: "https://xlijah.com/pics/range_rover.jpg" },
-  { id: "8", name: "Samsung Galaxy S21", price: 850, image: "https://xlijah.com/pics/galaxy_s21.jpg" },
-  { id: "9", name: "Sony Headphones", price: 150, image: "https://xlijah.com/pics/sony_headphones.jpg" },
-  { id: "10", name: "MacBook Pro", price: 2400, image: "https://xlijah.com/pics/macbook_pro.jpg" },
-  { id: "11", name: "Canon DSLR", price: 1200, image: "https://xlijah.com/pics/canon_dslr.jpg" },
-  { id: "12", name: "Fitbit Charge", price: 130, image: "https://xlijah.com/pics/fitbit_charge.jpg" },
-  { id: "13", name: "Google Pixel", price: 700, image: "https://xlijah.com/pics/google_pixel.jpg" },
-  { id: "14", name: "Kindle Paperwhite", price: 140, image: "https://xlijah.com/pics/kindle_paperwhite.jpg" },
-  { id: "15", name: "DJI Drone", price: 1200, image: "https://xlijah.com/pics/dji_drone.jpg" },
-  { id: "16", name: "Xbox Series X", price: 500, image: "https://xlijah.com/pics/xbox_series_x.jpg" },
+  { id: "7", name: "Range Rover", price: 70000, image: "https://xlijah.com/pics/pics/lenovo.jpg" },
+  { id: "8", name: "Samsung Galaxy S21", price: 850, image: "https://xlijah.com/pics/pics/macbook.jpg" },
+  { id: "9", name: "Sony Headphones", price: 150, image: "https://xlijah.com/pics/pics/mac.jpeg" },
+  { id: "10", name: "MacBook Pro", price: 2400, image: "https://xlijah.com/pics/pics/macbook_pro.jpg" },
+  { id: "11", name: "Canon DSLR", price: 1200, image: "https://xlijah.com/pics/pics/notebook.jpeg" },
+  { id: "12", name: "Fitbit Charge", price: 130, image: "https://xlijah.com/pics/pics/guns.jpeg" },
+  { id: "13", name: "Google Pixel", price: 700, image: "https://xlijah.com/pics/pics/mac.jpeg" },
+  { id: "14", name: "Kindle Paperwhite", price: 140, image: "https://xlijah.com/pics/pics/chemicals.jpeg" },
+  { id: "15", name: "DJI Drone", price: 1200, image: "https://xlijah.com/pics/pics/macbook.jpg" },
+  { id: "16", name: "Xbox Series X", price: 500, image: "https://xlijah.com/pics/pics/lenovo.jpg" },
 ];
 
 const { width } = Dimensions.get("window");
