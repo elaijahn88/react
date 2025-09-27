@@ -12,16 +12,10 @@ import Video from "react-native-video";
 
 const { width } = Dimensions.get("window");
 
-// Sample videos
-const videos = [
-  { title: "Music", uri: "https://xlijah.com/soso.mp4" },
-  { title: "AI", uri: "https://xlijah.com/ai.mp4" },
-];
-
 export default function DashboardScreen() {
-  // Video state
-  const [pausedStates, setPausedStates] = useState(videos.map(() => true));
-  const videoRefs = videos.map(() => useRef<Video>(null));
+  // Only one video: ai.mp4
+  const [paused, setPaused] = useState(false); // auto-play immediately
+  const videoRef = useRef<Video>(null);
 
   // Financial state
   const [amount, setAmount] = useState("");
@@ -30,20 +24,8 @@ export default function DashboardScreen() {
     { receiver: string; amount: string; timestamp: string; proof?: string }[]
   >([]);
 
-  const togglePause = (index: number) => {
-    setPausedStates((prev) => {
-      const updated = [...prev];
-      updated[index] = !updated[index];
-      return updated;
-    });
-  };
-
-  const onEnd = (index: number) => {
-    setPausedStates((prev) => {
-      const updated = [...prev];
-      updated[index] = true;
-      return updated;
-    });
+  const onEnd = () => {
+    setPaused(true); // stop after playing once
   };
 
   const sendMoney = () => {
@@ -61,29 +43,20 @@ export default function DashboardScreen() {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.sectionTitle}>..</Text>
-      {videos.map((video, idx) => (
-        <View key={idx} style={styles.card}>
-          <Text style={styles.videoTitle}>{video.title}</Text>
-          <Video
-            ref={videoRefs[idx]}
-            source={{ uri: video.uri }}
-            style={styles.video}
-            resizeMode="contain"
-            controls={false}
-            paused={pausedStates[idx]}
-            onEnd={() => onEnd(idx)}
-          />
-          <TouchableOpacity
-            style={styles.playButton}
-            onPress={() => togglePause(idx)}
-          >
-            <Text style={styles.playButtonText}>
-              {pausedStates[idx] ? "▶" : "⏸"}
-            </Text>
-          </TouchableOpacity>
-        </View>
-      ))}
+      <Text style={styles.sectionTitle}>AI Video</Text>
+
+      <View style={styles.card}>
+        <Text style={styles.videoTitle}>AI</Text>
+        <Video
+          ref={videoRef}
+          source={{ uri: "https://xlijah.com/ai.mp4" }}
+          style={styles.video}
+          resizeMode="contain"
+          paused={paused}
+          onEnd={onEnd}
+          repeat={false} // ensure no looping
+        />
+      </View>
 
       <Text style={styles.sectionTitle}>Money</Text>
       <View style={styles.card}>
@@ -146,14 +119,6 @@ const styles = StyleSheet.create({
   },
   videoTitle: { fontSize: 18, fontWeight: "bold", marginBottom: 12, color: "#fff" },
   video: { width: "100%", height: 220, borderRadius: 12, backgroundColor: "#000" },
-  playButton: {
-    backgroundColor: "#bb86fc",
-    paddingVertical: 12,
-    paddingHorizontal: 30,
-    borderRadius: 30,
-    marginTop: 12,
-  },
-  playButtonText: { color: "#121212", fontWeight: "bold", fontSize: 16 },
   input: {
     width: "100%",
     backgroundColor: "#2a2a2a",
