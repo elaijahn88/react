@@ -21,10 +21,7 @@ const { width } = Dimensions.get("window");
 export default function AIChat() {
   const videoRef = useRef<Video>(null);
 
-  // ✅ Start unpaused so video auto-plays
   const [videoPaused, setVideoPaused] = useState(false);
-
-  // States
   const [messages, setMessages] = useState<{ id: string; text: string }[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -33,12 +30,10 @@ export default function AIChat() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
 
-  // Handler for video end event → pause when finished
   const handleVideoEnd = () => {
     setVideoPaused(true);
   };
 
-  // Dummy sendMessage
   const sendMessage = () => {
     if (!input.trim()) return;
     const newMsg = { id: Date.now().toString(), text: input };
@@ -46,15 +41,12 @@ export default function AIChat() {
     setInput("");
   };
 
-  // Dummy renderItem
   const renderItem = ({ item }: { item: { id: string; text: string } }) => (
     <View
-      style={{
-        backgroundColor: isDark ? "#333" : "#eee",
-        padding: 10,
-        borderRadius: 8,
-        marginVertical: 4,
-      }}
+      style={[
+        styles.messageBubble,
+        { backgroundColor: isDark ? "#333" : "#eee" },
+      ]}
     >
       <Text style={{ color: isDark ? "#fff" : "#000" }}>{item.text}</Text>
     </View>
@@ -68,10 +60,14 @@ export default function AIChat() {
     >
       <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />
 
-      {/* Header */}
-      <View style={styles.header}>
-        <Ionicons name="person-circle" size={40} color="#fff" />
-        <View style={{ marginLeft: 10 }}>
+      <View
+        style={[
+          styles.header,
+          { backgroundColor: "#25D366", shadowColor: "#25D366" },
+        ]}
+      >
+        <Ionicons name="person-circle" size={44} color="#fff" />
+        <View style={{ marginLeft: 14 }}>
           <Text style={styles.headerText}>ATOM</Text>
           <View style={styles.statusRow}>
             <View
@@ -87,38 +83,50 @@ export default function AIChat() {
         </View>
       </View>
 
-      {/* Global video player */}
       <Video
         ref={videoRef}
         source={{ uri: "https://xlijah.com/ai.mp4" }}
-        style={styles.video}
-        paused={videoPaused}   // starts false → auto-plays
+        style={[
+          styles.video,
+          {
+            shadowColor: isDark ? "#000" : "#aaa",
+            shadowOpacity: 0.3,
+            shadowOffset: { width: 0, height: 4 },
+            shadowRadius: 8,
+            elevation: 6,
+          },
+        ]}
+        paused={videoPaused}
         resizeMode="contain"
-        onEnd={handleVideoEnd} // stops after first play
+        onEnd={handleVideoEnd}
         repeat={false}
         controls={false}
         playInBackground={false}
         playWhenInactive={false}
       />
 
-      {/* Chat Messages */}
       <FlatList
         data={messages}
         renderItem={renderItem}
         keyExtractor={(item) => item.id}
         inverted
-        contentContainerStyle={{ padding: 10 }}
+        contentContainerStyle={{ padding: 10, paddingBottom: 20 }}
+        keyboardShouldPersistTaps="handled"
       />
 
       {loading && <ActivityIndicator size="large" color="#25D366" />}
 
-      {/* Input */}
       <View
         style={[
           styles.inputContainer,
           {
             backgroundColor: isDark ? "#121212" : "#fff",
             borderColor: isDark ? "#333" : "#ddd",
+            shadowColor: "#000",
+            shadowOpacity: 0.1,
+            shadowOffset: { width: 0, height: -2 },
+            shadowRadius: 5,
+            elevation: 10,
           },
         ]}
       >
@@ -130,13 +138,40 @@ export default function AIChat() {
             {
               backgroundColor: isDark ? "#1c1c1e" : "#F0F0F0",
               color: isDark ? "#f5f5f5" : "#000",
+              shadowColor: "#000",
+              shadowOpacity: 0.05,
+              shadowOffset: { width: 0, height: 1 },
+              shadowRadius: 2,
+              elevation: 2,
             },
           ]}
           placeholder="CHAT_ATOM..."
           placeholderTextColor={isDark ? "#888" : "#999"}
+          returnKeyType="send"
+          onSubmitEditing={sendMessage}
         />
-        <TouchableOpacity onPress={sendMessage} style={styles.sendButton}>
-          <Ionicons name="send" size={20} color="#fff" />
+
+        {/* Attachments & media buttons */}
+        <TouchableOpacity style={styles.iconButton} onPress={() => console.log("Attach File")}>
+          <Text style={styles.iconText}>📎</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.iconButton} onPress={() => console.log("Video")}>
+          <Text style={styles.iconText}>🎥</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.iconButton} onPress={() => console.log("Audio")}>
+          <Text style={styles.iconText}>🎵</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.iconButton} onPress={() => console.log("Mic")}>
+          <Text style={styles.iconText}>🎙️</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          onPress={sendMessage}
+          style={styles.sendButton}
+          activeOpacity={0.7}
+          accessibilityLabel="Send message"
+        >
+          <Ionicons name="send" size={24} color="#fff" />
         </TouchableOpacity>
       </View>
     </KeyboardAvoidingView>
@@ -148,42 +183,92 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#25D366",
-    padding: 10,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+    elevation: 6,
   },
-  headerText: { color: "#fff", fontSize: 18, fontWeight: "bold" },
-  statusRow: { flexDirection: "row", alignItems: "center", marginTop: 2 },
+  headerText: {
+    color: "#fff",
+    fontSize: 20,
+    fontWeight: "800",
+  },
+  statusRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 4,
+  },
   statusDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    marginRight: 6,
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    marginRight: 8,
   },
-  statusText: { color: "#fff", fontSize: 12 },
+  statusText: {
+    color: "#fff",
+    fontSize: 13,
+    fontWeight: "600",
+  },
   video: {
     width: width * 0.9,
-    height: 200,
+    height: 220,
     alignSelf: "center",
-    marginBottom: 10,
-    borderRadius: 10,
+    marginBottom: 14,
+    borderRadius: 14,
+    overflow: "hidden",
+  },
+  messageBubble: {
+    padding: 14,
+    borderRadius: 12,
+    marginVertical: 6,
+    maxWidth: "80%",
+    alignSelf: "flex-start",
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: 1 },
+    shadowRadius: 4,
+    elevation: 1,
   },
   inputContainer: {
     flexDirection: "row",
     alignItems: "center",
-    padding: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
     borderTopWidth: 1,
   },
   input: {
     flex: 1,
-    borderRadius: 20,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
+    borderRadius: 25,
+    paddingHorizontal: 18,
+    paddingVertical: 12,
     fontSize: 16,
+    shadowOffset: { width: 0, height: 1 },
+  },
+  iconButton: {
+    marginHorizontal: 4,
+    padding: 8,
+    borderRadius: 20,
+    backgroundColor: "#4caf50", // Greenish background
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  iconText: {
+    fontSize: 20,
+    color: "#fff",
   },
   sendButton: {
-    marginLeft: 8,
+    marginLeft: 12,
     backgroundColor: "#25D366",
-    padding: 10,
-    borderRadius: 20,
+    padding: 14,
+    borderRadius: 30,
+    shadowColor: "#25D366",
+    shadowOpacity: 0.7,
+    shadowOffset: { width: 0, height: 3 },
+    shadowRadius: 5,
+    elevation: 8,
+    justifyContent: "center",
+    alignItems: "center",
   },
 });
