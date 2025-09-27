@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   View,
   Text,
@@ -12,6 +12,8 @@ import {
   Dimensions,
   useColorScheme,
   StatusBar,
+  Animated,
+  Easing,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import Video from "react-native-video";
@@ -31,6 +33,17 @@ export default function AIChat() {
 
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
+
+  const labelAnim = useRef(new Animated.Value(input.length > 0 ? 1 : 0)).current;
+
+  useEffect(() => {
+    Animated.timing(labelAnim, {
+      toValue: input.length > 0 ? 1 : 0,
+      duration: 200,
+      easing: Easing.out(Easing.ease),
+      useNativeDriver: false,
+    }).start();
+  }, [input]);
 
   const handleVideoEnd = () => {
     setVideoPaused(true);
@@ -145,7 +158,7 @@ export default function AIChat() {
 
       {loading && <ActivityIndicator size="large" color="#25D366" />}
 
-      {/* Input */}
+      {/* Input with curved floating label */}
       <View
         style={[
           styles.inputContainer,
@@ -160,59 +173,61 @@ export default function AIChat() {
           },
         ]}
       >
-        <TextInput
-          value={input}
-          onChangeText={setInput}
-          style={[
-            styles.input,
-            {
-              backgroundColor: isDark ? "#1c1c1e" : "#F0F0F0",
-              color: isDark ? "#f5f5f5" : "#000",
-              shadowColor: "#000",
-              shadowOpacity: 0.05,
-              shadowOffset: { width: 0, height: 1 },
-              shadowRadius: 2,
-              elevation: 2,
-            },
-          ]}
-          placeholder="CHAT_ATOM..."
-          placeholderTextColor={isDark ? "#888" : "#999"}
-          returnKeyType="send"
-          onSubmitEditing={sendMessage}
-        />
+        <View style={{ flex: 1, justifyContent: "center" }}>
+          <Animated.View
+            style={[
+              styles.floatingLabel,
+              {
+                top: labelAnim.interpolate({ inputRange: [0, 1], outputRange: [14, -10] }),
+                left: 12,
+                transform: [
+                  {
+                    scale: labelAnim.interpolate({ inputRange: [0, 1], outputRange: [1, 0.9] }),
+                  },
+                ],
+                backgroundColor: isDark ? "rgba(0,0,0,0.5)" : "rgba(255,255,255,0.6)",
+                borderRadius: 16,
+                paddingHorizontal: 8,
+                paddingVertical: 2,
+              },
+            ]}
+          >
+            <Text style={{ color: isDark ? "#fff" : "#888", fontWeight: "600" }}>
+              CHAT_ATOM...
+            </Text>
+          </Animated.View>
+
+          <TextInput
+            value={input}
+            onChangeText={setInput}
+            style={[
+              styles.input,
+              {
+                backgroundColor: isDark ? "#1c1c1e" : "#F0F0F0",
+                color: isDark ? "#f5f5f5" : "#000",
+              },
+            ]}
+            placeholder=""
+            returnKeyType="send"
+            onSubmitEditing={sendMessage}
+          />
+        </View>
 
         {/* Attachments & media buttons */}
-        <TouchableOpacity
-          style={styles.iconButton}
-          onPress={() => console.log("Attach File")}
-        >
+        <TouchableOpacity style={styles.iconButton} onPress={() => console.log("Attach File")}>
           <Text style={styles.iconText}>📎</Text>
         </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.iconButton}
-          onPress={() => console.log("Video")}
-        >
+        <TouchableOpacity style={styles.iconButton} onPress={() => console.log("Video")}>
           <Text style={styles.iconText}>🎥</Text>
         </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.iconButton}
-          onPress={() => console.log("Audio")}
-        >
+        <TouchableOpacity style={styles.iconButton} onPress={() => console.log("Audio")}>
           <Text style={styles.iconText}>🎵</Text>
         </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.iconButton}
-          onPress={() => console.log("Mic")}
-        >
+        <TouchableOpacity style={styles.iconButton} onPress={() => console.log("Mic")}>
           <Text style={styles.iconText}>🎙️</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity
-          onPress={sendMessage}
-          style={styles.sendButton}
-          activeOpacity={0.7}
-          accessibilityLabel="Send message"
-        >
+        <TouchableOpacity onPress={sendMessage} style={styles.sendButton} activeOpacity={0.7}>
           <Ionicons name="send" size={24} color="#fff" />
         </TouchableOpacity>
       </View>
@@ -232,27 +247,10 @@ const styles = StyleSheet.create({
     shadowRadius: 5,
     elevation: 6,
   },
-  headerText: {
-    color: "#fff",
-    fontSize: 20,
-    fontWeight: "800",
-  },
-  statusRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: 4,
-  },
-  statusDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    marginRight: 8,
-  },
-  statusText: {
-    color: "#fff",
-    fontSize: 13,
-    fontWeight: "600",
-  },
+  headerText: { color: "#fff", fontSize: 20, fontWeight: "800" },
+  statusRow: { flexDirection: "row", alignItems: "center", marginTop: 4 },
+  statusDot: { width: 12, height: 12, borderRadius: 6, marginRight: 8 },
+  statusText: { color: "#fff", fontSize: 13, fontWeight: "600" },
   video: {
     width: width * 0.9,
     height: 220,
@@ -272,10 +270,7 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 1,
   },
-  messageText: {
-    fontSize: 16,
-    fontWeight: "600",
-  },
+  messageText: { fontSize: 16, fontWeight: "600" },
   inputContainer: {
     flexDirection: "row",
     alignItems: "center",
@@ -283,14 +278,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     borderTopWidth: 1,
   },
-  input: {
-    flex: 1,
-    borderRadius: 25,
-    paddingHorizontal: 18,
-    paddingVertical: 12,
-    fontSize: 16,
-    shadowOffset: { width: 0, height: 1 },
-  },
+  input: { flex: 1, borderRadius: 25, paddingHorizontal: 18, paddingVertical: 12, fontSize: 16 },
+  floatingLabel: { position: "absolute", zIndex: 10 },
   iconButton: {
     marginHorizontal: 4,
     padding: 8,
@@ -299,10 +288,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  iconText: {
-    fontSize: 20,
-    color: "#fff",
-  },
+  iconText: { fontSize: 20, color: "#fff" },
   sendButton: {
     marginLeft: 12,
     backgroundColor: "#25D366",
@@ -313,7 +299,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 3 },
     shadowRadius: 5,
     elevation: 8,
-    justifyContent: "center",
-    alignItems: "center",
+    justifyContent: "center",alignItems: "center",
   },
 });
