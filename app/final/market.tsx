@@ -36,16 +36,16 @@ const initialProducts: Product[] = [
 ];
 
 const updatedProducts: Product[] = [
-  { id: "7", name: "Range Rover", price: 70000, image: "https://xlijah.com/pics/pics/lenovo.jpg" },
-  { id: "8", name: "Samsung Galaxy S21", price: 850, image: "https://xlijah.com/pics/pics/macbook.jpg" },
-  { id: "9", name: "Sony Headphones", price: 150, image: "https://xlijah.com/pics/pics/mac.jpeg" },
-  { id: "10", name: "MacBook Pro", price: 2400, image: "https://xlijah.com/pics/pics/macbook_pro.jpg" },
-  { id: "11", name: "Canon DSLR", price: 1200, image: "https://xlijah.com/pics/pics/notebook.jpeg" },
-  { id: "12", name: "Fitbit Charge", price: 130, image: "https://xlijah.com/pics/pics/guns.jpeg" },
-  { id: "13", name: "Google Pixel", price: 700, image: "https://xlijah.com/pics/pics/mac.jpeg" },
-  { id: "14", name: "Kindle Paperwhite", price: 140, image: "https://xlijah.com/pics/pics/chemicals.jpeg" },
-  { id: "15", name: "DJI Drone", price: 1200, image: "https://xlijah.com/pics/pics/macbook.jpg" },
-  { id: "16", name: "Xbox Series X", price: 500, image: "https://xlijah.com/pics/pics/lenovo.jpg" },
+  { id: "7", name: "lenovo", price: 70000, image: "https://xlijah.com/pics/pics/lenovo.jpg" },
+  { id: "8", name: "macbook", price: 850, image: "https://xlijah.com/pics/pics/macbook.jpg" },
+  { id: "9", name: "mac", price: 150, image: "https://xlijah.com/pics/pics/mac.jpeg" },
+  { id: "10", name: "MacBook Pro", price: 2400, image: "https://xlijah.com/pics/pics/macbook.jpg" },
+  { id: "11", name: "notebook", price: 1200, image: "https://xlijah.com/pics/pics/notebook.jpeg" },
+  { id: "12", name: "Arms", price: 130, image: "https://xlijah.com/pics/pics/guns.jpeg" },
+  { id: "13", name: "mac", price: 700, image: "https://xlijah.com/pics/pics/mac.jpeg" },
+  { id: "14", name: "chemicals", price: 140, image: "https://xlijah.com/pics/pics/chemicals.jpeg" },
+  { id: "15", name: "laptop", price: 1200, image: "https://xlijah.com/pics/pics/macbook.jpg" },
+  { id: "16", name: "Hp", price: 500, image: "https://xlijah.com/pics/pics/lenovo.jpg" },
 ];
 
 const { width } = Dimensions.get("window");
