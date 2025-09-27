@@ -7,6 +7,7 @@ import {
   Text,
   useColorScheme,
   StatusBar,
+  TouchableOpacity,
 } from "react-native";
 import { auth, db } from "../firebase";
 import {
@@ -22,7 +23,7 @@ interface IUserData {
   createdAt?: string;
 }
 
-export default function AuthDemo({ navigation }: any) {
+export default function AuthDemo() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [userData, setUserData] = useState<IUserData | null>(null);
@@ -32,7 +33,14 @@ export default function AuthDemo({ navigation }: any) {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
 
-  // Listen for auth state changes
+  // Auto-dismiss message after 5 seconds
+  useEffect(() => {
+    if (message) {
+      const timer = setTimeout(() => setMessage(null), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [message]);
+
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user: User | null) => {
       if (user) {
@@ -44,7 +52,6 @@ export default function AuthDemo({ navigation }: any) {
           } else {
             setUserData({ email: user.email || "" });
           }
-          navigation.replace("explore");
         } catch (err: any) {
           setMessage({ type: "error", text: "Error fetching user data: " + err.message });
         }
@@ -57,7 +64,6 @@ export default function AuthDemo({ navigation }: any) {
     return () => unsubscribe();
   }, []);
 
-  // Sign up user
   const signUp = async () => {
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
@@ -74,7 +80,6 @@ export default function AuthDemo({ navigation }: any) {
     }
   };
 
-  // Sign in user
   const signIn = async () => {
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
@@ -91,7 +96,6 @@ export default function AuthDemo({ navigation }: any) {
       }
 
       setMessage({ type: "success", text: "User signed in!" });
-      navigation.replace("explore");
     } catch (err: any) {
       setMessage({ type: "error", text: err.message });
     }
@@ -104,16 +108,32 @@ export default function AuthDemo({ navigation }: any) {
       <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />
 
       {message && (
-        <View
-          style={[
-            styles.card,
-            { backgroundColor: message.type === "success" ? "#d4edda" : "#f8d7da" },
-          ]}
-        >
-          <Text style={{ color: message.type === "success" ? "#155724" : "#721c24" }}>
-            {message.text}
-          </Text>
-        </View>
+        <TouchableOpacity onPress={() => setMessage(null)} activeOpacity={0.8}>
+          <View
+            style={[
+              styles.messageCard,
+              {
+                backgroundColor: message.type === "success" ? "#e6ffed" : "#ffe6e6",
+                borderColor: message.type === "success" ? "#28a745" : "#dc3545",
+              },
+            ]}
+          >
+            <Text
+              style={{
+                color: message.type === "success" ? "#155724" : "#721c24",
+                fontWeight: "700",
+                fontSize: 16,
+                marginBottom: 5,
+              }}
+            >
+              {message.type === "success" ? "✅ Success" : "❌ Error"}
+            </Text>
+            <Text style={{ color: message.type === "success" ? "#155724" : "#721c24" }}>
+              {message.text}
+            </Text>
+            <Text style={styles.dismissText}>Tap to dismiss</Text>
+          </View>
+        </TouchableOpacity>
       )}
 
       {userData ? (
@@ -165,11 +185,23 @@ export default function AuthDemo({ navigation }: any) {
 const styles = StyleSheet.create({
   container: { flex: 1, justifyContent: "center", padding: 20 },
   input: { height: 50, borderWidth: 1, marginBottom: 15, paddingHorizontal: 10, borderRadius: 5 },
-  text: { fontSize: 18, fontWeight: "600" },
-  card: {
-    padding: 12,
+  text: { fontSize: 18, fontWeight: "600", textAlign: "center", marginBottom: 20 },
+  messageCard: {
+    padding: 16,
     borderRadius: 8,
-    marginBottom: 15,
-    borderWidth: 1,
+    borderWidth: 1.5,
+    marginBottom: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  dismissText: {
+    marginTop: 10,
+    color: "#666",
+    fontSize: 12,
+    fontStyle: "italic",
+    textAlign: "right",
   },
 });
