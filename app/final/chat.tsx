@@ -20,16 +20,45 @@ const { width } = Dimensions.get("window");
 
 export default function AIChat() {
   const videoRef = useRef<Video>(null);
+
+  // ✅ Start unpaused so video auto-plays
   const [videoPaused, setVideoPaused] = useState(false);
 
-  // ... your existing states (messages, input, loading, isActive)...
+  // States
+  const [messages, setMessages] = useState<{ id: string; text: string }[]>([]);
+  const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [isActive, setIsActive] = useState(true);
 
-  // Handler for video end event
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === "dark";
+
+  // Handler for video end event → pause when finished
   const handleVideoEnd = () => {
     setVideoPaused(true);
   };
 
-  // Rest of your existing code (sendMessage, renderItem, etc.)
+  // Dummy sendMessage
+  const sendMessage = () => {
+    if (!input.trim()) return;
+    const newMsg = { id: Date.now().toString(), text: input };
+    setMessages((prev) => [newMsg, ...prev]);
+    setInput("");
+  };
+
+  // Dummy renderItem
+  const renderItem = ({ item }: { item: { id: string; text: string } }) => (
+    <View
+      style={{
+        backgroundColor: isDark ? "#333" : "#eee",
+        padding: 10,
+        borderRadius: 8,
+        marginVertical: 4,
+      }}
+    >
+      <Text style={{ color: isDark ? "#fff" : "#000" }}>{item.text}</Text>
+    </View>
+  );
 
   return (
     <KeyboardAvoidingView
@@ -51,7 +80,9 @@ export default function AIChat() {
                 { backgroundColor: isActive ? "limegreen" : "red" },
               ]}
             />
-            <Text style={styles.statusText}>{isActive ? "Active" : "Inactive"}</Text>
+            <Text style={styles.statusText}>
+              {isActive ? "Active" : "Inactive"}
+            </Text>
           </View>
         </View>
       </View>
@@ -61,9 +92,9 @@ export default function AIChat() {
         ref={videoRef}
         source={{ uri: "https://xlijah.com/ai.mp4" }}
         style={styles.video}
-        paused={videoPaused}
+        paused={videoPaused}   // starts false → auto-plays
         resizeMode="contain"
-        onEnd={handleVideoEnd}
+        onEnd={handleVideoEnd} // stops after first play
         repeat={false}
         controls={false}
         playInBackground={false}
@@ -113,7 +144,46 @@ export default function AIChat() {
 }
 
 const styles = StyleSheet.create({
-  // ...existing styles...
-  video: { width: width * 0.9, height: 200, alignSelf: "center", marginBottom: 10, borderRadius: 10 },
-  // ...rest of styles...
+  container: { flex: 1 },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#25D366",
+    padding: 10,
+  },
+  headerText: { color: "#fff", fontSize: 18, fontWeight: "bold" },
+  statusRow: { flexDirection: "row", alignItems: "center", marginTop: 2 },
+  statusDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    marginRight: 6,
+  },
+  statusText: { color: "#fff", fontSize: 12 },
+  video: {
+    width: width * 0.9,
+    height: 200,
+    alignSelf: "center",
+    marginBottom: 10,
+    borderRadius: 10,
+  },
+  inputContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 8,
+    borderTopWidth: 1,
+  },
+  input: {
+    flex: 1,
+    borderRadius: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    fontSize: 16,
+  },
+  sendButton: {
+    marginLeft: 8,
+    backgroundColor: "#25D366",
+    padding: 10,
+    borderRadius: 20,
+  },
 });
