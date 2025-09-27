@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import {
   View,
   FlatList,
@@ -13,6 +13,9 @@ import {
   TextInput,
   KeyboardAvoidingView,
   Platform,
+  Alert,
+  ActivityIndicator,
+  ScrollView,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
@@ -50,71 +53,102 @@ const CARD_WIDTH = (width - 40) / 2;
 const phoneNumber = "0746524088"; // Seller phone number
 
 const callSeller = () => {
-  Linking.openURL(`tel:${phoneNumber}`).catch(() =>
-    console.error("Phone app not available")
-  );
+  Linking.openURL(`tel:${phoneNumber}`).catch(() => {
+    Alert.alert("Error", "Phone app not available");
+  });
 };
 
-const ProductCard = ({
-  item,
-  onQuantityChange,
-  isDark,
-}: {
-  item: Product;
-  onQuantityChange: (id: string, qty: number) => void;
-  isDark: boolean;
-}) => {
-  const [quantity, setQuantity] = useState(0);
+const ProductCard = React.memo(
+  ({
+    item,
+    onQuantityChange,
+    isDark,
+  }: {
+    item: Product;
+    onQuantityChange: (id: string, qty: number) => void;
+    isDark: boolean;
+  }) => {
+    const [quantity, setQuantity] = useState(0);
+    const [imageLoading, setImageLoading] = useState(true);
 
-  const updateQuantity = (newQty: number) => {
-    const safeQty = Math.max(newQty, 0);
-    setQuantity(safeQty);
-    onQuantityChange(item.id, safeQty);
-  };
+    const updateQuantity = (newQty: number) => {
+      const safeQty = Math.max(newQty, 0);
+      setQuantity(safeQty);
+      onQuantityChange(item.id, safeQty);
+    };
 
-  return (
-    <View style={[styles.card, { backgroundColor: isDark ? "#1c1c1e" : "#fff" }]}>
-      <Image source={{ uri: item.image }} style={styles.image} />
-      <Text style={[styles.title, { color: isDark ? "#fff" : "#000" }]} numberOfLines={2}>
-        {item.name}
-      </Text>
-      <Text style={[styles.price, { color: isDark ? "#00ff7f" : "#00a650" }]}>
-        ${item.price.toFixed(2)}
-      </Text>
-
-      {/* Quantity Selector */}
-      <View style={styles.quantityRow}>
-        <TouchableOpacity
-          style={[styles.qtyButton, { backgroundColor: "#007aff" }]}
-          onPress={() => updateQuantity(quantity - 1)}
+    return (
+      <View style={[styles.card, { backgroundColor: isDark ? "#1c1c1e" : "#fff" }]}>
+        <View
+          style={{
+            width: CARD_WIDTH - 24,
+            height: CARD_WIDTH - 24,
+            borderRadius: 12,
+            overflow: "hidden",
+            backgroundColor: "#ccc",
+            justifyContent: "center",
+            alignItems: "center",
+          }}
         >
-          <Text style={styles.qtyButtonText}>-</Text>
-        </TouchableOpacity>
-
-        <Text style={[styles.qtyText, { color: isDark ? "#fff" : "#000" }]}>{quantity}</Text>
-
-        <TouchableOpacity
-          style={[styles.qtyButton, { backgroundColor: "#007aff" }]}
-          onPress={() => updateQuantity(quantity + 1)}
+          {imageLoading && <ActivityIndicator size="small" color={isDark ? "#fff" : "#000"} />}
+          <Image
+            source={{ uri: item.image }}
+            style={[styles.image, imageLoading ? { display: "none" } : {}]}
+            onLoadEnd={() => setImageLoading(false)}
+            accessibilityLabel={`${item.name} image`}
+          />
+        </View>
+        <Text
+          style={[styles.title, { color: isDark ? "#fff" : "#000" }]}
+          numberOfLines={2}
+          accessibilityRole="header"
         >
-          <Text style={styles.qtyButtonText}>+</Text>
+          {item.name}
+        </Text>
+        <Text style={[styles.price, { color: isDark ? "#00ff7f" : "#00a650" }]}>${item.price.toFixed(2)}</Text>
+
+        {/* Quantity Selector */}
+        <View style={styles.quantityRow}>
+          <TouchableOpacity
+            style={[styles.qtyButton, { backgroundColor: "#007aff" }]}
+            onPress={() => updateQuantity(quantity - 1)}
+            accessibilityLabel={`Decrease quantity of ${item.name}`}
+            accessibilityHint="Decreases quantity by 1"
+          >
+            <Text style={styles.qtyButtonText}>-</Text>
+          </TouchableOpacity>
+
+          <Text
+            style={[styles.qtyText, { color: isDark ? "#fff" : "#000" }]}
+            accessibilityLabel={`Quantity for ${item.name}`}
+          >
+            {quantity}
+          </Text>
+
+          <TouchableOpacity
+            style={[styles.qtyButton, { backgroundColor: "#007aff" }]}
+            onPress={() => updateQuantity(quantity + 1)}
+            accessibilityLabel={`Increase quantity of ${item.name}`}
+            accessibilityHint="Increases quantity by 1"
+          >
+            <Text style={styles.qtyButtonText}>+</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Call Seller */}
+        <TouchableOpacity
+          style={[styles.button, quantity === 0 && { backgroundColor: "#555" }]}
+          onPress={callSeller}
+          disabled={quantity === 0}
+          accessibilityLabel={`Add ${item.name} to cart and call seller`}
+          accessibilityHint={quantity === 0 ? "Disabled when quantity is zero" : "Calls seller"}
+        >
+          <Text style={styles.buttonText}>+Cart</Text>
         </TouchableOpacity>
       </View>
-
-      {/* Call Seller */}
-      <TouchableOpacity
-        style={[
-          styles.button,
-          quantity === 0 && { backgroundColor: "#555" },
-        ]}
-        onPress={callSeller}
-        disabled={quantity === 0}
-      >
-        <Text style={styles.buttonText}>+Cart</Text>
-      </TouchableOpacity>
-    </View>
-  );
-};
+    );
+  }
+);
 
 export default function Marketplace() {
   const [products, setProducts] = useState<Product[]>(initialProducts);
@@ -129,6 +163,10 @@ export default function Marketplace() {
   const [expiry, setExpiry] = useState("");
   const [cvv, setCvv] = useState("");
   const [paymentMessage, setPaymentMessage] = useState<{ type: "error" | "success"; text: string } | null>(null);
+  const [processingPayment, setProcessingPayment] = useState(false);
+
+  // Cart review modal
+  const [cartReviewVisible, setCartReviewVisible] = useState(false);
 
   const handleQuantityChange = (id: string, qty: number) => {
     setCart((prev) => {
@@ -151,16 +189,23 @@ export default function Marketplace() {
   };
 
   const handleCardNumberChange = (text: string) => {
-    // Allow only numbers and spaces
     const cleaned = text.replace(/[^\d]/g, "");
     setCardNumber(formatCardNumber(cleaned));
   };
 
-  const handlePay = () => {
-    // Reset previous messages
+  // Auto-format expiry date MM/YY with slash
+  const handleExpiryChange = (text: string) => {
+    // Remove non-digit and slash
+    let cleaned = text.replace(/[^\d]/g, "");
+    if (cleaned.length > 4) cleaned = cleaned.slice(0, 4);
+    if (cleaned.length > 2) cleaned = cleaned.slice(0, 2) + "/" + cleaned.slice(2);
+    setExpiry(cleaned);
+  };
+
+  const handlePay = async () => {
     setPaymentMessage(null);
 
-    if (cardNumber.length !== 19) {
+    if (cardNumber.replace(/\s/g, "").length !== 16) {
       setPaymentMessage({ type: "error", text: "Card number must be 16 digits." });
       return;
     }
@@ -168,7 +213,7 @@ export default function Marketplace() {
       setPaymentMessage({ type: "error", text: "Cardholder name is required." });
       return;
     }
-    if (!/^\d{2}\/\d{2}$/.test(expiry)) {
+    if (!/^(0[1-9]|1[0-2])\/\d{2}$/.test(expiry)) {
       setPaymentMessage({ type: "error", text: "Expiry date must be in MM/YY format." });
       return;
     }
@@ -177,25 +222,52 @@ export default function Marketplace() {
       return;
     }
 
-    // Mock payment success
-    setPaymentMessage({ type: "success", text: `Payment of $${totalPrice.toFixed(2)} successful!` });
+    setProcessingPayment(true);
 
-    // Clear cart and payment inputs after a short delay
+    // Simulate async payment processing delay
     setTimeout(() => {
-      setPaymentVisible(false);
-      setCart({});
-      setCardNumber("");
-      setCardName("");
-      setExpiry("");
-      setCvv("");
-      setPaymentMessage(null);
+      setPaymentMessage({ type: "success", text: `Payment of $${totalPrice.toFixed(2)} successful!` });
+      setProcessingPayment(false);
+
+      // Clear cart and payment inputs after delay
+      setTimeout(() => {
+        setPaymentVisible(false);
+        setCart({});
+        setCardNumber("");
+        setCardName("");
+        setExpiry("");
+        setCvv("");
+        setPaymentMessage(null);
+      }, 2000);
     }, 2000);
   };
 
+  // Preserve cart on update product list
   const updateProductList = () => {
     setProducts(updatedProducts);
-    setCart({});
+    // Remove items not in new list
+    setCart((prev) => {
+      const newCart: { [key: string]: number } = {};
+      Object.entries(prev).forEach(([id, qty]) => {
+        if (updatedProducts.find((p) => p.id === id)) {
+          newCart[id] = qty;
+        }
+      });
+      return newCart;
+    });
   };
+
+  // Cart Review Items
+  const cartItems = Object.entries(cart)
+    .map(([id, qty]) => {
+      const product = products.find((p) => p.id === id);
+      if (!product) return null;
+      return { ...product, quantity: qty };
+    })
+    .filter(Boolean) as (Product & { quantity: number })[];
+
+  // CVV visibility toggle
+  const [showCvv, setShowCvv] = useState(false);
 
   return (
     <View style={[styles.container, { backgroundColor: isDark ? "#121212" : "#f2f2f2" }]}>
@@ -206,6 +278,7 @@ export default function Marketplace() {
         style={[styles.updateButton, { backgroundColor: isDark ? "#555" : "#007aff" }]}
         onPress={updateProductList}
         accessibilityLabel="Update product list"
+        accessibilityHint="Replaces products with new list, preserving matching cart items"
       >
         <Text style={[styles.updateButtonText, { color: "#fff" }]}>Update Products</Text>
       </TouchableOpacity>
@@ -225,8 +298,9 @@ export default function Marketplace() {
       {totalItems > 0 && (
         <TouchableOpacity
           style={styles.cartIcon}
-          onPress={() => setPaymentVisible(true)}
-          accessibilityLabel="Open payment modal"
+          onPress={() => setCartReviewVisible(true)}
+          accessibilityLabel="Open cart review"
+          accessibilityHint="View items in cart and proceed to payment"
         >
           <Ionicons name="cart" size={28} color="#fff" />
           <View style={styles.cartBadge}>
@@ -235,113 +309,159 @@ export default function Marketplace() {
         </TouchableOpacity>
       )}
 
-      {/* Payment Modal */}
-      <Modal
-        visible={paymentVisible}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setPaymentVisible(false)}
-      >
-        <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : undefined}
-          style={styles.modalContainer}
-        >
-          <View style={[styles.modalContent, { backgroundColor: isDark ? "#222" : "#fff" }]}>
-            <Text style={[styles.modalHeader, { color: isDark ? "#fff" : "#000" }]}>Payment Details</Text>
-
-            {/* Mastercard Logo */}
-            <Image
-              source={{ uri: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2a/Mastercard-logo.svg/120px-Mastercard-logo.svg.png" }}
-              style={styles.mastercardLogo}
-              resizeMode="contain"
-              accessible
-              accessibilityLabel="Mastercard Logo"
-            />
-
-            {/* Card Number */}
-            <TextInput
-              style={[styles.input, { borderColor: paymentMessage?.type === "error" && paymentMessage.text.includes("Card number") ? "red" : "#ccc", color: isDark ? "#fff" : "#000" }]}
-              placeholder="Card Number (#### #### #### ####)"
-              placeholderTextColor={isDark ? "#888" : "#aaa"}
-              keyboardType="numeric"
-              maxLength={19}
-              value={cardNumber}
-              onChangeText={handleCardNumberChange}
-              accessibilityLabel="Card Number Input"
-            />
-
-            {/* Cardholder Name */}
-            <TextInput
-              style={[styles.input, { borderColor: paymentMessage?.type === "error" && paymentMessage.text.includes("Cardholder") ? "red" : "#ccc", color: isDark ? "#fff" : "#000" }]}
-              placeholder="Cardholder Name"
-              placeholderTextColor={isDark ? "#888" : "#aaa"}
-              value={cardName}
-              onChangeText={setCardName}
-              accessibilityLabel="Cardholder Name Input"
-            />
-
-            <View style={styles.row}>
-              {/* Expiry Date */}
-              <TextInput
-                style={[
-                  styles.inputHalf,
-                  { marginRight: 10, borderColor: paymentMessage?.type === "error" && paymentMessage.text.includes("Expiry") ? "red" : "#ccc", color: isDark ? "#fff" : "#000" },
-                ]}
-                placeholder="Expiry (MM/YY)"
-                placeholderTextColor={isDark ? "#888" : "#aaa"}
-                maxLength={5}
-                value={expiry}
-                onChangeText={(text) => {
-                  // Format MM/YY while typing
-                  let cleaned = text.replace(/[^\d]/g, "");
-                  if (cleaned.length > 2) cleaned = cleaned.slice(0, 2) + "/" + cleaned.slice(2, 4);
-                  setExpiry(cleaned);
-                }}
-                keyboardType="numeric"
-                accessibilityLabel="Expiry Date Input"
-              />
-
-              {/* CVV */}
-              <TextInput
-                style={[
-                  styles.inputHalf,
-                  { borderColor: paymentMessage?.type === "error" && paymentMessage.text.includes("CVV") ? "red" : "#ccc", color: isDark ? "#fff" : "#000" },
-                ]}
-                placeholder="CVV"
-                placeholderTextColor={isDark ? "#888" : "#aaa"}
-                keyboardType="numeric"
-                maxLength={3}
-                value={cvv}
-                onChangeText={(text) => setCvv(text.replace(/[^\d]/g, ""))}
-                secureTextEntry
-                accessibilityLabel="CVV Input"
-              />
-            </View>
-
-            {/* Validation/Error Message */}
-            {paymentMessage && (
-              <Text
-                style={{
-                  color: paymentMessage.type === "error" ? "red" : "green",
-                  marginTop: 10,
-                  fontWeight: "600",
-                  textAlign: "center",
-                }}
-                accessibilityLiveRegion="polite"
-              >
-                {paymentMessage.text}
-              </Text>
+      {/* Cart Review Modal */}
+      <Modal visible={cartReviewVisible} transparent animationType="slide" onRequestClose={() => setCartReviewVisible(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContent, { backgroundColor: isDark ? "#222" : "#fff", maxHeight: "80%" }]}>
+            <Text style={[styles.modalTitle, { color: isDark ? "#fff" : "#000" }]}>Your Cart</Text>
+            {cartItems.length === 0 ? (
+              <Text style={{ color: isDark ? "#fff" : "#000", padding: 16 }}>Your cart is empty.</Text>
+            ) : (
+              <ScrollView>
+                {cartItems.map(({ id, name, price, quantity }) => (
+                  <View key={id} style={styles.cartItem}>
+                    <Text style={{ color: isDark ? "#fff" : "#000", flex: 1 }}>
+                      {name} x {quantity}
+                    </Text>
+                    <Text style={{ color: isDark ? "#0f0" : "#080" }}>${(price * quantity).toFixed(2)}</Text>
+                  </View>
+                ))}
+                <View style={styles.cartTotal}>
+                  <Text style={[styles.modalTitle, { color: isDark ? "#fff" : "#000" }]}>Total:</Text>
+                  <Text style={[styles.modalTitle, { color: isDark ? "#0f0" : "#080" }]}>${totalPrice.toFixed(2)}</Text>
+                </View>
+              </ScrollView>
             )}
 
-            {/* Pay Button */}
-            <TouchableOpacity style={styles.payButton} onPress={handlePay} accessibilityLabel="Pay button">
-              <Text style={styles.payButtonText}>Pay ${totalPrice.toFixed(2)}</Text>
-            </TouchableOpacity>
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={[styles.button, { flex: 1, marginRight: 8 }]}
+                onPress={() => setCartReviewVisible(false)}
+                accessibilityLabel="Close cart review"
+              >
+                <Text style={styles.buttonText}>Close</Text>
+              </TouchableOpacity>
 
-            {/* Cancel Button */}
-            <TouchableOpacity onPress={() => setPaymentVisible(false)} style={styles.closeButton} accessibilityLabel="Cancel payment">
-              <Text style={[styles.closeButtonText, { color: isDark ? "#aaa" : "#444" }]}>Cancel</Text>
-            </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.button, { flex: 1, backgroundColor: cartItems.length === 0 ? "#555" : "#28a745" }]}
+                onPress={() => {
+                  setCartReviewVisible(false);
+                  setPaymentVisible(true);
+                }}
+                disabled={cartItems.length === 0}
+                accessibilityLabel="Proceed to payment"
+                accessibilityHint={cartItems.length === 0 ? "Disabled when cart is empty" : "Proceed to payment screen"}
+              >
+                <Text style={styles.buttonText}>Checkout</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Payment Modal */}
+      <Modal visible={paymentVisible} transparent animationType="slide" onRequestClose={() => !processingPayment && setPaymentVisible(false)}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : undefined}
+          style={styles.modalOverlay}
+        >
+          <View style={[styles.modalContent, { backgroundColor: isDark ? "#222" : "#fff", maxHeight: "90%" }]}>
+            <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingBottom: 20 }}>
+              <Text style={[styles.modalTitle, { color: isDark ? "#fff" : "#000" }]}>Payment Details</Text>
+
+              <TextInput
+                style={[styles.input, { backgroundColor: isDark ? "#333" : "#eee", color: isDark ? "#fff" : "#000" }]}
+                placeholder="Card Number"
+                placeholderTextColor={isDark ? "#888" : "#666"}
+                keyboardType="number-pad"
+                value={cardNumber}
+                onChangeText={handleCardNumberChange}
+                maxLength={19}
+                accessibilityLabel="Card Number"
+              />
+
+              <TextInput
+                style={[styles.input, { backgroundColor: isDark ? "#333" : "#eee", color: isDark ? "#fff" : "#000" }]}
+                placeholder="Cardholder Name"
+                placeholderTextColor={isDark ? "#888" : "#666"}
+                value={cardName}
+                onChangeText={setCardName}
+                accessibilityLabel="Cardholder Name"
+                autoCapitalize="words"
+              />
+
+              <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+                <TextInput
+                  style={[styles.input, { backgroundColor: isDark ? "#333" : "#eee", color: isDark ? "#fff" : "#000", flex: 1, marginRight: 8 }]}
+                  placeholder="Expiry (MM/YY)"
+                  placeholderTextColor={isDark ? "#888" : "#666"}
+                  keyboardType="number-pad"
+                  value={expiry}
+                  onChangeText={handleExpiryChange}
+                  maxLength={5}
+                  accessibilityLabel="Expiry date"
+                />
+
+                <View style={{ flex: 1 }}>
+                  <View style={{ flexDirection: "row", alignItems: "center" }}>
+                    <TextInput
+                      style={[styles.input, { backgroundColor: isDark ? "#333" : "#eee", color: isDark ? "#fff" : "#000", flex: 1 }]}
+                      placeholder="CVV"
+                      placeholderTextColor={isDark ? "#888" : "#666"}
+                      keyboardType="number-pad"
+                      value={cvv}
+                      onChangeText={(text) => setCvv(text.replace(/[^\d]/g, "").slice(0, 3))}
+                      maxLength={3}
+                      secureTextEntry={!showCvv}
+                      accessibilityLabel="CVV"
+                    />
+                    <TouchableOpacity
+                      onPress={() => setShowCvv(!showCvv)}
+                      style={{ position: "absolute", right: 10 }}
+                      accessibilityLabel={showCvv ? "Hide CVV" : "Show CVV"}
+                    >
+                      <Ionicons name={showCvv ? "eye" : "eye-off"} size={24} color={isDark ? "#fff" : "#000"} />
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </View>
+
+              {paymentMessage && (
+                <Text
+                  style={{
+                    marginTop: 10,
+                    color: paymentMessage.type === "error" ? "red" : "green",
+                    fontWeight: "bold",
+                    textAlign: "center",
+                  }}
+                  accessibilityLiveRegion="polite"
+                >
+                  {paymentMessage.text}
+                </Text>
+              )}
+
+              <TouchableOpacity
+                style={[styles.button, processingPayment ? { backgroundColor: "#555" } : { marginTop: 20 }]}
+                onPress={handlePay}
+                disabled={processingPayment}
+                accessibilityLabel="Confirm payment"
+                accessibilityHint={processingPayment ? "Processing payment" : "Submits payment details"}
+              >
+                {processingPayment ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <Text style={styles.buttonText}>Pay ${totalPrice.toFixed(2)}</Text>
+                )}
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.button, { backgroundColor: "#aaa", marginTop: 12 }]}
+                onPress={() => !processingPayment && setPaymentVisible(false)}
+                accessibilityLabel="Cancel payment"
+              >
+                <Text style={[styles.buttonText, { color: "#333" }]}>Cancel</Text>
+              </TouchableOpacity>
+            </ScrollView>
           </View>
         </KeyboardAvoidingView>
       </Modal>
@@ -350,120 +470,152 @@ export default function Marketplace() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, paddingTop: 50 },
-  header: { fontSize: 26, fontWeight: "bold", paddingHorizontal: 16, paddingBottom: 10 },
-  list: { paddingHorizontal: 10, paddingBottom: 20 },
+  container: { flex: 1, paddingTop: 40 },
+  header: { fontSize: 36, fontWeight: "900", marginLeft: 20, marginBottom: 10 },
+  list: {
+    paddingHorizontal: 12,
+    paddingBottom: 100,
+  },
   card: {
-    borderRadius: 12,
-    margin: 10,
     width: CARD_WIDTH,
+    borderRadius: 12,
     padding: 12,
+    margin: 8,
     alignItems: "center",
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.2,
-    shadowRadius: 5,
-    elevation: 5,
+    shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: 1 },
+    shadowRadius: 3,
+    elevation: 3,
   },
-  image: { width: CARD_WIDTH - 24, height: CARD_WIDTH - 24, borderRadius: 12 },
-  title: { fontSize: 16, marginTop: 10, fontWeight: "600", textAlign: "center" },
-  price: { fontSize: 16, fontWeight: "bold", marginTop: 6 },
-  button: { marginTop: 10, backgroundColor: "#007aff", borderRadius: 8, paddingVertical: 8, paddingHorizontal: 20 },
-  buttonText: { color: "#fff", fontWeight: "600" },
-  quantityRow: { flexDirection: "row", alignItems: "center", marginTop: 8 },
-  qtyButton: { borderRadius: 6, paddingHorizontal: 10, paddingVertical: 4 },
-  qtyButtonText: { color: "#fff", fontSize: 18, fontWeight: "bold" },
-  qtyText: { marginHorizontal: 12, fontSize: 16, fontWeight: "600" },
-  cartIcon: {
-    position: "absolute",
-    bottom: 30,
-    right: 20,
-    backgroundColor: "#007aff",
-    borderRadius: 30,
-    padding: 15,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 5,
+  image: {
+    width: "100%",
+    height: "100%",
+    borderRadius: 12,
   },
-  cartBadge: { position: "absolute", top: 5, right: 5, backgroundColor: "red", borderRadius: 10, paddingHorizontal: 5, paddingVertical: 2 },
-  cartBadgeText: { color: "#fff", fontSize: 12, fontWeight: "bold" },
-
-  // Update Products Button
-  updateButton: {
-    marginHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 8,
-    marginBottom: 10,
-    alignItems: "center",
-  },
-  updateButtonText: {
-    fontWeight: "600",
-    fontSize: 16,
-  },
-
-  // Payment modal styles
-  modalContainer: {
-    flex: 1,
-    justifyContent: "center",
-    backgroundColor: "rgba(0,0,0,0.5)",
-    paddingHorizontal: 20,
-  },
-  modalContent: {
-    borderRadius: 16,
-    padding: 20,
-    elevation: 10,
-  },
-  modalHeader: {
-    fontSize: 22,
+  title: {
+    marginTop: 12,
     fontWeight: "700",
-    marginBottom: 15,
+    fontSize: 16,
     textAlign: "center",
   },
-  mastercardLogo: {
-    width: 120,
-    height: 40,
-    alignSelf: "center",
-    marginBottom: 20,
-  },
-  input: {
-    borderWidth: 1,
-    borderRadius: 8,
-    paddingVertical: 10,
-    paddingHorizontal: 14,
-    marginBottom: 12,
+  price: {
+    marginTop: 4,
+    fontWeight: "700",
     fontSize: 16,
   },
-  row: {
+  quantityRow: {
     flexDirection: "row",
-    justifyContent: "space-between",
+    alignItems: "center",
+    marginTop: 12,
   },
-  inputHalf: {
-    flex: 1,
-    borderWidth: 1,
-    borderRadius: 8,
-    paddingVertical: 10,
-    paddingHorizontal: 14,
-    fontSize: 16,
-  },
-  payButton: {
-    marginTop: 15,
-    backgroundColor: "#eb001b", // Mastercard red
-    paddingVertical: 14,
-    borderRadius: 8,
+  qtyButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    justifyContent: "center",
     alignItems: "center",
   },
-  payButtonText: {
+  qtyButtonText: {
+    color: "#fff",
+    fontSize: 22,
+    fontWeight: "600",
+  },
+  qtyText: {
+    marginHorizontal: 12,
+    fontSize: 18,
+    fontWeight: "700",
+  },
+  button: {
+    marginTop: 16,
+    backgroundColor: "#007aff",
+    paddingVertical: 12,
+    borderRadius: 12,
+    width: "100%",
+    alignItems: "center",
+  },
+  buttonText: {
     color: "#fff",
     fontWeight: "700",
     fontSize: 18,
   },
-  closeButton: {
-    marginTop: 12,
+  cartIcon: {
+    position: "absolute",
+    bottom: 40,
+    right: 30,
+    backgroundColor: "#007aff",
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    justifyContent: "center",
     alignItems: "center",
   },
-  closeButtonText: {
+  cartBadge: {
+    position: "absolute",
+    top: 6,
+    right: 6,
+    backgroundColor: "#ff3b30",
+    borderRadius: 8,
+    paddingHorizontal: 6,
+    paddingVertical: 1,
+  },
+  cartBadgeText: {
+    color: "#fff",
+    fontWeight: "700",
+    fontSize: 12,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalContent: {
+    width: "90%",
+    borderRadius: 16,
+    padding: 20,
+  },
+  modalTitle: {
+    fontSize: 28,
+    fontWeight: "900",
+    marginBottom: 20,
+    textAlign: "center",
+  },
+  cartItem: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingVertical: 6,
+    borderBottomWidth: 1,
+    borderBottomColor: "#ccc",
+  },
+  cartTotal: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: "#ccc",
+    paddingTop: 12,
+  },
+  modalButtons: {
+    flexDirection: "row",
+    marginTop: 20,
+  },
+  input: {
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    fontSize: 18,
+    marginBottom: 16,
+  },
+  updateButton: {
+    marginHorizontal: 20,
+    marginBottom: 10,
+    paddingVertical: 10,
+    borderRadius: 12,
+    alignItems: "center",
+  },
+  updateButtonText: {
     fontSize: 16,
+    fontWeight: "700",
   },
 });
