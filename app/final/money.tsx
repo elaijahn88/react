@@ -25,20 +25,34 @@ const getCurrentDateTime = () => {
   return now.toLocaleString(); // Example: "9/24/2025, 11:32:45 AM"
 };
 
-// 🔹 Sample transactions
+// 🔹 Sample transactions (all zero amounts)
 const sampleTransactions: Transaction[] = [
-  { id: "1", title: "Salary", amount: 1200, type: "income", date: getCurrentDateTime() },
-  { id: "2", title: "Coffee", amount: 4500, type: "expense", date: getCurrentDateTime() },
-  { id: "3", title: "Kfc", amount: 4500, type: "income", date: getCurrentDateTime() },
-  { id: "4", title: "Iphones", amount: 65000, type: "expense", date: getCurrentDateTime() },
+  { id: "1", title: "Salary", amount: 0, type: "income", date: getCurrentDateTime() },
+  { id: "2", title: "Coffee", amount: 0, type: "expense", date: getCurrentDateTime() },
+  { id: "3", title: "Kfc", amount: 0, type: "income", date: getCurrentDateTime() },
+  { id: "4", title: "Iphones", amount: 0, type: "expense", date: getCurrentDateTime() },
 ];
 
 export default function FinanceDashboard() {
-  const accountBalance = 500;
+  const accountBalance = 0; // Set account balance to 0
   const balanceThreshold = 100000;
 
-  // 🔹 State for selected action
   const [selectedAction, setSelectedAction] = useState<string | null>(null);
+
+  // 🔹 Section visibility state
+  const [visibleSections, setVisibleSections] = useState({
+    video: true,
+    accountSummary: true,
+    quickActions: true,
+    transactions: true,
+  });
+
+  const toggleSection = (key: keyof typeof visibleSections) => {
+    setVisibleSections((prev) => ({
+      ...prev,
+      [key]: !prev[key],
+    }));
+  };
 
   const renderTransaction = ({ item }: { item: Transaction }) => (
     <View style={styles.transactionCard}>
@@ -68,81 +82,116 @@ export default function FinanceDashboard() {
         <Text style={styles.headerText}>MONEY_GRAM</Text>
       </View>
 
-      {/* 1. Video Section */}
-      <Text style={styles.sectionTitle}>Economy</Text>
-      <Video
-        source={{ uri: "https://xlijah.com/ai.mp4" }}
-        style={styles.video}
-        controls={false}
-        paused={false}
-        resizeMode="contain"
-      />
-
-      {/* 2. Account Summary */}
-      <Text style={styles.sectionTitle}>Account..</Text>
-      <View
-        style={[
-          styles.summaryCard,
-          { backgroundColor: accountBalance > balanceThreshold ? "green" : "red" },
-        ]}
-      >
-        <Text style={styles.summaryLabel}>Balance</Text>
-        <Text style={styles.summaryAmount}>{accountBalance.toLocaleString()} UGX</Text>
-      </View>
-
-      <View style={styles.summaryRow}>
-        <TouchableOpacity
-          style={[styles.summaryCard, { flex: 1, marginRight: 10 }]}
-          onPress={() => setSelectedAction("Savings")}
-        >
-          <Text style={styles.summaryLabel}>Savings</Text>
-          <Text style={styles.summaryAmount}>0.000 UGX</Text>
+      {/* 🔹 Section Toggles */}
+      <View style={styles.toggles}>
+        <TouchableOpacity onPress={() => toggleSection("video")}>
+          <Text style={styles.toggleText}>🎥 Toggle Video</Text>
         </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.summaryCard, { flex: 1, marginLeft: 10 }]}
-          onPress={() => setSelectedAction("Loans")}
-        >
-          <Text style={styles.summaryLabel}>Loans</Text>
-          <Text style={styles.summaryAmount}>0.000 UGX</Text>
+        <TouchableOpacity onPress={() => toggleSection("accountSummary")}>
+          <Text style={styles.toggleText}>💰 Toggle Account</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => toggleSection("quickActions")}>
+          <Text style={styles.toggleText}>⚡ Toggle Quick Actions</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => toggleSection("transactions")}>
+          <Text style={styles.toggleText}>📜 Toggle Transactions</Text>
         </TouchableOpacity>
       </View>
 
-      {/* 3. Quick Actions */}
-      <Text style={styles.sectionTitle}>FST_ACT</Text>
-      <View style={styles.actions}>
-        <TouchableOpacity style={styles.actionButton} onPress={() => setSelectedAction("Send Money")}>
-          <Text style={styles.actionText}>Send</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.actionButton} onPress={() => setSelectedAction("Receive Money")}>
-          <Text style={styles.actionText}>Receive</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.actionButton} onPress={() => setSelectedAction("Investments")}>
-          <Text style={styles.actionText}>Invest</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.actionButton} onPress={() => setSelectedAction("Savings")}>
-          <Text style={styles.actionText}>Savings</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.actionButton} onPress={() => setSelectedAction("Loans")}>
-          <Text style={styles.actionText}>Loans</Text>
-        </TouchableOpacity>
-      </View>
+      {/* 🔹 Video Section */}
+      {visibleSections.video && (
+        <>
+          <Text style={styles.sectionTitle}>Economy</Text>
+          <Video
+            source={{ uri: "https://xlijah.com/ai.mp4" }}
+            style={styles.video}
+            controls={false}
+            paused={false}
+            resizeMode="contain"
+            repeat={true}
+            ignoreSilentSwitch="ignore"
+            onError={(e) => console.log("Video error:", e)}
+          />
+        </>
+      )}
 
-      {/* 🔹 Action Card that updates */}
+      {/* 🔹 Account Summary */}
+      {visibleSections.accountSummary && (
+        <>
+          <Text style={styles.sectionTitle}>Account..</Text>
+          <View
+            style={[
+              styles.summaryCard,
+              { backgroundColor: accountBalance > balanceThreshold ? "green" : "red" },
+            ]}
+          >
+            <Text style={styles.summaryLabel}>Balance</Text>
+            <Text style={styles.summaryAmount}>{accountBalance.toLocaleString()} UGX</Text>
+          </View>
+
+          <View style={styles.summaryRow}>
+            <TouchableOpacity
+              style={[styles.summaryCard, { flex: 1, marginRight: 10 }]}
+              onPress={() => setSelectedAction("Savings")}
+            >
+              <Text style={styles.summaryLabel}>Savings</Text>
+              <Text style={styles.summaryAmount}>0.000 UGX</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.summaryCard, { flex: 1, marginLeft: 10 }]}
+              onPress={() => setSelectedAction("Loans")}
+            >
+              <Text style={styles.summaryLabel}>Loans</Text>
+              <Text style={styles.summaryAmount}>0.000 UGX</Text>
+            </TouchableOpacity>
+          </View>
+        </>
+      )}
+
+      {/* 🔹 Quick Actions */}
+      {visibleSections.quickActions && (
+        <>
+          <Text style={styles.sectionTitle}>FST_ACT</Text>
+          <View style={styles.actions}>
+            <TouchableOpacity style={styles.actionButton} onPress={() => setSelectedAction("Send Money")}>
+              <Text style={styles.actionText}>Send</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.actionButton} onPress={() => setSelectedAction("Receive Money")}>
+              <Text style={styles.actionText}>Receive</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.actionButton} onPress={() => setSelectedAction("Investments")}>
+              <Text style={styles.actionText}>Invest</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.actionButton} onPress={() => setSelectedAction("Savings")}>
+              <Text style={styles.actionText}>Savings</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.actionButton} onPress={() => setSelectedAction("Loans")}>
+              <Text style={styles.actionText}>Loans</Text>
+            </TouchableOpacity>
+          </View>
+        </>
+      )}
+
+      {/* 🔹 Dynamic Action Card */}
       {selectedAction && (
         <View style={styles.actionCard}>
           <Text style={styles.actionCardText}>👉 {selectedAction} selected</Text>
         </View>
       )}
 
-      {/* 4. Recent Transactions */}
-      <Text style={styles.sectionTitle}>Trn_Hstry</Text>
-      <FlatList
-        data={sampleTransactions}
-        renderItem={renderTransaction}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={{ paddingBottom: 20 }}
-        scrollEnabled={false}
-      />
+      {/* 🔹 Transactions */}
+      {visibleSections.transactions && (
+        <>
+          <Text style={styles.sectionTitle}>Trn_Hstry</Text>
+          <FlatList
+            data={sampleTransactions}
+            renderItem={renderTransaction}
+            keyExtractor={(item) => item.id}
+            contentContainerStyle={{ paddingBottom: 20 }}
+            scrollEnabled={false}
+          />
+        </>
+      )}
     </ScrollView>
   );
 }
@@ -167,6 +216,16 @@ const styles = StyleSheet.create({
     borderColor: "#fff",
   },
   headerText: { fontSize: 20, fontWeight: "bold", color: "#fff" },
+
+  // 🔹 Toggle buttons
+  toggles: {
+    marginBottom: 15,
+  },
+  toggleText: {
+    color: "#0f0",
+    fontSize: 14,
+    paddingVertical: 5,
+  },
 
   sectionTitle: { fontSize: 18, fontWeight: "bold", marginVertical: 10, color: "#fff" },
   video: { width: width - 30, height: 200, marginBottom: 15, borderRadius: 12 },
