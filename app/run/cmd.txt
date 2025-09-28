@@ -4,7 +4,7 @@
 
 ! cd jovan && expo  install react-native-video
 ! cd jovan && expo  install firebase 
-!cd jovan && expo install three @react-three/fiber @react-three/drei
+!cd jovan && expo install three @react-three/fiber @react-three/drei react-native-gesture-handler expo-gl
 
 !eas login
 ! cd jovan && eas build -p android --profile preview
