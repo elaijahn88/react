@@ -8,8 +8,9 @@ import {
   useColorScheme,
   StatusBar,
   TouchableOpacity,
+  ActivityIndicator,
 } from "react-native";
-import { auth, db } from "../firebase";
+import { auth, db } from "../firebase"; // adjust path
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
@@ -23,17 +24,22 @@ interface IUserData {
   createdAt?: string;
 }
 
-export default function AuthDemo() {
+export default function AuthAndFetcher() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [userData, setUserData] = useState<IUserData | null>(null);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
+  // For UserFetcher section
+  const [fetchedEmail, setFetchedEmail] = useState("");
+  const [fetchLoading, setFetchLoading] = useState(false);
+  const [fetchError, setFetchError] = useState("");
+
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
 
-  // Auto-dismiss message after 5 seconds
+  // Auto-dismiss messages
   useEffect(() => {
     if (message) {
       const timer = setTimeout(() => setMessage(null), 5000);
@@ -41,6 +47,7 @@ export default function AuthDemo() {
     }
   }, [message]);
 
+  // Monitor auth state
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user: User | null) => {
       if (user) {
@@ -87,7 +94,6 @@ export default function AuthDemo() {
 
       const docRef = doc(db, "users", user.uid);
       const docSnap = await getDoc(docRef);
-
       if (!docSnap.exists()) {
         await setDoc(docRef, {
           email: user.email,
@@ -98,6 +104,28 @@ export default function AuthDemo() {
       setMessage({ type: "success", text: "User signed in!" });
     } catch (err: any) {
       setMessage({ type: "error", text: err.message });
+    }
+  };
+
+  // Manual fetch like UserFetcher
+  const fetchUserDoc = async () => {
+    setFetchLoading(true);
+    setFetchError("");
+    setFetchedEmail("");
+    try {
+      const userRef = doc(db, "users", "users");
+      const userSnap = await getDoc(userRef);
+      if (userSnap.exists()) {
+        const data = userSnap.data();
+        setFetchedEmail(data.email || "No email found");
+      } else {
+        setFetchError('Document "users" not found in "users" collection.');
+      }
+    } catch (err) {
+      console.error(err);
+      setFetchError("Error fetching user document.");
+    } finally {
+      setFetchLoading(false);
     }
   };
 
@@ -178,6 +206,15 @@ export default function AuthDemo() {
           <Button title="Login" onPress={signIn} />
         </>
       )}
+
+      {/* UserFetcher section */}
+      <View style={{ marginTop: 30 }}>
+        <Text style={{ fontWeight: "600", marginBottom: 8 }}>Manual Fetch Test (/users/users)</Text>
+        <Button title="Fetch Email" onPress={fetchUserDoc} />
+        {fetchLoading && <ActivityIndicator style={{ marginTop: 10 }} />}
+        {fetchedEmail ? <Text style={styles.result}>Email: {fetchedEmail}</Text> : null}
+        {fetchError ? <Text style={styles.error}>{fetchError}</Text> : null}
+      </View>
     </View>
   );
 }
@@ -204,4 +241,6 @@ const styles = StyleSheet.create({
     fontStyle: "italic",
     textAlign: "right",
   },
+  result: { marginTop: 10, fontSize: 16, color: "green" },
+  error: { marginTop: 10, fontSize: 16, color: "red" },
 });
