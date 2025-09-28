@@ -79,7 +79,7 @@ export default function FinanceDashboard() {
           source={{ uri: "https://xlijah/pics/icon.png" }}
           style={styles.profilePic}
         />
-        <Text style={styles.headerText}>MONEY_GRAM</Text>
+        <Text style={styles.headerText}>MONEY</Text>
       </View>
 
       {/* 🔹 Section Toggles */}
