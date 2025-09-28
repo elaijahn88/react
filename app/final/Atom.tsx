@@ -41,10 +41,10 @@ const initialProducts: Product[] = [
   { id: "4", name: "Leather Bag", price: 150, image: "https://xlijah.com/pics/bag.webp", updateLink: "http://xlijah.com/pics/pics/guns.jpeg" },
   { id: "5", name: "Sunglasses", price: 50, image: "https://xlijah.com/pics/sunglasses.jpg", updateLink: "http://xlijah.com/pics/pics/macbook.jpg" },
   { id: "6", name: "iPhone 12", price: 999, image: "https://xlijah.com/pics/iphone.jpg", updateLink: "http://xlijah.com/pics/pics/notebook.jpeg" },
-  { id: "7", name: "MacBook Pro", price: 2400, image: "https://xlijah.com/pics/macbook_pro.jpg", updateLink: "http://xlijah.com/pics/pics/mac.jpeg" },
-  { id: "8", name: "Canon DSLR", price: 1200, image: "https://xlijah.com/pics/canon_dslr.jpg", updateLink: "http://xlijah.com/pics/pics/lenovo.jpg" },
-  { id: "9", name: "Fitbit Charge", price: 130, image: "https://xlijah.com/pics/fitbit_charge.jpg", updateLink: "http://xlijah.com/pics/pics/chemicals.jpeg" },
-  { id: "10", name: "Google Pixel", price: 700, image: "https://xlijah.com/pics/google_pixel.jpg", updateLink: "http://xlijah.com/pics/pics/guns.jpeg" },
+  { id: "7", name: "MacBook Pro", price: 2400, image: "https://xlijah.com/pics/chemicals.jpg", updateLink: "http://xlijah.com/pics/pics/mac.jpeg" },
+  { id: "8", name: "Canon DSLR", price: 1200, image: "https://xlijah.com/pics/pics/lenovo.jpg", updateLink: "http://xlijah.com/pics/pics/lenovo.jpg" },
+  { id: "9", name: "Fitbit Charge", price: 130, image: "https://xlijah.com/pics/pics/guns.jpeg", updateLink: "http://xlijah.com/pics/pics/chemicals.jpeg" },
+  { id: "10", name: "Google Pixel", price: 700, image: "https://xlijah.com/pics/apple_watch.jpg", updateLink: "http://xlijah.com/pics/pics/guns.jpeg" },
 ];
 
 const fallbackImage = "https://xlijah.com/pics/pics/notebook.jpeg";
