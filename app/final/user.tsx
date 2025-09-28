@@ -8,7 +8,7 @@ import {
 } from 'react-native'; // If you're using React Web, use divs instead
 
 import { doc, getDoc } from 'firebase/firestore';
-import { db } from './firebase'; // make sure this is your configured Firestore instance
+import { db } from '../firebase'; // make sure this is your configured Firestore instance
 
 export default function UserFetcher() {
   const [email, setEmail] = useState('');
