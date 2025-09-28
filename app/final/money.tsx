@@ -85,16 +85,16 @@ export default function FinanceDashboard() {
       {/* 🔹 Section Toggles */}
       <View style={styles.toggles}>
         <TouchableOpacity onPress={() => toggleSection("video")}>
-          <Text style={styles.toggleText}>🎥 Toggle Video</Text>
+          <Text style={styles.toggleText}> Video</Text>
         </TouchableOpacity>
         <TouchableOpacity onPress={() => toggleSection("accountSummary")}>
-          <Text style={styles.toggleText}>💰 Toggle Account</Text>
+          <Text style={styles.toggleText}>Account</Text>
         </TouchableOpacity>
         <TouchableOpacity onPress={() => toggleSection("quickActions")}>
-          <Text style={styles.toggleText}>⚡ Toggle Quick Actions</Text>
+          <Text style={styles.toggleText}>Actions</Text>
         </TouchableOpacity>
         <TouchableOpacity onPress={() => toggleSection("transactions")}>
-          <Text style={styles.toggleText}>📜 Toggle Transactions</Text>
+          <Text style={styles.toggleText}>Transactions</Text>
         </TouchableOpacity>
       </View>
 
