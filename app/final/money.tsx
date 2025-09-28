@@ -54,7 +54,7 @@ const financeItems = {
   ],
   Sacco: [
     {
-      name: "Teachers Sacco",
+      name: "Sacco",
       details: "Savings and credit cooperative for teachers.",
     },
     {
