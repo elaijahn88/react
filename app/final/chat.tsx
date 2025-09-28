@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef } from "react";
 import {
   View,
   Text,
@@ -12,8 +12,6 @@ import {
   Dimensions,
   useColorScheme,
   StatusBar,
-  Animated,
-  Easing,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import Video from "react-native-video";
@@ -33,17 +31,6 @@ export default function AIChat() {
 
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
-
-  const labelAnim = useRef(new Animated.Value(input.length > 0 ? 1 : 0)).current;
-
-  useEffect(() => {
-    Animated.timing(labelAnim, {
-      toValue: input.length > 0 ? 1 : 0,
-      duration: 200,
-      easing: Easing.out(Easing.ease),
-      useNativeDriver: false,
-    }).start();
-  }, [input]);
 
   const handleVideoEnd = () => {
     setVideoPaused(true);
@@ -158,7 +145,7 @@ export default function AIChat() {
 
       {loading && <ActivityIndicator size="large" color="#25D366" />}
 
-      {/* Input with curved floating label */}
+      {/* Input */}
       <View
         style={[
           styles.inputContainer,
@@ -174,29 +161,6 @@ export default function AIChat() {
         ]}
       >
         <View style={{ flex: 1, justifyContent: "center" }}>
-          <Animated.View
-            style={[
-              styles.floatingLabel,
-              {
-                top: labelAnim.interpolate({ inputRange: [0, 1], outputRange: [14, -10] }),
-                left: 12,
-                transform: [
-                  {
-                    scale: labelAnim.interpolate({ inputRange: [0, 1], outputRange: [1, 0.9] }),
-                  },
-                ],
-                backgroundColor: isDark ? "rgba(0,0,0,0.5)" : "rgba(255,255,255,0.6)",
-                borderRadius: 16,
-                paddingHorizontal: 8,
-                paddingVertical: 2,
-              },
-            ]}
-          >
-            <Text style={{ color: isDark ? "#fff" : "#888", fontWeight: "600" }}>
-              CHAT_ATOM...
-            </Text>
-          </Animated.View>
-
           <TextInput
             value={input}
             onChangeText={setInput}
@@ -207,7 +171,8 @@ export default function AIChat() {
                 color: isDark ? "#f5f5f5" : "#000",
               },
             ]}
-            placeholder=""
+            placeholder="Type your message..."
+            placeholderTextColor={isDark ? "#888" : "#888"}
             returnKeyType="send"
             onSubmitEditing={sendMessage}
           />
@@ -278,8 +243,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     borderTopWidth: 1,
   },
-  input: { flex: 1, borderRadius: 25, paddingHorizontal: 18, paddingVertical: 12, fontSize: 16 },
-  floatingLabel: { position: "absolute", zIndex: 10 },
+  input: {
+    flex: 1,
+    borderRadius: 25,
+    paddingHorizontal: 18,
+    paddingVertical: 12,
+    fontSize: 16,
+  },
   iconButton: {
     marginHorizontal: 4,
     padding: 8,
@@ -299,6 +269,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 3 },
     shadowRadius: 5,
     elevation: 8,
-    justifyContent: "center",alignItems: "center",
+    justifyContent: "center",
+    alignItems: "center",
   },
 });
