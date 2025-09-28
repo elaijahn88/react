@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { View, Text, FlatList, ActivityIndicator, StyleSheet } from "react-native";
 import { collection, getDocs } from "firebase/firestore";
-import { db } from "./firebase"; // your firebase.ts file
+import { db } from "../firebase"; // your firebase.ts file
 
 type Account = {
   id: string;
