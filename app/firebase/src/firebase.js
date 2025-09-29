@@ -20,6 +20,8 @@ const app = initializeApp(firebaseConfig);
 
 // ✅ Initialize Firestore
 export const db = getFirestore(app);
+//messaging
+export const messaging = getMessaging(app);
 
 // ✅ Firebase Auth & Storage
 export const auth = getAuth(app);
