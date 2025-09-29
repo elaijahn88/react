@@ -7,6 +7,8 @@
 !cd jovan && expo install three @react-three/fiber @react-three/drei react-native-gesture-handler expo-gl
 ! cd jovan && expo install react-native-gesture-handler react-native-reanimated expo-gl three
 !cd jovan && expo install @shopify/react-native-skia
+!expo install @react-native-firebase/app @react-native-firebase/messaging
+
 
 
 !eas login
