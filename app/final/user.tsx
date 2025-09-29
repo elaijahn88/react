@@ -45,7 +45,7 @@ export default function UserFetcher() {
       <Button title="Fetch Email" onPress={fetchUser} />
       {loading && <ActivityIndicator style={{ marginTop: 10 }} />}
       {email ? <Text style={styles.result}>Email: {email}</Text> : null}
-      {error ? <Text style={styles.error}>{error}</Text> : null}
+      {error ? <Text style={styles.error}>Network!!!</Text> : null}
     </View>
   );
 }
