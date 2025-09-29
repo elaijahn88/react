@@ -25,6 +25,7 @@ export const auth = getAuth(app);
 export const storage = getStorage(app);
 export const messaging = getMessaging(app);
 export const database = getDatabase(app);
+export { ref, push, onValue };
 
 // 🔐 VAPID Key for Web Push
 export const VAPID_KEY = "BOzsw0X4rASZJI6TbOPnqb-zUU4SJVyYWZsnXlO4iw9GAvhhywZBCF3jlFB47WqBkw8Ro4zGK36DkcLq4TRElzA";
