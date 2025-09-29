@@ -23,3 +23,38 @@ export const db = getFirestore(app);
 // ✅ Firebase Auth & Storage
 export const auth = getAuth(app);
 export const storage = getStorage(app);
+const VAPID_KEY = "BOzsw0X4rASZJI6TbOPnqb-zUU4SJVyYWZsnXlO4iw9GAvhhywZBCF3jlFB47WqBkw8Ro4zGK36DkcLq4TRElzA";
+
+function App() {
+  const [fcmToken, setFcmToken] = useState(null);
+
+  useEffect(() => {
+    async function requestPermissionAndGetToken() {
+      try {
+        // Request notification permission from the user
+        const permission = await Notification.requestPermission();
+
+        if (permission === "granted") {
+          console.log("Notification permission granted.");
+          
+          // Get the FCM token using the VAPID key
+          const token = await getToken(messaging, { vapidKey: VAPID_KEY });
+          console.log("FCM Token generated:", token);
+          setFcmToken(token);
+
+          // You would typically send this token to your backend server
+          // to store it for sending targeted notifications.
+          // sendTokenToServer(token);
+
+        } else if (permission === "denied") {
+          console.log("Notification permission denied.");
+        }
+      } catch (err) {
+        console.error("Error retrieving FCM token:", err);
+      }
+    }
+
+    requestPermissionAndGetToken();
+
+  }, []);
+
