@@ -4,6 +4,7 @@ import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 import { getMessaging } from "firebase/messaging";
+import { getDatabase } from "firebase/database";
 
 // 🔑 Your Firebase config
 const firebaseConfig = {
@@ -25,6 +26,9 @@ export const messaging = getMessaging(app);
 
 // ✅ Firebase Auth & Storage
 export const auth = getAuth(app);
+//realtime database 
+export const database = getDatabase(app);
+
 export const storage = getStorage(app);
 const VAPID_KEY = "BOzsw0X4rASZJI6TbOPnqb-zUU4SJVyYWZsnXlO4iw9GAvhhywZBCF3jlFB47WqBkw8Ro4zGK36DkcLq4TRElzA";
 
