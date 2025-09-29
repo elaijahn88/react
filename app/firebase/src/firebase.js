@@ -4,7 +4,7 @@ import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 import { getMessaging, getToken } from "firebase/messaging";
-import { getDatabase } from "firebase/database";
+import { getDatabase , ref, push, onValue} from "firebase/database";
 
 // 🔑 Firebase configuration
 const firebaseConfig = {
