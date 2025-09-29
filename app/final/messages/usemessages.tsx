@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import NetInfo from "@react-native-community/netinfo";
-import { database, ref, push, onValue } from "./firebase";
+import { database, ref, push, onValue } from "../firebase";
 
 export const useMessages = () => {
   const [messages, setMessages] = useState([]);
