@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { View, TextInput, Button, FlatList, Text } from "react-native";
-import { useMessages } from "./useMessages";
+import { useMessages } from "../useMessages";
 
 export default function ChatScreen() {
   const { messages, sendMessage } = useMessages();
