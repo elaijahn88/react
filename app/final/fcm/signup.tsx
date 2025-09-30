@@ -3,8 +3,17 @@ import { View, Text, TextInput, Button, StyleSheet } from "react-native";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { doc, setDoc } from "firebase/firestore";
 import { auth, db } from "../firebase";
+import { NativeStackScreenProps } from "@react-navigation/native-stack";
 
-export default function SignupScreen({ navigation }) {
+type RootStackParamList = {
+  Signup: undefined;
+  Login: undefined;
+  Home: { profile: { uid: string; email: string; name: string } };
+};
+
+type Props = NativeStackScreenProps<RootStackParamList, "Signup">;
+
+export default function SignupScreen({ navigation }: Props) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
@@ -27,7 +36,7 @@ export default function SignupScreen({ navigation }) {
 
       alert("Signup successful!");
       navigation.navigate("Login");
-    } catch (err) {
+    } catch (err: any) {
       alert(err.message);
     }
   };
