@@ -1,246 +1,155 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   View,
   TextInput,
   Button,
   StyleSheet,
   Text,
-  useColorScheme,
-  StatusBar,
-  TouchableOpacity,
   ActivityIndicator,
 } from "react-native";
 import { auth, db } from "../firebase"; // adjust path
-import {
-  createUserWithEmailAndPassword,
-  signInWithEmailAndPassword,
-  onAuthStateChanged,
-  User,
-} from "firebase/auth";
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth";
 import { doc, setDoc, getDoc } from "firebase/firestore";
 
 interface IUserData {
   email: string;
+  name: string;
+  account: number;
+  password: string;
+  age: number;
   createdAt?: string;
 }
 
-export default function AuthAndFetcher() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [userData, setUserData] = useState<IUserData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+export default function AuthAndFetcher(): JSX.Element {
+  const [email, setEmail] = useState<string>("");
+  const [password, setPassword] = useState<string>("");
+  const [name, setName] = useState<string>("");
+  const [account, setAccount] = useState<string>("");
+  const [age, setAge] = useState<string>("");
 
-  // For UserFetcher section
-  const [fetchedEmail, setFetchedEmail] = useState("");
-  const [fetchLoading, setFetchLoading] = useState(false);
-  const [fetchError, setFetchError] = useState("");
+  const [loading, setLoading] = useState<boolean>(false);
+  const [message, setMessage] = useState<string>("");
 
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === "dark";
-
-  // Auto-dismiss messages
-  useEffect(() => {
-    if (message) {
-      const timer = setTimeout(() => setMessage(null), 5000);
-      return () => clearTimeout(timer);
+  // SIGN UP
+  const signUp = async (): Promise<void> => {
+    if (!email || !password || !name || !account || !age) {
+      setMessage("All fields are required");
+      return;
     }
-  }, [message]);
 
-  // Monitor auth state
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user: User | null) => {
-      if (user) {
-        try {
-          const docRef = doc(db, "users", user.uid);
-          const docSnap = await getDoc(docRef);
-          if (docSnap.exists()) {
-            setUserData(docSnap.data() as IUserData);
-          } else {
-            setUserData({ email: user.email || "" });
-          }
-        } catch (err: any) {
-          setMessage({ type: "error", text: "Error fetching user data: " + err.message });
-        }
-      } else {
-        setUserData(null);
-      }
-      setLoading(false);
-    });
+    setLoading(true);
+    setMessage("");
 
-    return () => unsubscribe();
-  }, []);
-
-  const signUp = async () => {
     try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
+      const userRef = doc(db, "users", email);
+      const docSnap = await getDoc(userRef);
+      if (docSnap.exists()) {
+        setMessage("User with this email already exists!");
+        setLoading(false);
+        return;
+      }
 
-      await setDoc(doc(db, "users", user.uid), {
-        email: user.email,
+      // Create Firebase Auth user
+      await createUserWithEmailAndPassword(auth, email, password);
+
+      // Add extra fields in Firestore
+      const userData: IUserData = {
+        email,
+        name,
+        account: parseInt(account, 10),
+        password, // plain text, consider hashing for production
+        age: parseInt(age, 10),
         createdAt: new Date().toISOString(),
-      });
+      };
 
-      setMessage({ type: "success", text: "User registered!" });
+      await setDoc(userRef, userData);
+
+      setMessage("✅ User registered successfully!");
     } catch (err: any) {
-      setMessage({ type: "error", text: err.message });
-    }
-  };
-
-  const signIn = async () => {
-    try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
-
-      const docRef = doc(db, "users", user.uid);
-      const docSnap = await getDoc(docRef);
-      if (!docSnap.exists()) {
-        await setDoc(docRef, {
-          email: user.email,
-          createdAt: new Date().toISOString(),
-        });
-      }
-
-      setMessage({ type: "success", text: "User signed in!" });
-    } catch (err: any) {
-      setMessage({ type: "error", text: err.message });
-    }
-  };
-
-  // Manual fetch like UserFetcher
-  const fetchUserDoc = async () => {
-    setFetchLoading(true);
-    setFetchError("");
-    setFetchedEmail("");
-    try {
-      const userRef = doc(db, "users", "users");
-      const userSnap = await getDoc(userRef);
-      if (userSnap.exists()) {
-        const data = userSnap.data();
-        setFetchedEmail(data.email || "No email found");
-      } else {
-        setFetchError('Document "users" not found in "users" collection.');
-      }
-    } catch (err) {
       console.error(err);
-      setFetchError("Error fetching user document.");
+      setMessage("Error: " + err.message);
     } finally {
-      setFetchLoading(false);
+      setLoading(false);
     }
   };
 
-  if (loading) return <Text style={{ flex: 1, textAlign: "center", marginTop: 50 }}>Loading...</Text>;
+  // SIGN IN
+  const signIn = async (): Promise<void> => {
+    if (!email || !password) {
+      setMessage("Email & Password required");
+      return;
+    }
+
+    setLoading(true);
+    setMessage("");
+
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      setMessage("✅ Signed in successfully!");
+    } catch (err: any) {
+      console.error(err);
+      setMessage("Error: " + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
-    <View style={[styles.container, { backgroundColor: isDark ? "#000" : "#fff" }]}>
-      <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />
+    <View style={styles.container}>
+      <TextInput
+        style={styles.input}
+        placeholder="Email"
+        value={email}
+        onChangeText={setEmail}
+        keyboardType="email-address"
+        autoCapitalize="none"
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Password"
+        value={password}
+        onChangeText={setPassword}
+        secureTextEntry
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Name"
+        value={name}
+        onChangeText={setName}
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Account Number"
+        value={account}
+        onChangeText={setAccount}
+        keyboardType="numeric"
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Age"
+        value={age}
+        onChangeText={setAge}
+        keyboardType="numeric"
+      />
 
-      {message && (
-        <TouchableOpacity onPress={() => setMessage(null)} activeOpacity={0.8}>
-          <View
-            style={[
-              styles.messageCard,
-              {
-                backgroundColor: message.type === "success" ? "#e6ffed" : "#ffe6e6",
-                borderColor: message.type === "success" ? "#28a745" : "#dc3545",
-              },
-            ]}
-          >
-            <Text
-              style={{
-                color: message.type === "success" ? "#155724" : "#721c24",
-                fontWeight: "700",
-                fontSize: 16,
-                marginBottom: 5,
-              }}
-            >
-              {message.type === "success" ? "✅ Success" : "❌ Error"}
-            </Text>
-            <Text style={{ color: message.type === "success" ? "#155724" : "#721c24" }}>
-              {message.text}
-            </Text>
-            <Text style={styles.dismissText}>Tap to dismiss</Text>
-          </View>
-        </TouchableOpacity>
-      )}
+      <Button title="Sign Up" onPress={signUp} />
+      <View style={{ height: 10 }} />
+      <Button title="Login" onPress={signIn} />
 
-      {userData ? (
-        <Text style={[styles.text, { color: isDark ? "#f5f5f5" : "#000" }]}>
-          Welcome, {userData.email}
-        </Text>
-      ) : (
-        <>
-          <TextInput
-            style={[
-              styles.input,
-              {
-                backgroundColor: isDark ? "#1c1c1e" : "#fff",
-                color: isDark ? "#f5f5f5" : "#000",
-                borderColor: isDark ? "#333" : "#ccc",
-              },
-            ]}
-            placeholder="Email"
-            placeholderTextColor={isDark ? "#888" : "#666"}
-            value={email}
-            onChangeText={setEmail}
-            keyboardType="email-address"
-            autoCapitalize="none"
-          />
-          <TextInput
-            style={[
-              styles.input,
-              {
-                backgroundColor: isDark ? "#1c1c1e" : "#fff",
-                color: isDark ? "#f5f5f5" : "#000",
-                borderColor: isDark ? "#333" : "#ccc",
-              },
-            ]}
-            placeholder="Password"
-            placeholderTextColor={isDark ? "#888" : "#666"}
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-          />
-          <Button title="Sign Up" onPress={signUp} />
-          <View style={{ height: 10 }} />
-          <Button title="Login" onPress={signIn} />
-        </>
-      )}
-
-      {/* UserFetcher section */}
-      <View style={{ marginTop: 30 }}>
-        <Text style={{ fontWeight: "600", marginBottom: 8 }}>Manual Fetch Test (/users/users)</Text>
-        <Button title="Fetch Email" onPress={fetchUserDoc} />
-        {fetchLoading && <ActivityIndicator style={{ marginTop: 10 }} />}
-        {fetchedEmail ? <Text style={styles.result}>Email: {fetchedEmail}</Text> : null}
-        {fetchError ? <Text style={styles.error}>{fetchError}</Text> : null}
-      </View>
+      {loading && <ActivityIndicator style={{ marginTop: 10 }} />}
+      {message ? <Text style={styles.message}>{message}</Text> : null}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, justifyContent: "center", padding: 20 },
-  input: { height: 50, borderWidth: 1, marginBottom: 15, paddingHorizontal: 10, borderRadius: 5 },
-  text: { fontSize: 18, fontWeight: "600", textAlign: "center", marginBottom: 20 },
-  messageCard: {
-    padding: 16,
-    borderRadius: 8,
-    borderWidth: 1.5,
-    marginBottom: 20,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 3,
+  input: {
+    height: 50,
+    borderWidth: 1,
+    marginBottom: 15,
+    paddingHorizontal: 10,
+    borderRadius: 5,
   },
-  dismissText: {
-    marginTop: 10,
-    color: "#666",
-    fontSize: 12,
-    fontStyle: "italic",
-    textAlign: "right",
-  },
-  result: { marginTop: 10, fontSize: 16, color: "green" },
-  error: { marginTop: 10, fontSize: 16, color: "red" },
+  message: { marginTop: 10, fontSize: 16, color: "green", textAlign: "center" },
 });
