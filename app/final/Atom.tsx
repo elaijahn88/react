@@ -2,15 +2,15 @@ import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
-  TouchableOpacity,
   FlatList,
+  Image,
+  TouchableOpacity,
   StyleSheet,
-  Alert,
-  TextInput,
+  ActivityIndicator,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { doc, getDoc, setDoc } from "firebase/firestore";
-import { db } from "../firebase";
+import { db } from "../firebase"; // Adjust path
+import { doc, getDoc, setDoc, collection, getDocs } from "firebase/firestore";
 
 interface Product {
   id: string;
@@ -20,7 +20,10 @@ interface Product {
   updateLink: string;
 }
 
-// Initial products if user email not set
+interface Preferences {
+  [productId: string]: number;
+}
+
 const initialProducts: Product[] = [
   { id: "1", name: "Nike Sneakers", price: 120, image: "https://xlijah.com/pics/sneaker.jpg", updateLink: "http://xlijah.com/pics/pics/mac.jpeg" },
   { id: "2", name: "Apple Watch", price: 250, image: "https://xlijah.com/pics/apple_watch.jpg", updateLink: "http://xlijah.com/pics/pics/lenovo.jpg" },
@@ -34,186 +37,111 @@ const initialProducts: Product[] = [
   { id: "10", name: "Google Pixel", price: 700, image: "https://xlijah.com/pics/apple_watch.jpg", updateLink: "http://xlijah.com/pics/pics/guns.jpeg" },
 ];
 
+const USER_EMAIL = "elajahn8@gmail.com"; // default user document
+
 export default function ShopScreen() {
-  const [userEmail, setUserEmail] = useState<string>("");
-  const [userInfo, setUserInfo] = useState<any>(null);
   const [products, setProducts] = useState<Product[]>(initialProducts);
-  const [preferences, setPreferences] = useState<{ [key: string]: number }>({});
-  const [showAddCard, setShowAddCard] = useState(false);
-  const [cardNumber, setCardNumber] = useState("");
+  const [preferences, setPreferences] = useState<Preferences>({});
+  const [loading, setLoading] = useState<boolean>(true);
 
-  const [personalStoreNIN, setPersonalStoreNIN] = useState("");
+  // Load user preferences from Firestore
+  const loadPreferences = async () => {
+    setLoading(true);
+    try {
+      const userRef = doc(db, "users", USER_EMAIL);
+      const userSnap = await getDoc(userRef);
 
-  // Fetch user info from Firestore
-  useEffect(() => {
-    const fetchUserData = async () => {
-      if (!userEmail) return;
-      try {
-        const userRef = doc(db, "users", userEmail);
-        const docSnap = await getDoc(userRef);
-        if (docSnap.exists()) {
-          const data = docSnap.data();
-          setUserInfo(data);
-          if (data.preferences) setPreferences(data.preferences);
-          if (data.cardNumber) setCardNumber(data.cardNumber);
+      let userPrefs: Preferences = {};
+      if (userSnap.exists()) {
+        const data = userSnap.data();
+        if (data.preferences) {
+          userPrefs = data.preferences;
         }
-      } catch (err) {
-        console.error("Error fetching user info:", err);
       }
-    };
-    fetchUserData();
-  }, [userEmail]);
+      setPreferences(userPrefs);
 
-  // Load preferences from AsyncStorage
+      // Compute recommendations
+      const recommendedProducts = await getRecommendedProducts(userPrefs);
+      setProducts(recommendedProducts);
+    } catch (err) {
+      console.error("Error loading preferences:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fetch all users preferences for collaborative recommendation
+  const getRecommendedProducts = async (userPrefs: Preferences) => {
+    try {
+      const usersSnap = await getDocs(collection(db, "users"));
+      const allPrefs: { [productId: string]: number } = {};
+
+      usersSnap.forEach((docSnap) => {
+        const data = docSnap.data();
+        if (data.preferences) {
+          for (const [pid, clicks] of Object.entries(data.preferences)) {
+            allPrefs[pid] = (allPrefs[pid] || 0) + (clicks as number);
+          }
+        }
+      });
+
+      // Combine with current user preferences
+      const combinedScores: { [id: string]: number } = {};
+      initialProducts.forEach((p) => {
+        combinedScores[p.id] = (userPrefs[p.id] || 0) + (allPrefs[p.id] || 0);
+      });
+
+      // Sort products by score descending
+      return [...initialProducts].sort(
+        (a, b) => (combinedScores[b.id] || 0) - (combinedScores[a.id] || 0)
+      );
+    } catch (err) {
+      console.error(err);
+      return initialProducts;
+    }
+  };
+
+  // Handle product click
+  const handleClick = async (product: Product) => {
+    const newPrefs = { ...preferences };
+    newPrefs[product.id] = (newPrefs[product.id] || 0) + 1;
+
+    setPreferences(newPrefs);
+
+    // Update Firestore
+    try {
+      const userRef = doc(db, "users", USER_EMAIL);
+      await setDoc(userRef, { preferences: newPrefs }, { merge: true });
+    } catch (err) {
+      console.error("Error updating preferences:", err);
+    }
+  };
+
   useEffect(() => {
-    const loadPreferences = async () => {
-      try {
-        const stored = await AsyncStorage.getItem("user_preferences");
-        if (stored) setPreferences(JSON.parse(stored));
-      } catch (err) {
-        console.error("Failed to load preferences:", err);
-      }
-    };
     loadPreferences();
   }, []);
 
-  const handleProductClick = async (productId: string) => {
-    const updatedPrefs = { ...preferences, [productId]: (preferences[productId] || 0) + 1 };
-    setPreferences(updatedPrefs);
-    await AsyncStorage.setItem("user_preferences", JSON.stringify(updatedPrefs));
-
-    if (userEmail) {
-      try {
-        const userRef = doc(db, "users", userEmail);
-        await setDoc(userRef, { preferences: updatedPrefs }, { merge: true });
-      } catch (err) {
-        console.error("Failed to update Firestore preferences:", err);
-      }
-    }
-    Alert.alert("Product Clicked", `You clicked product ${productId}`);
-  };
-
-  const handlePay = () => {
-    setShowAddCard(true);
-    setTimeout(() => setShowAddCard(false), 60000); // hide after 1 min
-  };
-
-  const saveCard = async () => {
-    if (!cardNumber) return;
-    if (!userEmail) return Alert.alert("Set user email first!");
-    try {
-      const userRef = doc(db, "users", userEmail);
-      await setDoc(userRef, { cardNumber }, { merge: true });
-      Alert.alert("Card saved!");
-      setShowAddCard(false);
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  const applyForPersonalStore = async () => {
-    if (!userEmail || !personalStoreNIN) return Alert.alert("Set email & NIN first!");
-    try {
-      const userRef = doc(db, "personalStores", userEmail);
-      await setDoc(userRef, {
-        nin: personalStoreNIN,
-        status: "pending",
-        requestedAt: new Date().toISOString(),
-      });
-      Alert.alert("Application submitted!");
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  // Sort products by preference clicks
-  const sortedProducts = [...products].sort((a, b) => (preferences[b.id] || 0) - (preferences[a.id] || 0));
+  if (loading) return <ActivityIndicator style={{ flex: 1, marginTop: 50 }} size="large" color="#25D366" />;
 
   return (
-    <View style={{ flex: 1, padding: 16 }}>
-      <Text>User Email:</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Enter your email"
-        value={userEmail}
-        onChangeText={setUserEmail}
-      />
-
-      <Text style={{ fontSize: 22, fontWeight: "bold", marginVertical: 12 }}>Products</Text>
-
+    <View style={{ flex: 1, padding: 15, backgroundColor: "#121212" }}>
+      <Text style={{ fontSize: 20, color: "#fff", fontWeight: "bold", marginBottom: 15 }}>
+        Recommended Products
+      </Text>
       <FlatList
-        data={sortedProducts}
+        data={products}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
-          <TouchableOpacity style={styles.productCard} onPress={() => handleProductClick(item.id)}>
-            <Text style={{ fontWeight: "bold" }}>{item.name}</Text>
-            <Text>Price: ${item.price}</Text>
-            {preferences[item.id] && <Text>Clicks: {preferences[item.id]}</Text>}
+          <TouchableOpacity
+            style={{ marginBottom: 15, backgroundColor: "#1f1f1f", borderRadius: 12, padding: 10 }}
+            onPress={() => handleClick(item)}
+          >
+            <Image source={{ uri: item.image }} style={{ height: 120, borderRadius: 10 }} resizeMode="cover" />
+            <Text style={{ color: "#fff", fontWeight: "bold", marginTop: 8 }}>{item.name}</Text>
+            <Text style={{ color: "#ccc" }}>${item.price}</Text>
           </TouchableOpacity>
         )}
       />
-
-      <TouchableOpacity style={styles.payButton} onPress={handlePay}>
-        <Text style={{ color: "#fff", fontWeight: "bold" }}>Pay</Text>
-      </TouchableOpacity>
-
-      {showAddCard && (
-        <View style={styles.addCard}>
-          <TextInput
-            style={styles.input}
-            placeholder="Card Number"
-            value={cardNumber}
-            onChangeText={setCardNumber}
-          />
-          <TouchableOpacity style={styles.payButton} onPress={saveCard}>
-            <Text style={{ color: "#fff", fontWeight: "bold" }}>Save Card</Text>
-          </TouchableOpacity>
-        </View>
-      )}
-
-      <View style={{ marginTop: 20 }}>
-        <Text style={{ fontSize: 18, fontWeight: "bold" }}>Open Personal Store</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Enter National ID (NIN)"
-          value={personalStoreNIN}
-          onChangeText={setPersonalStoreNIN}
-        />
-        <TouchableOpacity style={styles.payButton} onPress={applyForPersonalStore}>
-          <Text style={{ color: "#fff", fontWeight: "bold" }}>Apply</Text>
-        </TouchableOpacity>
-      </View>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  input: {
-    borderWidth: 1,
-    borderColor: "#ccc",
-    padding: 10,
-    marginVertical: 8,
-    borderRadius: 8,
-  },
-  productCard: {
-    padding: 12,
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 12,
-    marginBottom: 10,
-  },
-  payButton: {
-    backgroundColor: "#25D366",
-    padding: 14,
-    borderRadius: 25,
-    marginTop: 12,
-    alignItems: "center",
-  },
-  addCard: {
-    marginTop: 12,
-    padding: 12,
-    borderWidth: 1,
-    borderColor: "#25D366",
-    borderRadius: 12,
-  },
-});
