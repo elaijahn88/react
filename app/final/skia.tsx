@@ -93,7 +93,7 @@ const PADDING = 5;
 const COLUMNS = 18;
 
 export default function PeriodicTableFull() {
-  const font = useFont(require("../assets/fonts/Roboto-Regular.ttf"), 12); // Make sure to add a Roboto font in assets
+  const font = useFont(require("./assets/fonts/Roboto-Regular.ttf"), 12); // Make sure to add a Roboto font in assets
 
   return (
     <View style={styles.container}>
