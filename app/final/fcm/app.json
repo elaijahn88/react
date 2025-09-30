@@ -1,4 +1,4 @@
-update {
+{
   "expo": {
     "name": "jovan",
     "slug": "jovan",
@@ -19,7 +19,8 @@ update {
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "googleServicesFile": "./google-services.json"
     },
     "web": {
       "output": "static",
@@ -38,16 +39,7 @@ update {
             "backgroundColor": "#000000"
           }
         }
-      ]
-    ],
-    "experiments": {
-      "typedRoutes": true,
-      "reactCompiler": true
-    }
-  }
-}       with {
-  "expo": {
-    "plugins": [
+      ],
       [
         "@react-native-firebase/app",
         {
@@ -60,6 +52,10 @@ update {
           "googleServicesFile": "./google-services.json"
         }
       ]
-    ]
+    ],
+    "experiments": {
+      "typedRoutes": true,
+      "reactCompiler": true
+    }
   }
 }
