@@ -1,264 +1,81 @@
-import React, { useState } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  TextInput,
-  Switch,
-  TouchableOpacity,
-  Image,
-  ScrollView,
-  useColorScheme,
-} from "react-native";
-import { Ionicons } from "@expo/vector-icons";
-import { useNavigation } from "@react-navigation/native";
+import React, { useEffect, useState } from "react";
+import { View, Text, StyleSheet, ActivityIndicator, ScrollView } from "react-native";
+import { db } from "../firebase"; // adjust path
+import { doc, getDoc } from "firebase/firestore";
 
-export default function ProfileScreen() {
-  const navigation = useNavigation();
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === "dark";
+interface IUserData {
+  email: string;
+  name: string;
+  account: number;
+  age: number;
+  transaction: string;
+  createdAt?: string;
+}
 
-  const [user, setUser] = useState({
-    name: "Atom",
-    email: "jah@icloud.com",
-    avatar: "https://xlijah.com/pics/icon.png",
-  });
+export default function AuthAndFetcher(): JSX.Element {
+  const [loading, setLoading] = useState<boolean>(true);
+  const [userData, setUserData] = useState<IUserData | null>(null);
+  const [message, setMessage] = useState<string>("");
 
-  const [editing, setEditing] = useState(false);
-  const [name, setName] = useState(user.name);
-  const [email, setEmail] = useState(user.email);
+  const defaultEmail = "elajahn8@gmail.com";
 
-  const [notifications, setNotifications] = useState(true);
-  const [darkMode, setDarkMode] = useState(isDark);
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const userRef = doc(db, "users", defaultEmail);
+        const docSnap = await getDoc(userRef);
 
-  const [hobby, setHobby] = useState(""); // New state for hobby input
-  const [askingHobby, setAskingHobby] = useState(false); // Toggle input visibility
+        if (docSnap.exists()) {
+          const data = docSnap.data() as IUserData;
+          setUserData(data);
+        } else {
+          setMessage("User not found in database!");
+        }
+      } catch (err: any) {
+        console.error(err);
+        setMessage("Error fetching user data: " + err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const bgColor = isDark ? "#121212" : "#f9f9f9";
-  const cardBg = isDark ? "#1c1c1e" : "#fff";
-  const textColor = isDark ? "#fff" : "#000";
-  const secondaryText = isDark ? "#aaa" : "gray";
+    fetchUserData();
+  }, []);
+
+  if (loading) {
+    return <ActivityIndicator size="large" style={{ flex: 1, justifyContent: "center" }} />;
+  }
 
   return (
-    <ScrollView contentContainerStyle={[styles.container, { backgroundColor: bgColor }]}>
-      {/* Avatar */}
-      <View style={styles.avatarContainer}>
-        <Image source={{ uri: user.avatar }} style={styles.avatar} />
-        <TouchableOpacity style={styles.changePicButton}>
-          <Ionicons name="camera" size={20} color="white" />
-          <Text style={styles.changePicText}>Change</Text>
-        </TouchableOpacity>
-      </View>
+    <ScrollView contentContainerStyle={styles.container}>
+      {message ? <Text style={styles.message}>{message}</Text> : null}
 
-      {/* Profile Info */}
-      {!editing ? (
-        <>
-          <Text style={[styles.name, { color: textColor }]}>{user.name}</Text>
-          <Text style={[styles.email, { color: secondaryText }]}>{user.email}</Text>
-
-          <TouchableOpacity
-            style={styles.button}
-            onPress={() => setEditing(true)}
-          >
-            <Ionicons name="create-outline" size={20} color="white" />
-            <Text style={styles.buttonText}>+Prof</Text>
-          </TouchableOpacity>
-        </>
-      ) : (
-        <>
-          <Text style={[styles.sectionTitle, { color: textColor }]}>+Prof</Text>
-          <TextInput
-            value={name}
-            onChangeText={setName}
-            style={[styles.input, { backgroundColor: cardBg, color: textColor, borderColor: isDark ? "#333" : "#ccc" }]}
-            placeholder="Name"
-            placeholderTextColor={secondaryText}
-          />
-          <TextInput
-            value={email}
-            onChangeText={setEmail}
-            style={[styles.input, { backgroundColor: cardBg, color: textColor, borderColor: isDark ? "#333" : "#ccc" }]}
-            placeholder="Email"
-            keyboardType="email-address"
-            placeholderTextColor={secondaryText}
-          />
-          <TouchableOpacity
-            style={styles.button}
-            onPress={() => {
-              setUser({ ...user, name, email });
-              setEditing(false);
-            }}
-          >
-            <Ionicons name="save-outline" size={20} color="white" />
-            <Text style={styles.buttonText}>Save</Text>
-          </TouchableOpacity>
-        </>
+      {userData && (
+        <View style={styles.userInfo}>
+          <Text style={styles.userTitle}>User Info:</Text>
+          <Text>Email: {userData.email}</Text>
+          <Text>Name: {userData.name}</Text>
+          <Text>Account: {userData.account}</Text>
+          <Text>Age: {userData.age}</Text>
+          <Text>Transaction: {userData.transaction}</Text>
+        </View>
       )}
-
-      {/* Ask Hobby Button */}
-      <TouchableOpacity
-        style={styles.button}
-        onPress={() => setAskingHobby(true)}
-      >
-        <Ionicons name="chatbubble-ellipses-outline" size={20} color="white" />
-        <Text style={styles.buttonText}>Ask Hobby</Text>
-      </TouchableOpacity>
-
-      {/* Hobby Input Field */}
-      {askingHobby && (
-        <>
-          <TextInput
-            value={hobby}
-            onChangeText={setHobby}
-            placeholder="What's your hobby?"
-            placeholderTextColor={secondaryText}
-            style={[
-              styles.input,
-              {
-                backgroundColor: cardBg,
-                color: textColor,
-                borderColor: isDark ? "#333" : "#ccc",
-              },
-            ]}
-          />
-          <TouchableOpacity
-            style={styles.button}
-            onPress={() => {
-              console.log("User's hobby:", hobby);
-              setHobby("");
-              setAskingHobby(false);
-            }}
-          >
-            <Ionicons name="checkmark-outline" size={20} color="white" />
-            <Text style={styles.buttonText}>Submit Hobby</Text>
-          </TouchableOpacity>
-        </>
-      )}
-
-      {/* Tools Section */}
-      <View style={[styles.toolsContainer, { backgroundColor: cardBg }]}>
-        <Text style={[styles.sectionTitle, { color: textColor }]}>Tools</Text>
-        <TouchableOpacity style={styles.toolButton}>
-          <Ionicons name="bag-outline" size={20} color="#007bff" />
-          <Text style={styles.toolText}>My Orders</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.toolButton}>
-          <Ionicons name="shield-checkmark-outline" size={20} color="#007bff" />
-          <Text style={styles.toolText}>Security</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.toolButton}>
-          <Ionicons name="help-circle-outline" size={20} color="#007bff" />
-          <Text style={styles.toolText}>Help Center</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Settings Section */}
-      <View style={[styles.toolsContainer, { backgroundColor: cardBg }]}>
-        <Text style={[styles.sectionTitle, { color: textColor }]}>Settings</Text>
-        <View style={styles.settingRow}>
-          <Text style={[styles.settingLabel, { color: textColor }]}>notify</Text>
-          <Switch value={notifications} onValueChange={setNotifications} />
-        </View>
-        <View style={styles.settingRow}>
-          <Text style={[styles.settingLabel, { color: textColor }]}>Dark Mode</Text>
-          <Switch value={darkMode} onValueChange={setDarkMode} />
-        </View>
-        <View style={styles.settingRow}>
-          <Text style={[styles.settingLabel, { color: textColor }]}>P_Mode</Text>
-          <Switch value={false} />
-        </View>
-      </View>
-
-      {/* Logout */}
-      <TouchableOpacity
-        style={[styles.button, { backgroundColor: "red" }]}
-        onPress={() => {
-          // Do something else on logout
-          setUser({
-            name: "",
-            email: "",
-            avatar: "https://xlijah.com/pics/icon.png",
-          });
-          setNotifications(false);
-          setDarkMode(false);
-          console.log("User logged out — local data cleared.");
-        }}
-      >
-        <Ionicons name="log-out-outline" size={20} color="white" />
-        <Text style={styles.buttonText}>Logout</Text>
-      </TouchableOpacity>
     </ScrollView>
   );
 }
 
-// ---------------- Styles ----------------
 const styles = StyleSheet.create({
-  container: { flexGrow: 1, alignItems: "center", padding: 20 },
-
-  avatarContainer: { alignItems: "center", marginBottom: 15 },
-  avatar: { width: 120, height: 120, borderRadius: 60 },
-  changePicButton: {
-    flexDirection: "row",
-    backgroundColor: "#007bff",
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 20,
-    marginTop: -30,
-    alignItems: "center",
-  },
-  changePicText: { color: "white", marginLeft: 5 },
-
-  name: { fontSize: 20, fontWeight: "bold", marginTop: 10 },
-  email: { fontSize: 16, color: "gray", marginBottom: 20 },
-
-  button: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#007bff",
-    padding: 12,
-    marginTop: 15,
+  container: { flexGrow: 1, justifyContent: "center", padding: 20 },
+  message: { fontSize: 16, color: "red", textAlign: "center", marginBottom: 10 },
+  userInfo: {
+    marginTop: 20,
+    padding: 15,
+    backgroundColor: "#f0f0f0",
     borderRadius: 8,
-    width: "80%",
   },
-  buttonText: { color: "#fff", fontSize: 16, marginLeft: 8 },
-
-  sectionTitle: { fontSize: 18, fontWeight: "bold", marginBottom: 10, alignSelf: "flex-start" },
-
-  input: {
-    borderWidth: 1,
-    borderRadius: 8,
-    padding: 10,
-    marginTop: 10,
+  userTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
     marginBottom: 10,
-    width: "100%",
   },
-
-  toolsContainer: {
-    marginTop: 25,
-    width: "100%",
-    padding: 16,
-    borderRadius: 10,
-    shadowColor: "#000",
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    elevation: 3,
-  },
-  toolButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: "#eee",
-  },
-  toolText: { fontSize: 14, marginLeft: 10, color: "#007bff" },
-
-  settingRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    width: "100%",
-    marginVertical: 10,
-    paddingHorizontal: 10,
-  },
-  settingLabel: { fontSize: 15 },
 });
