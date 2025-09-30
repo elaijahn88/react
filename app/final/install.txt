@@ -1,1 +1,17 @@
-@shopify/react-native-skia,@react-native-async-storage/async-storage @react-native-firebase/firestore
+
+
+!npm install -g expo-cli
+!npm install -g eas-cli
+!npx create-expo-app jovan
+
+! cd jovan && expo  install react-native-video
+! cd jovan && expo  install firebase 
+!cd jovan && expo install three @react-three/fiber @react-three/drei react-native-gesture-handler expo-gl
+! cd jovan && expo install react-native-gesture-handler react-native-reanimated expo-gl three
+!cd jovan && expo install @shopify/react-native-skia
+!expo install @react-native-firebase/app @react-native-firebase/messaging @shopify/react-native-skia @react-native-async-storage/async-storage @react-native-firebase/firestore
+
+
+
+!eas login
+! cd jovan && eas build -p android --profile preview
