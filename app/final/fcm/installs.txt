@@ -8,7 +8,7 @@ npx create-expo-app jovan
 # Navigation & firebase 
 cd jovan && expo install firebase @react-navigation/native @react-navigation/native-stack  react-native-screens react-native-safe-area-context react-native-gesture-handler react-native-reanimated
 eas login
-eas build -p android --profile preview
+!cd jovan && eas build -p android --profile preview
 
 # Optional (you had video + 3D + skia installed)
 expo install react-native-video three @react-three/fiber @react-three/drei expo-gl @shopify/react-native-skia
