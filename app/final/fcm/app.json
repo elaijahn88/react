@@ -1,0 +1,18 @@
+{
+  "expo": {
+    "plugins": [
+      [
+        "@react-native-firebase/app",
+        {
+          "googleServicesFile": "./google-services.json"
+        }
+      ],
+      [
+        "@react-native-firebase/messaging",
+        {
+          "googleServicesFile": "./google-services.json"
+        }
+      ]
+    ]
+  }
+}
