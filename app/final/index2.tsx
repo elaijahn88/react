@@ -17,6 +17,10 @@ interface IUserData {
   account: number;
   password: string;
   age: number;
+  transaction: string;
+  photoUrl: string;
+  updatedUrl: string;
+  videoUrl: string;
   createdAt?: string;
 }
 
@@ -33,7 +37,7 @@ export default function AuthAndFetcher(): JSX.Element {
   // SIGN UP
   const signUp = async (): Promise<void> => {
     if (!email || !password || !name || !account || !age) {
-      setMessage("All fields are required");
+      setMessage("All required fields must be filled");
       return;
     }
 
@@ -52,18 +56,21 @@ export default function AuthAndFetcher(): JSX.Element {
       // Create Firebase Auth user
       await createUserWithEmailAndPassword(auth, email, password);
 
-      // Add extra fields in Firestore
+      // Add user data in Firestore with empty fields for future transactions and URLs
       const userData: IUserData = {
         email,
         name,
         account: parseInt(account, 10),
-        password, // plain text, consider hashing for production
+        password, // plain text for demo; hash in production
         age: parseInt(age, 10),
+        transaction: "",   // placeholder label
+        photoUrl: "",      // placeholder label
+        updatedUrl: "",    // placeholder label
+        videoUrl: "",      // placeholder label
         createdAt: new Date().toISOString(),
       };
 
       await setDoc(userRef, userData);
-
       setMessage("✅ User registered successfully!");
     } catch (err: any) {
       console.error(err);
