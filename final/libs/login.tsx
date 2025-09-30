@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { View, Text, TextInput, Button, StyleSheet } from "react-native";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
-import { auth, db } from "../firebase";
+import { auth, db } from "./firebase";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 
 type RootStackParamList = {
