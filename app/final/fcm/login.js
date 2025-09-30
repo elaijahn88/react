@@ -3,8 +3,17 @@ import { View, Text, TextInput, Button, StyleSheet } from "react-native";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
 import { auth, db } from "../firebase";
+import { NativeStackScreenProps } from "@react-navigation/native-stack";
 
-export default function LoginScreen({ navigation }) {
+type RootStackParamList = {
+  Signup: undefined;
+  Login: undefined;
+  Home: { profile: { uid: string; email: string; name: string } };
+};
+
+type Props = NativeStackScreenProps<RootStackParamList, "Login">;
+
+export default function LoginScreen({ navigation }: Props) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
@@ -22,12 +31,16 @@ export default function LoginScreen({ navigation }) {
       const docSnap = await getDoc(docRef);
 
       if (docSnap.exists()) {
-        const profile = docSnap.data();
+        const profile = docSnap.data() as {
+          uid: string;
+          email: string;
+          name: string;
+        };
         navigation.navigate("Home", { profile });
       } else {
         alert("No profile found!");
       }
-    } catch (err) {
+    } catch (err: any) {
       alert(err.message);
     }
   };
