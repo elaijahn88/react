@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -9,135 +9,146 @@ import {
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
-  Dimensions,
-  useColorScheme,
   StatusBar,
+  Dimensions,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import Video from "react-native-video";
+import firestore from "@react-native-firebase/firestore";
 
 const { width } = Dimensions.get("window");
 
+type MessageStatus = "sent" | "delivered" | "viewed";
+
+interface IMessage {
+  id: string;
+  body: string;
+  receivedAt: string;
+  status: MessageStatus;
+  email: string;
+}
+
 export default function AIChat() {
   const videoRef = useRef<Video>(null);
-
   const [videoPaused, setVideoPaused] = useState(false);
-  const [messages, setMessages] = useState<
-    { id: string; text: string; type: "sent" | "received" }[]
-  >([]);
+
+  // Messages & input
+  const [messages, setMessages] = useState<IMessage[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
-  const [isActive, setIsActive] = useState(true);
 
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === "dark";
+  // Email to fetch messages
+  const [email, setEmail] = useState("user@example.com");
 
-  const handleVideoEnd = () => {
-    setVideoPaused(true);
-  };
+  const handleVideoEnd = () => setVideoPaused(true);
 
-  const sendMessage = () => {
+  // Firestore listener
+  useEffect(() => {
+    const unsubscribe = firestore()
+      .collection("messages")
+      .where("email", "==", email)
+      .orderBy("receivedAt", "desc")
+      .onSnapshot(snapshot => {
+        const msgs: IMessage[] = [];
+        snapshot.forEach(doc => msgs.push(doc.data() as IMessage));
+        setMessages(msgs);
+      });
+
+    return () => unsubscribe();
+  }, [email]);
+
+  const sendMessage = async () => {
     if (!input.trim()) return;
-    const newMsg = { id: Date.now().toString(), text: input, type: "sent" };
-    setMessages((prev) => [newMsg, ...prev]);
 
-    // Fake auto reply for demo
-    setTimeout(() => {
-      const reply = {
-        id: (Date.now() + 1).toString(),
-        text: "Got it ✅",
-        type: "received",
-      };
-      setMessages((prev) => [reply, ...prev]);
-    }, 1200);
+    const newMsg: IMessage = {
+      id: firestore().collection("messages").doc().id,
+      body: input,
+      receivedAt: new Date().toISOString(),
+      status: "sent",
+      email,
+    };
 
-    setInput("");
+    try {
+      await firestore().collection("messages").doc(newMsg.id).set(newMsg);
+      setInput("");
+    } catch (err) {
+      console.error("Error sending message:", err);
+    }
   };
 
-  const renderItem = ({
-    item,
-  }: {
-    item: { id: string; text: string; type: "sent" | "received" };
-  }) => (
-    <View
-      style={[
-        styles.messageBubble,
-        item.type === "sent"
-          ? { alignSelf: "flex-end", backgroundColor: "#ffe5e5" }
-          : { alignSelf: "flex-start", backgroundColor: "#e5ffe5" },
-      ]}
-    >
-      <Text
-        style={[
-          styles.messageText,
-          { color: item.type === "sent" ? "red" : "green" },
-        ]}
-      >
-        {item.type === "sent" ? "Sent: " : "Received: "} {item.text}
-      </Text>
+  const markAllViewed = async () => {
+    try {
+      const batch = firestore().batch();
+      messages.forEach(msg => {
+        if (msg.status !== "viewed") {
+          const ref = firestore().collection("messages").doc(msg.id);
+          batch.update(ref, { status: "viewed" });
+        }
+      });
+      await batch.commit();
+    } catch (err) {
+      console.error("Error marking viewed:", err);
+    }
+  };
+
+  const getTickColor = (status: MessageStatus) => {
+    switch (status) {
+      case "sent":
+        return "black";
+      case "delivered":
+        return "red";
+      case "viewed":
+        return "blue";
+    }
+  };
+
+  const renderItem = ({ item }: { item: IMessage }) => (
+    <View style={[styles.messageBubble, { backgroundColor: "#2a2a2a" }]}>
+      <Text style={{ color: "#fff", fontWeight: "600" }}>{item.body}</Text>
+      <Text style={{ color: getTickColor(item.status), fontSize: 16, marginTop: 4 }}>✔</Text>
     </View>
   );
 
   return (
     <KeyboardAvoidingView
-      style={[styles.container, { backgroundColor: isDark ? "#000" : "#fff" }]}
+      style={styles.container}
       behavior={Platform.select({ ios: "padding", android: undefined })}
       keyboardVerticalOffset={90}
     >
-      <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />
+      <StatusBar barStyle="light-content" />
 
-      {/* Header */}
-      <View
-        style={[
-          styles.header,
-          { backgroundColor: "#25D366", shadowColor: "#25D366" },
-        ]}
-      >
-        <Ionicons name="person-circle" size={44} color="#fff" />
-        <View style={{ marginLeft: 14 }}>
-          <Text style={styles.headerText}>ATOM</Text>
-          <View style={styles.statusRow}>
-            <View
-              style={[
-                styles.statusDot,
-                { backgroundColor: isActive ? "limegreen" : "red" },
-              ]}
-            />
-            <Text style={styles.statusText}>
-              {isActive ? "Active" : "Inactive"}
-            </Text>
-          </View>
-        </View>
+      {/* Email input */}
+      <View style={{ padding: 10, backgroundColor: "#1f1f1f" }}>
+        <TextInput
+          value={email}
+          onChangeText={setEmail}
+          style={{
+            backgroundColor: "#2a2a2a",
+            color: "#fff",
+            padding: 12,
+            borderRadius: 10,
+          }}
+          placeholder="Enter email"
+          placeholderTextColor="#888"
+        />
       </View>
 
-      {/* Video */}
+      {/* Optional AI Video */}
       <Video
         ref={videoRef}
         source={{ uri: "https://xlijah.com/ai.mp4" }}
-        style={[
-          styles.video,
-          {
-            shadowColor: isDark ? "#000" : "#aaa",
-            shadowOpacity: 0.3,
-            shadowOffset: { width: 0, height: 4 },
-            shadowRadius: 8,
-            elevation: 6,
-          },
-        ]}
+        style={[styles.video]}
         paused={videoPaused}
         resizeMode="contain"
         onEnd={handleVideoEnd}
         repeat={false}
-        controls={false}
-        playInBackground={false}
-        playWhenInactive={false}
       />
 
-      {/* Chat messages */}
+      {/* Messages */}
       <FlatList
         data={messages}
         renderItem={renderItem}
-        keyExtractor={(item) => item.id}
+        keyExtractor={item => item.id}
         inverted
         contentContainerStyle={{ padding: 10, paddingBottom: 20 }}
         keyboardShouldPersistTaps="handled"
@@ -146,54 +157,21 @@ export default function AIChat() {
       {loading && <ActivityIndicator size="large" color="#25D366" />}
 
       {/* Input */}
-      <View
-        style={[
-          styles.inputContainer,
-          {
-            backgroundColor: isDark ? "#121212" : "#fff",
-            borderColor: isDark ? "#333" : "#ddd",
-            shadowColor: "#000",
-            shadowOpacity: 0.1,
-            shadowOffset: { width: 0, height: -2 },
-            shadowRadius: 5,
-            elevation: 10,
-          },
-        ]}
-      >
-        <View style={{ flex: 1, justifyContent: "center" }}>
-          <TextInput
-            value={input}
-            onChangeText={setInput}
-            style={[
-              styles.input,
-              {
-                backgroundColor: isDark ? "#1c1c1e" : "#F0F0F0",
-                color: isDark ? "#f5f5f5" : "#000",
-              },
-            ]}
-            placeholder="Type your message..."
-            placeholderTextColor={isDark ? "#888" : "#888"}
-            returnKeyType="send"
-            onSubmitEditing={sendMessage}
-          />
-        </View>
-
-        {/* Attachments & media buttons */}
-        <TouchableOpacity style={styles.iconButton} onPress={() => console.log("Attach File")}>
-          <Text style={styles.iconText}>📎</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.iconButton} onPress={() => console.log("Video")}>
-          <Text style={styles.iconText}>🎥</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.iconButton} onPress={() => console.log("Audio")}>
-          <Text style={styles.iconText}>🎵</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.iconButton} onPress={() => console.log("Mic")}>
-          <Text style={styles.iconText}>🎙️</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity onPress={sendMessage} style={styles.sendButton} activeOpacity={0.7}>
+      <View style={styles.inputContainer}>
+        <TextInput
+          value={input}
+          onChangeText={setInput}
+          style={styles.input}
+          placeholder="Type your message..."
+          placeholderTextColor="#888"
+          returnKeyType="send"
+          onSubmitEditing={sendMessage}
+        />
+        <TouchableOpacity onPress={sendMessage} style={styles.sendButton}>
           <Ionicons name="send" size={24} color="#fff" />
+        </TouchableOpacity>
+        <TouchableOpacity onPress={markAllViewed} style={[styles.sendButton, { backgroundColor: "#007bff", marginLeft: 8 }]}>
+          <Text style={{ color: "#fff", fontWeight: "700" }}>Mark Viewed</Text>
         </TouchableOpacity>
       </View>
     </KeyboardAvoidingView>
@@ -201,26 +179,12 @@ export default function AIChat() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.3,
-    shadowRadius: 5,
-    elevation: 6,
-  },
-  headerText: { color: "#fff", fontSize: 20, fontWeight: "800" },
-  statusRow: { flexDirection: "row", alignItems: "center", marginTop: 4 },
-  statusDot: { width: 12, height: 12, borderRadius: 6, marginRight: 8 },
-  statusText: { color: "#fff", fontSize: 13, fontWeight: "600" },
+  container: { flex: 1, backgroundColor: "#121212" },
   video: {
     width: width * 0.9,
     height: 220,
     alignSelf: "center",
-    marginBottom: 14,
+    marginVertical: 14,
     borderRadius: 14,
     overflow: "hidden",
   },
@@ -229,46 +193,27 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     marginVertical: 6,
     maxWidth: "80%",
-    shadowColor: "#000",
-    shadowOpacity: 0.1,
-    shadowOffset: { width: 0, height: 1 },
-    shadowRadius: 4,
-    elevation: 1,
   },
-  messageText: { fontSize: 16, fontWeight: "600" },
   inputContainer: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 10,
-    paddingHorizontal: 16,
+    padding: 10,
     borderTopWidth: 1,
+    borderColor: "#333",
   },
   input: {
     flex: 1,
+    backgroundColor: "#2a2a2a",
+    color: "#fff",
     borderRadius: 25,
     paddingHorizontal: 18,
     paddingVertical: 12,
     fontSize: 16,
   },
-  iconButton: {
-    marginHorizontal: 4,
-    padding: 8,
-    borderRadius: 20,
-    backgroundColor: "#4caf50",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  iconText: { fontSize: 20, color: "#fff" },
   sendButton: {
-    marginLeft: 12,
     backgroundColor: "#25D366",
-    padding: 14,
+    padding: 12,
     borderRadius: 30,
-    shadowColor: "#25D366",
-    shadowOpacity: 0.7,
-    shadowOffset: { width: 0, height: 3 },
-    shadowRadius: 5,
-    elevation: 8,
     justifyContent: "center",
     alignItems: "center",
   },
