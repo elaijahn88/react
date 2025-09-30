@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -10,13 +10,9 @@ import {
   Platform,
   ActivityIndicator,
   StatusBar,
-  Dimensions,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import Video from "react-native-video";
 import firestore from "@react-native-firebase/firestore";
-
-const { width } = Dimensions.get("window");
 
 type MessageStatus = "sent" | "delivered" | "viewed";
 
@@ -29,18 +25,10 @@ interface IMessage {
 }
 
 export default function AIChat() {
-  const videoRef = useRef<Video>(null);
-  const [videoPaused, setVideoPaused] = useState(false);
-
-  // Messages & input
   const [messages, setMessages] = useState<IMessage[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
-
-  // Email to fetch messages
   const [email, setEmail] = useState("user@example.com");
-
-  const handleVideoEnd = () => setVideoPaused(true);
 
   // Firestore listener
   useEffect(() => {
@@ -133,17 +121,6 @@ export default function AIChat() {
         />
       </View>
 
-      {/* Optional AI Video */}
-      <Video
-        ref={videoRef}
-        source={{ uri: "https://xlijah.com/ai.mp4" }}
-        style={[styles.video]}
-        paused={videoPaused}
-        resizeMode="contain"
-        onEnd={handleVideoEnd}
-        repeat={false}
-      />
-
       {/* Messages */}
       <FlatList
         data={messages}
@@ -170,7 +147,10 @@ export default function AIChat() {
         <TouchableOpacity onPress={sendMessage} style={styles.sendButton}>
           <Ionicons name="send" size={24} color="#fff" />
         </TouchableOpacity>
-        <TouchableOpacity onPress={markAllViewed} style={[styles.sendButton, { backgroundColor: "#007bff", marginLeft: 8 }]}>
+        <TouchableOpacity
+          onPress={markAllViewed}
+          style={[styles.sendButton, { backgroundColor: "#007bff", marginLeft: 8 }]}
+        >
           <Text style={{ color: "#fff", fontWeight: "700" }}>Mark Viewed</Text>
         </TouchableOpacity>
       </View>
@@ -180,14 +160,6 @@ export default function AIChat() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#121212" },
-  video: {
-    width: width * 0.9,
-    height: 220,
-    alignSelf: "center",
-    marginVertical: 14,
-    borderRadius: 14,
-    overflow: "hidden",
-  },
   messageBubble: {
     padding: 14,
     borderRadius: 12,
