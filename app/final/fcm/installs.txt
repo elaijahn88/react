@@ -10,8 +10,7 @@ cd jovan && expo install firebase @react-navigation/native @react-navigation/nat
 eas login
 !cd jovan && eas build -p android --profile preview
 
-# Optional (you had video + 3D + skia installed)
-expo install react-native-video three @react-three/fiber @react-three/drei expo-gl @shopify/react-native-skia
+
 
 # Push Notifications (optional, only if you need messaging)
 expo install @react-native-firebase/app @react-native-firebase/messaging
