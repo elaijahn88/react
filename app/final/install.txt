@@ -1,0 +1,1 @@
+@shopify/react-native-skia,@react-native-async-storage/async-storage @react-native-firebase/firestore
