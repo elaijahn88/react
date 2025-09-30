@@ -1,39 +1,46 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   View,
   Text,
   Button,
   StyleSheet,
   ActivityIndicator,
-} from 'react-native'; // If you're using React Web, use divs instead
+  TextInput,
+} from "react-native";
 
-import { doc, getDoc } from 'firebase/firestore';
-import { db } from '../firebase'; // make sure this is your configured Firestore instance
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "../firebase"; // ensure your Firestore is initialized
 
 export default function UserFetcher() {
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
+  const [fetchedEmail, setFetchedEmail] = useState("");
 
   const fetchUser = async () => {
+    if (!email) {
+      setError("Please enter an email.");
+      return;
+    }
+
     setLoading(true);
-    setError('');
-    setEmail('');
+    setError("");
+    setFetchedEmail("");
 
     try {
-      // Fetch from collection 'users', document ID 'users'
-      const userRef = doc(db, 'users', 'users');
+      // Lookup by email as document ID
+      const userRef = doc(db, "users", email);
       const userSnap = await getDoc(userRef);
 
       if (userSnap.exists()) {
         const data = userSnap.data();
-        setEmail(data.email || 'No email found');
+        setFetchedEmail(data.email || "No email found in document");
       } else {
-        setError('Document "users" not found in "users" collection.');
+        setError(`No user found with ID: ${email}`);
       }
     } catch (err) {
       console.error(err);
-      setError('Error fetching user document.');
+      setError("Error fetching user document.");
     } finally {
       setLoading(false);
     }
@@ -41,11 +48,27 @@ export default function UserFetcher() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Fetch Email from /users/users</Text>
+      <Text style={styles.title}>Login with Email</Text>
+
+      {/* User input */}
+      <TextInput
+        style={styles.input}
+        placeholder="Enter email"
+        value={email}
+        onChangeText={setEmail}
+        autoCapitalize="none"
+        keyboardType="email-address"
+      />
+
       <Button title="Fetch Email" onPress={fetchUser} />
+
       {loading && <ActivityIndicator style={{ marginTop: 10 }} />}
-      {email ? <Text style={styles.result}>Email: {email}</Text> : null}
-      {error ? <Text style={styles.error}>Network!!!</Text> : null}
+
+      {fetchedEmail ? (
+        <Text style={styles.result}>Email in DB: {fetchedEmail}</Text>
+      ) : null}
+
+      {error ? <Text style={styles.error}>{error}</Text> : null}
     </View>
   );
 }
@@ -56,17 +79,25 @@ const styles = StyleSheet.create({
     marginTop: 40,
   },
   title: {
-    fontSize: 16,
+    fontSize: 18,
     marginBottom: 12,
+    fontWeight: "bold",
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: "#aaa",
+    padding: 10,
+    marginBottom: 12,
+    borderRadius: 6,
   },
   result: {
     marginTop: 10,
     fontSize: 16,
-    color: 'green',
+    color: "green",
   },
   error: {
     marginTop: 10,
     fontSize: 16,
-    color: 'red',
+    color: "red",
   },
 });
