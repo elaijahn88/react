@@ -6,7 +6,13 @@ import SignupScreen from "./screens/SignupScreen";
 import LoginScreen from "./screens/LoginScreen";
 import HomeScreen from "./screens/HomeScreen";
 
-const Stack = createNativeStackNavigator();
+export type RootStackParamList = {
+  Signup: undefined;
+  Login: undefined;
+  Home: { profile: { uid: string; email: string; name: string } };
+};
+
+const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export default function App() {
   return (
