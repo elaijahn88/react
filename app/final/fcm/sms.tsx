@@ -2,9 +2,9 @@ import React from "react";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 
-import SignupScreen from "../SignupScreen";
-import LoginScreen from "../LoginScreen";
-import HomeScreen from "../HomeScreen";
+import SignupScreen from "../signup";
+import LoginScreen from "../login";
+import HomeScreen from "../home";
 
 export type RootStackParamList = {
   Signup: undefined;
