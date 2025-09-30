@@ -3,8 +3,7 @@ import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
-import { getMessaging, getToken } from "firebase/messaging";
-import { getDatabase , ref, push, onValue} from "firebase/database";
+import { getDatabase, ref, push, onValue } from "firebase/database";
 
 // 🔑 Firebase configuration
 const firebaseConfig = {
@@ -23,9 +22,5 @@ const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app);
 export const auth = getAuth(app);
 export const storage = getStorage(app);
-export const messaging = getMessaging(app);
 export const database = getDatabase(app);
 export { ref, push, onValue };
-
-// 🔐 VAPID Key for Web Push
-export const VAPID_KEY = "BOzsw0X4rASZJI6TbOPnqb-zUU4SJVyYWZsnXlO4iw9GAvhhywZBCF3jlFB47WqBkw8Ro4zGK36DkcLq4TRElzA";
