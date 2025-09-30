@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "588974859374",
+    "firebase_url": "https://file-6f3ac-default-rtdb.firebaseio.com",
+    "project_id": "file-6f3ac",
+    "storage_bucket": "file-6f3ac.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:588974859374:android:b0661bd1bfdb356aa3f27f",
+        "android_client_info": {
+          "package_name": "com.xlijah.Atom"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "588974859374-nlo5dekng0fmvvmots8sa2q0arhunimb.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC-tkURRvTk80HH-kfAvnW8V396iO1lcIE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "588974859374-nlo5dekng0fmvvmots8sa2q0arhunimb.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
