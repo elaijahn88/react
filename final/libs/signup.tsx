@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, Button, StyleSheet } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image } from "react-native";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { doc, setDoc } from "firebase/firestore";
 import { auth, db } from "./firebase";
@@ -14,17 +14,22 @@ type RootStackParamList = {
 type Props = NativeStackScreenProps<RootStackParamList, "Signup">;
 
 export default function SignupScreen({ navigation }: Props) {
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [name, setName] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
 
   const handleSignup = async () => {
+    setError(null);
+    if (!name || !email || !password) {
+      setError("All fields are required.");
+      return;
+    }
+
     try {
-      const userCredential = await createUserWithEmailAndPassword(
-        auth,
-        email,
-        password
-      );
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
       // Save profile in Firestore
@@ -34,53 +39,242 @@ export default function SignupScreen({ navigation }: Props) {
         name: name,
       });
 
-      alert("Signup successful!");
-      navigation.navigate("Login");
+      setSuccess("Signup successful! Please login.");
+      setTimeout(() => navigation.navigate("Login"), 1500);
     } catch (err: any) {
-      alert(err.message);
+      setError(err.message || "Failed to signup.");
     }
   };
 
+  // Placeholder handlers for social signup
+  const handleGoogleSignup = () => alert("Google signup clicked");
+  const handleFacebookSignup = () => alert("Facebook signup clicked");
+
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Signup</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Full Name"
-        value={name}
-        onChangeText={setName}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Email"
-        value={email}
-        onChangeText={setEmail}
-        autoCapitalize="none"
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Password"
-        secureTextEntry
-        value={password}
-        onChangeText={setPassword}
-      />
-      <Button title="Signup" onPress={handleSignup} />
-      <Button
-        title="Already have an account? Login"
-        onPress={() => navigation.navigate("Login")}
-      />
+      <View style={styles.card}>
+        <Text style={styles.title}>Signup</Text>
+
+        {/* Success Message */}
+        {success && (
+          <View style={[styles.messageCard, styles.successCard]}>
+            <Text style={styles.successText}>{success}</Text>
+            <TouchableOpacity onPress={() => setSuccess(null)}>
+              <Text style={styles.dismissText}>Dismiss</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {/* Error Message */}
+        {error && (
+          <View style={[styles.messageCard, styles.errorCard]}>
+            <Text style={styles.errorText}>{error}</Text>
+            <TouchableOpacity onPress={() => setError(null)}>
+              <Text style={styles.dismissText}>Dismiss</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
+        <TextInput
+          style={styles.input}
+          placeholder="Full Name"
+          value={name}
+          onChangeText={setName}
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Email"
+          value={email}
+          onChangeText={setEmail}
+          autoCapitalize="none"
+          keyboardType="email-address"
+        />
+
+        <View style={styles.passwordContainer}>
+          <TextInput
+            style={[styles.input, { flex: 1 }]}
+            placeholder="Password"
+            secureTextEntry={!showPassword}
+            value={password}
+            onChangeText={setPassword}
+          />
+          <TouchableOpacity
+            onPress={() => setShowPassword(!showPassword)}
+            style={styles.toggleButton}
+          >
+            <Text style={styles.toggleText}>{showPassword ? "Hide" : "Show"}</Text>
+          </TouchableOpacity>
+        </View>
+
+        <TouchableOpacity style={styles.button} onPress={handleSignup}>
+          <Text style={styles.buttonText}>Signup</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.button, styles.secondaryButton]}
+          onPress={() => navigation.navigate("Login")}
+        >
+          <Text style={[styles.buttonText, styles.secondaryButtonText]}>
+            Already have an account? Login
+          </Text>
+        </TouchableOpacity>
+
+        {/* Social signup row */}
+        <Text style={styles.orText}>OR</Text>
+        <View style={styles.socialRow}>
+          <TouchableOpacity
+            style={[styles.socialButton, { backgroundColor: "#DB4437" }]}
+            onPress={handleGoogleSignup}
+          >
+            <Image
+              source={{ uri: "https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" }}
+              style={styles.socialIcon}
+            />
+            <Text style={styles.socialText}>Google</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.socialButton, { backgroundColor: "#4267B2" }]}
+            onPress={handleFacebookSignup}
+          >
+            <Image
+              source={{ uri: "https://upload.wikimedia.org/wikipedia/commons/0/05/Facebook_Logo_%282019%29.png" }}
+              style={styles.socialIcon}
+            />
+            <Text style={styles.socialText}>Facebook</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: "center", padding: 20 },
-  title: { fontSize: 24, fontWeight: "bold", marginBottom: 20 },
+  container: {
+    flex: 1,
+    backgroundColor: "#f2f4f7",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+  },
+  card: {
+    width: "100%",
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    padding: 25,
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: 5 },
+    shadowRadius: 10,
+    elevation: 5,
+  },
+  title: {
+    fontSize: 26,
+    fontWeight: "700",
+    marginBottom: 20,
+    color: "#222",
+    textAlign: "center",
+  },
   input: {
     borderWidth: 1,
-    padding: 10,
+    borderColor: "#ccc",
+    borderRadius: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 15,
+    marginBottom: 15,
+    backgroundColor: "#f9f9f9",
+    fontSize: 16,
+  },
+  passwordContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 15,
+  },
+  toggleButton: {
+    paddingHorizontal: 10,
+    justifyContent: "center",
+  },
+  toggleText: {
+    color: "#007bff",
+    fontWeight: "600",
+    fontSize: 14,
+  },
+  button: {
+    backgroundColor: "#007bff",
+    paddingVertical: 14,
+    borderRadius: 10,
     marginBottom: 10,
-    borderRadius: 6,
-    borderColor: "#aaa",
+    alignItems: "center",
+  },
+  buttonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  secondaryButton: {
+    backgroundColor: "#e0e0e0",
+  },
+  secondaryButtonText: {
+    color: "#333",
+  },
+  messageCard: {
+    borderRadius: 8,
+    padding: 10,
+    marginBottom: 15,
+  },
+  successCard: {
+    backgroundColor: "#d4edda",
+    borderColor: "#c3e6cb",
+    borderWidth: 1,
+  },
+  successText: {
+    color: "#155724",
+    fontSize: 14,
+    marginBottom: 5,
+  },
+  errorCard: {
+    backgroundColor: "#f8d7da",
+    borderColor: "#f5c6cb",
+    borderWidth: 1,
+  },
+  errorText: {
+    color: "#721c24",
+    fontSize: 14,
+    marginBottom: 5,
+  },
+  dismissText: {
+    color: "#721c24",
+    fontSize: 12,
+    textAlign: "right",
+    textDecorationLine: "underline",
+  },
+  orText: {
+    textAlign: "center",
+    marginVertical: 10,
+    fontSize: 14,
+    color: "#555",
+  },
+  socialRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+  socialButton: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 12,
+    borderRadius: 10,
+    justifyContent: "center",
+    marginHorizontal: 5,
+  },
+  socialIcon: {
+    width: 20,
+    height: 20,
+    marginRight: 8,
+  },
+  socialText: {
+    color: "#fff",
+    fontWeight: "600",
+    fontSize: 14,
   },
 });
