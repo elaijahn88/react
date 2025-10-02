@@ -1,13 +1,13 @@
-dnpm install -g expo-cli
-npm install -g eas-cli
-npx create-expo-app jovan
+!npm install -g expo-cli
+!npm install -g eas-cli
+!npx create-expo-app jovan
 
 
 
 
 # Navigation & firebase 
-cd jovan && expo install expo-image-picker firebase @react-navigation/native @react-navigation/native-stack  react-native-screens react-native-safe-area-context react-native-gesture-handler react-native-reanimated @react-native-firebase/app @react-native-firebase/messaging
-eas login
+!cd jovan && expo install expo-image-picker firebase @react-navigation/native @react-navigation/native-stack  react-native-screens react-native-safe-area-context react-native-gesture-handler react-native-reanimated @react-native-firebase/app @react-native-firebase/messaging
+!eas login
 !cd jovan && eas build -p android --profile preview
 
 
