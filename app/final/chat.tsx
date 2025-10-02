@@ -22,32 +22,40 @@ if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental
   UIManager.setLayoutAnimationEnabledExperimental(true);
 }
 
-type MessageStatus = "local" | "sent" | "delivered" | "viewed";
-
 interface IMessage {
   id: string;
   body: string;
+  sender: string;
   receivedAt: FirebaseFirestoreTypes.Timestamp;
-  status: MessageStatus;
+  status: { [userEmail: string]: "sent" | "delivered" | "viewed" };
+}
+
+interface ITypingStatus {
+  isTyping: boolean;
+  lastUpdated: FirebaseFirestoreTypes.Timestamp;
+  userEmail: string;
+}
+
+interface Props {
+  roomId: string;
   email: string;
 }
 
-export default function AIChat() {
+export default function MultiUserChat({ roomId, email }: Props) {
   const [messages, setMessages] = useState<IMessage[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(true);
-  const [email, setEmail] = useState("user@example.com");
   const [isConnected, setIsConnected] = useState(true);
   const [otherTyping, setOtherTyping] = useState(false);
   const flatListRef = useRef<FlatList<IMessage>>(null);
   let typingTimeout: NodeJS.Timeout | null = null;
 
-  // Enable offline persistence
+  // Offline persistence
   useEffect(() => {
     firestore().settings({ persistence: true });
   }, []);
 
-  // Network connectivity listener
+  // Network listener
   useEffect(() => {
     const unsubscribe = NetInfo.addEventListener(state => {
       setIsConnected(state.isConnected ?? true);
@@ -55,146 +63,139 @@ export default function AIChat() {
     return () => unsubscribe();
   }, []);
 
-  // Firestore listener for messages
+  // Listen to messages in the room
   useEffect(() => {
     setLoading(true);
     const unsubscribe = firestore()
+      .collection("rooms")
+      .doc(roomId)
       .collection("messages")
-      .where("email", "==", email)
       .orderBy("receivedAt", "desc")
       .onSnapshot(snapshot => {
         LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
 
         const msgs: IMessage[] = [];
         snapshot.forEach(doc => {
-          const data = doc.data() as Omit<IMessage, "id">;
-
-          // Replace local message with Firestore message
-          const isLocal = data.status === "local";
-          msgs.push({
-            id: data.id,
-            body: data.body,
-            receivedAt: data.receivedAt,
-            email: data.email,
-            status: isLocal ? "delivered" : data.status, // mark delivered if it was local
-          });
+          const data = doc.data() as IMessage;
+          msgs.push(data);
         });
-
         setMessages(msgs);
         setLoading(false);
 
-        // Auto-scroll
         setTimeout(() => {
           flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
         }, 100);
       });
 
     return () => unsubscribe();
-  }, [email]);
+  }, [roomId]);
 
-  // Firestore listener for typing indicator
+  // Listen to typing indicators
   useEffect(() => {
     const unsubscribe = firestore()
+      .collection("rooms")
+      .doc(roomId)
       .collection("typingStatus")
-      .where("email", "!=", email)
+      .where("userEmail", "!=", email)
       .onSnapshot(snapshot => {
         let someoneTyping = false;
         snapshot.forEach(doc => {
-          const data = doc.data() as { isTyping: boolean; lastUpdated: FirebaseFirestoreTypes.Timestamp };
+          const data = doc.data() as ITypingStatus;
           const secondsSinceUpdate = (Date.now() - data.lastUpdated.toDate().getTime()) / 1000;
-          if (data.isTyping && secondsSinceUpdate < 5) {
-            someoneTyping = true;
-          }
+          if (data.isTyping && secondsSinceUpdate < 5) someoneTyping = true;
         });
         setOtherTyping(someoneTyping);
       });
-
     return () => unsubscribe();
-  }, [email]);
+  }, [roomId, email]);
 
-  // Update typing status
+  // Handle typing
   const handleTyping = (text: string) => {
     setInput(text);
 
-    firestore().collection("typingStatus").doc(email).set({
-      email,
-      isTyping: true,
-      lastUpdated: firestore.Timestamp.now(),
-    });
+    firestore()
+      .collection("rooms")
+      .doc(roomId)
+      .collection("typingStatus")
+      .doc(email)
+      .set({
+        isTyping: true,
+        lastUpdated: firestore.Timestamp.now(),
+        userEmail: email,
+      });
 
     if (typingTimeout) clearTimeout(typingTimeout);
     typingTimeout = setTimeout(() => {
-      firestore().collection("typingStatus").doc(email).set({
-        email,
-        isTyping: false,
-        lastUpdated: firestore.Timestamp.now(),
-      });
+      firestore()
+        .collection("rooms")
+        .doc(roomId)
+        .collection("typingStatus")
+        .doc(email)
+        .set({
+          isTyping: false,
+          lastUpdated: firestore.Timestamp.now(),
+          userEmail: email,
+        });
     }, 3000);
   };
 
-  // Send message (handles offline pending)
+  // Send message
   const sendMessage = async () => {
     if (!input.trim()) return;
 
-    const tempId = `local-${Date.now()}`;
     const newMsg: IMessage = {
-      id: tempId,
+      id: firestore().collection("rooms").doc().id,
       body: input,
+      sender: email,
       receivedAt: firestore.Timestamp.fromDate(new Date()),
-      status: isConnected ? "sent" : "local",
-      email,
+      status: { [email]: "sent" },
     };
 
-    // Optimistic UI
     setMessages(prev => [newMsg, ...prev]);
     setInput("");
 
     if (!isConnected) return;
 
     try {
-      const docRef = firestore().collection("messages").doc();
-      await docRef.set({ id: docRef.id, ...newMsg, status: "sent" });
+      const docRef = firestore()
+        .collection("rooms")
+        .doc(roomId)
+        .collection("messages")
+        .doc(newMsg.id);
+      await docRef.set(newMsg);
     } catch (err) {
-      console.error("Error sending message:", err);
+      console.error(err);
     }
   };
 
-  // Mark all messages as viewed
-  const markAllViewed = async () => {
-    try {
-      const batch = firestore().batch();
-      messages.forEach(msg => {
-        if (msg.status !== "viewed") {
-          const ref = firestore().collection("messages").doc(msg.id);
-          batch.update(ref, { status: "viewed" });
-        }
-      });
-      await batch.commit();
-    } catch (err) {
-      console.error("Error marking viewed:", err);
-    }
+  // Mark message viewed
+  const markMessageViewed = async (msgId: string) => {
+    const ref = firestore().collection("rooms").doc(roomId).collection("messages").doc(msgId);
+    await ref.update({ [`status.${email}`]: "viewed" });
   };
 
-  // Tick color
-  const getTickColor = (status: MessageStatus) => {
+  const getTickColor = (status: "sent" | "delivered" | "viewed" | undefined) => {
     switch (status) {
-      case "local":
-        return "gray";
       case "sent":
         return "black";
       case "delivered":
         return "red";
       case "viewed":
         return "blue";
+      default:
+        return "gray";
     }
   };
 
-  const renderItem = ({ item }: { item: IMessage }) => (
-    <View style={[styles.messageBubble, { backgroundColor: "#2a2a2a" }]}>
-      <Text style={{ color: "#fff", fontWeight: "600" }}>{item.body}</Text>
-      <Text style={{ color: getTickColor(item.status), fontSize: 16, marginTop: 4 }}>✔</Text>
-    </View>
-  );
+  const renderItem = ({ item }: { item: IMessage }) => {
+    const userStatus = item.status[email];
+    return (
+      <View style={[styles.messageBubble, { backgroundColor: "#2a2a2a" }]}>
+        <Text style={{ color: "#fff", fontWeight: "600" }}>{item.body}</Text>
+        <Text style={{ color: getTickColor(userStatus), fontSize: 16, marginTop: 4 }}>✔</Text>
+      </View>
+    );
+  };
 
   return (
     <KeyboardAvoidingView
@@ -203,38 +204,18 @@ export default function AIChat() {
       keyboardVerticalOffset={90}
     >
       <StatusBar barStyle="light-content" />
-
-      {/* Offline banner */}
       {!isConnected && (
         <View style={{ backgroundColor: "red", padding: 6 }}>
           <Text style={{ color: "#fff", textAlign: "center" }}>You are offline</Text>
         </View>
       )}
 
-      {/* Email input */}
-      <View style={{ padding: 10, backgroundColor: "#1f1f1f" }}>
-        <TextInput
-          value={email}
-          onChangeText={setEmail}
-          style={{
-            backgroundColor: "#2a2a2a",
-            color: "#fff",
-            padding: 12,
-            borderRadius: 10,
-          }}
-          placeholder="Enter email"
-          placeholderTextColor="#888"
-        />
-      </View>
-
-      {/* Typing indicator */}
       {otherTyping && (
         <View style={{ padding: 6, paddingLeft: 12 }}>
           <Text style={{ color: "#aaa", fontStyle: "italic" }}>Someone is typing...</Text>
         </View>
       )}
 
-      {/* Messages */}
       {loading ? (
         <ActivityIndicator size="large" color="#25D366" style={{ flex: 1 }} />
       ) : (
@@ -249,7 +230,6 @@ export default function AIChat() {
         />
       )}
 
-      {/* Input */}
       <View style={styles.inputContainer}>
         <TextInput
           value={input}
@@ -267,12 +247,6 @@ export default function AIChat() {
           disabled={!isConnected}
         >
           <Ionicons name="send" size={24} color="#fff" />
-        </TouchableOpacity>
-        <TouchableOpacity
-          onPress={markAllViewed}
-          style={[styles.sendButton, { backgroundColor: "#007bff", marginLeft: 8 }]}
-        >
-          <Text style={{ color: "#fff", fontWeight: "700" }}>Mark Viewed</Text>
         </TouchableOpacity>
       </View>
     </KeyboardAvoidingView>
@@ -309,5 +283,6 @@ const styles = StyleSheet.create({
     borderRadius: 30,
     justifyContent: "center",
     alignItems: "center",
+    marginLeft: 8,
   },
 });
