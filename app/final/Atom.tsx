@@ -15,7 +15,6 @@ import {
   Dimensions,
   useColorScheme,
 } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
 import { db } from "../firebase"; // Firestore config
 import { collection, onSnapshot, addDoc } from "firebase/firestore";
 
@@ -50,12 +49,9 @@ export default function MarketplaceApp() {
   // Payment form
   const [cardNumber, setCardNumber] = useState("");
   const [cardName, setCardName] = useState("");
-  const [expiry, setExpiry] = useState("");
-  const [cvv, setCvv] = useState("");
   const [paymentMessage, setPaymentMessage] = useState<
     { type: "error" | "success"; text: string } | null
   >(null);
-  const [showCvv, setShowCvv] = useState(false);
 
   useEffect(() => {
     const unsubscribe = onSnapshot(collection(db, "products"), (snapshot) => {
@@ -85,18 +81,19 @@ export default function MarketplaceApp() {
 
   const handleSubmitNewProduct = () => {
     if (!name || !price || !image) return alert("All fields required");
-    setProcessing(true);
+    // don't set `processing` here — only open payment modal
     setPaymentVisible(true);
   };
 
   const handlePayment = () => {
     setPaymentMessage(null);
+
+    // basic validations: card number (16 digits) and cardholder name
     if (cardNumber.replace(/\s/g, "").length !== 16)
       return setPaymentMessage({ type: "error", text: "Card number must be 16 digits." });
     if (!cardName) return setPaymentMessage({ type: "error", text: "Cardholder name required." });
-    if (!/^(0[1-9]|1[0-2])\/\d{2}$/.test(expiry))
-      return setPaymentMessage({ type: "error", text: "Expiry must be MM/YY." });
-    if (cvv.length !== 3) return setPaymentMessage({ type: "error", text: "CVV must be 3 digits." });
+
+    setProcessing(true);
 
     setTimeout(async () => {
       setPaymentMessage({ type: "success", text: "Listing payment successful!" });
@@ -109,10 +106,20 @@ export default function MarketplaceApp() {
           description: "User listed product",
           createdAt: new Date(),
         });
-        setName(""); setPrice(""); setImage("");
-        setNewProductModal(false); setPaymentVisible(false);
-      } catch (err) { console.error(err); }
-      setProcessing(false);
+        // reset form
+        setName("");
+        setPrice("");
+        setImage("");
+        setCardNumber("");
+        setCardName("");
+        setNewProductModal(false);
+        setPaymentVisible(false);
+      } catch (err) {
+        console.error(err);
+        setPaymentMessage({ type: "error", text: "Failed to list product. Try again." });
+      } finally {
+        setProcessing(false);
+      }
     }, 2000);
   };
 
@@ -192,7 +199,14 @@ export default function MarketplaceApp() {
                   <Text style={styles.buttonText}>Submit & Pay</Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity style={[styles.button, { backgroundColor: "#aaa", marginTop: 12 }]} onPress={() => setNewProductModal(false)}>
+                <TouchableOpacity
+                  style={[styles.button, { backgroundColor: "#aaa", marginTop: 12 }]}
+                  onPress={() => {
+                    setNewProductModal(false);
+                    setPaymentMessage(null);
+                    setProcessing(false);
+                  }}
+                >
                   <Text style={[styles.buttonText, { color: "#333" }]}>Cancel</Text>
                 </TouchableOpacity>
               </View>
@@ -210,31 +224,17 @@ export default function MarketplaceApp() {
               <TextInput
                 placeholder="Card Number"
                 value={cardNumber}
-                onChangeText={setCardNumber}
+                onChangeText={(t) => {
+                  // allow spaces every 4 digits for readability
+                  const digits = t.replace(/\D/g, "").slice(0, 16);
+                  const spaced = digits.replace(/(\d{4})(?=\d)/g, "$1 ");
+                  setCardNumber(spaced);
+                }}
                 keyboardType="number-pad"
                 style={styles.input}
                 maxLength={19}
               />
               <TextInput placeholder="Cardholder Name" value={cardName} onChangeText={setCardName} style={styles.input} />
-              <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
-                <TextInput placeholder="Expiry (MM/YY)" value={expiry} onChangeText={setExpiry} style={[styles.input, { flex: 1, marginRight: 8 }]} maxLength={5} keyboardType="number-pad" />
-                <View style={{ flex: 1 }}>
-                  <View style={{ flexDirection: "row", alignItems: "center" }}>
-                    <TextInput
-                      placeholder="CVV"
-                      value={cvv}
-                      onChangeText={(t) => setCvv(t.replace(/[^\d]/g, "").slice(0, 3))}
-                      style={[styles.input, { flex: 1 }]}
-                      keyboardType="number-pad"
-                      secureTextEntry={!showCvv}
-                      maxLength={3}
-                    />
-                    <TouchableOpacity onPress={() => setShowCvv(!showCvv)} style={{ position: "absolute", right: 10 }}>
-                      <Ionicons name={showCvv ? "eye" : "eye-off"} size={24} color={isDark ? "#fff" : "#000"} />
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              </View>
 
               {paymentMessage && (
                 <Text style={{ marginTop: 10, color: paymentMessage.type === "error" ? "red" : "green", fontWeight: "bold", textAlign: "center" }}>
@@ -242,11 +242,22 @@ export default function MarketplaceApp() {
                 </Text>
               )}
 
-              <TouchableOpacity style={[styles.button, { marginTop: 20 }]} onPress={handlePayment}>
+              <TouchableOpacity
+                style={[styles.button, { marginTop: 20 }]}
+                onPress={handlePayment}
+                disabled={processing}
+              >
                 {processing ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Pay Listing Fee</Text>}
               </TouchableOpacity>
 
-              <TouchableOpacity style={[styles.button, { backgroundColor: "#aaa", marginTop: 12 }]} onPress={() => setPaymentVisible(false)}>
+              <TouchableOpacity
+                style={[styles.button, { backgroundColor: "#aaa", marginTop: 12 }]}
+                onPress={() => {
+                  setPaymentVisible(false);
+                  setProcessing(false);
+                  setPaymentMessage(null);
+                }}
+              >
                 <Text style={[styles.buttonText, { color: "#333" }]}>Cancel</Text>
               </TouchableOpacity>
             </ScrollView>
