@@ -1,42 +1,78 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
-  Button,
   StyleSheet,
   ActivityIndicator,
   TextInput,
+  TouchableOpacity,
+  KeyboardAvoidingView,
+  Platform,
+  FlatList,
+  Image,
+  Alert,
 } from "react-native";
+import { doc, getDoc, setDoc, collection, getDocs } from "firebase/firestore";
+import { db } from "../firebase";
 
-import { doc, getDoc } from "firebase/firestore";
-import { db } from "../firebase"; // ensure your Firestore is initialized
+interface Product {
+  id: string;
+  name: string;
+  price: number;
+  image: string;
+}
 
-export default function UserFetcher() {
+interface Preferences {
+  [productId: string]: number;
+}
+
+const initialProducts: Product[] = [
+  { id: "1", name: "Nike Sneakers", price: 120, image: "https://xlijah.com/pics/sneaker.jpg" },
+  { id: "2", name: "Apple Watch", price: 250, image: "https://xlijah.com/pics/apple_watch.jpg" },
+  { id: "3", name: "Bluetooth Headphones", price: 80, image: "https://xlijah.com/pics/bluetooth.webp" },
+  { id: "4", name: "Leather Bag", price: 150, image: "https://xlijah.com/pics/bag.webp" },
+  { id: "5", name: "Sunglasses", price: 50, image: "https://xlijah.com/pics/sunglasses.jpg" },
+];
+
+export default function EmailLoginMarketplace() {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [fetchedEmail, setFetchedEmail] = useState("");
 
+  const [userLoggedIn, setUserLoggedIn] = useState(false);
+  const [preferences, setPreferences] = useState<Preferences>({});
+  const [products, setProducts] = useState<Product[]>(initialProducts);
+
+  // Fetch user from Firestore by email
   const fetchUser = async () => {
     if (!email) {
-      setError("Please enter an email.");
+      setError("Please enter your email.");
       return;
     }
 
     setLoading(true);
     setError("");
-    setFetchedEmail("");
 
     try {
-      // Lookup by email as document ID
       const userRef = doc(db, "users", email);
       const userSnap = await getDoc(userRef);
 
       if (userSnap.exists()) {
         const data = userSnap.data();
-        setFetchedEmail(data.email || "No email found in document");
+        const userPrefs = data.preferences || {};
+        setPreferences(userPrefs);
+
+        // Load recommendations
+        const recommended = await getRecommendedProducts(userPrefs);
+        setProducts(recommended);
+
+        setUserLoggedIn(true);
       } else {
-        setError(`No user found with ID: ${email}`);
+        // If user doesn't exist, create a new document
+        await setDoc(doc(db, "users", email), { preferences: {} });
+        setPreferences({});
+        setProducts(initialProducts);
+        setUserLoggedIn(true);
       }
     } catch (err) {
       console.error(err);
@@ -46,58 +82,108 @@ export default function UserFetcher() {
     }
   };
 
+  // Collaborative recommendation
+  const getRecommendedProducts = async (userPrefs: Preferences) => {
+    try {
+      const usersSnap = await getDocs(collection(db, "users"));
+      const allPrefs: { [productId: string]: number } = {};
+
+      usersSnap.forEach((docSnap) => {
+        const data = docSnap.data();
+        if (data.preferences) {
+          for (const [pid, clicks] of Object.entries(data.preferences)) {
+            allPrefs[pid] = (allPrefs[pid] || 0) + (clicks as number);
+          }
+        }
+      });
+
+      const combinedScores: { [id: string]: number } = {};
+      initialProducts.forEach((p) => {
+        combinedScores[p.id] = (userPrefs[p.id] || 0) + (allPrefs[p.id] || 0);
+      });
+
+      return [...initialProducts].sort((a, b) => (combinedScores[b.id] || 0) - (combinedScores[a.id] || 0));
+    } catch (err) {
+      console.error(err);
+      return initialProducts;
+    }
+  };
+
+  // Handle product click (update preferences in Firestore)
+  const handleProductClick = async (product: Product) => {
+    const newPrefs = { ...preferences };
+    newPrefs[product.id] = (newPrefs[product.id] || 0) + 1;
+    setPreferences(newPrefs);
+
+    try {
+      await setDoc(doc(db, "users", email), { preferences: newPrefs }, { merge: true });
+      Alert.alert("Added!", `You clicked on ${product.name}`);
+    } catch (err) {
+      console.error(err);
+      Alert.alert("Error", "Failed to update preferences");
+    }
+  };
+
+  // If user is logged in, show Marketplace
+  if (userLoggedIn) {
+    return (
+      <View style={styles.marketContainer}>
+        <Text style={styles.marketTitle}>Welcome, {email}</Text>
+        <FlatList
+          data={products}
+          keyExtractor={(item) => item.id}
+          numColumns={2}
+          contentContainerStyle={{ padding: 10 }}
+          renderItem={({ item }) => (
+            <TouchableOpacity style={styles.card} onPress={() => handleProductClick(item)}>
+              <Image source={{ uri: item.image }} style={styles.image} />
+              <Text style={styles.name}>{item.name}</Text>
+              <Text style={styles.price}>${item.price}</Text>
+            </TouchableOpacity>
+          )}
+        />
+      </View>
+    );
+  }
+
+  // Login UI
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Login with Email</Text>
-
-      {/* User input */}
-      <TextInput
-        style={styles.input}
-        placeholder="Enter email"
-        value={email}
-        onChangeText={setEmail}
-        autoCapitalize="none"
-        keyboardType="email-address"
-      />
-
-      <Button title="Fetch Email" onPress={fetchUser} />
-
-      {loading && <ActivityIndicator style={{ marginTop: 10 }} />}
-
-      {fetchedEmail ? (
-        <Text style={styles.result}>Email in DB: {fetchedEmail}</Text>
-      ) : null}
-
-      {error ? <Text style={styles.error}>{error}</Text> : null}
-    </View>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
+    >
+      <View style={styles.card}>
+        <Text style={styles.title}>Login with Email</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Enter your email"
+          placeholderTextColor="#888"
+          value={email}
+          onChangeText={setEmail}
+          autoCapitalize="none"
+          keyboardType="email-address"
+        />
+        <TouchableOpacity style={styles.button} onPress={fetchUser} disabled={loading}>
+          {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Login</Text>}
+        </TouchableOpacity>
+        {error ? <Text style={styles.error}>{error}</Text> : null}
+      </View>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    padding: 20,
-    marginTop: 40,
-  },
-  title: {
-    fontSize: 18,
-    marginBottom: 12,
-    fontWeight: "bold",
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: "#aaa",
-    padding: 10,
-    marginBottom: 12,
-    borderRadius: 6,
-  },
-  result: {
-    marginTop: 10,
-    fontSize: 16,
-    color: "green",
-  },
-  error: {
-    marginTop: 10,
-    fontSize: 16,
-    color: "red",
-  },
+  container: { flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#f0f3f7", padding: 20 },
+  card: { width: "100%", backgroundColor: "#fff", borderRadius: 16, padding: 24, alignItems: "center", shadowColor: "#000", shadowOpacity: 0.1, shadowOffset: { width: 0, height: 5 }, shadowRadius: 10, elevation: 5 },
+  title: { fontSize: 22, fontWeight: "700", marginBottom: 20, color: "#333" },
+  input: { width: "100%", borderWidth: 1, borderColor: "#ddd", borderRadius: 12, paddingHorizontal: 16, paddingVertical: 12, marginBottom: 20, fontSize: 16, color: "#333", backgroundColor: "#f9f9f9" },
+  button: { width: "100%", backgroundColor: "#007aff", paddingVertical: 14, borderRadius: 12, alignItems: "center" },
+  buttonText: { color: "#fff", fontWeight: "700", fontSize: 16 },
+  error: { color: "#dc3545", marginTop: 12, fontSize: 16, textAlign: "center" },
+  marketContainer: { flex: 1, backgroundColor: "#f0f3f7" },
+  marketTitle: { fontSize: 24, fontWeight: "700", margin: 16 },
+  card: { flex: 1, margin: 8, backgroundColor: "#fff", borderRadius: 12, padding: 10, alignItems: "center" },
+  image: { width: 120, height: 120, borderRadius: 8 },
+  name: { marginTop: 8, fontWeight: "600", fontSize: 16, textAlign: "center" },
+  price: { marginTop: 4, fontWeight: "700", fontSize: 16, color: "#007aff" },
 });
