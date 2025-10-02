@@ -1,170 +1,78 @@
 import React, { useState, useEffect } from "react";
 import {
   View,
-  FlatList,
   Text,
+  FlatList,
   Image,
   TouchableOpacity,
   StyleSheet,
-  Dimensions,
-  useColorScheme,
-  Linking,
   Modal,
   TextInput,
-  ScrollView,
-  ActivityIndicator,
-  Alert,
   KeyboardAvoidingView,
   Platform,
+  ScrollView,
+  ActivityIndicator,
+  Dimensions,
+  useColorScheme,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { db } from "../firebase"; // adjust path
-import { doc, getDoc, setDoc, collection, getDocs } from "firebase/firestore";
+import { db } from "../firebase"; // Firestore config
+import { collection, onSnapshot, addDoc } from "firebase/firestore";
 
 const { width } = Dimensions.get("window");
 const CARD_WIDTH = (width - 40) / 2;
-const USER_EMAIL = "elajahn8@gmail.com";
-const phoneNumber = "0746524088";
 
 type Product = {
   id: string;
   name: string;
   price: number;
   image: string;
+  sellerEmail?: string;
+  description?: string;
 };
 
-type Preferences = { [productId: string]: number };
-
-const initialProducts: Product[] = [
-  { id: "1", name: "Nike Sneakers", price: 120, image: "https://xlijah.com/pics/sneaker.jpg" },
-  { id: "2", name: "Apple Watch", price: 250, image: "https://xlijah.com/pics/apple_watch.jpg" },
-  { id: "3", name: "Bluetooth Headphones", price: 80, image: "https://xlijah.com/pics/bluetooth.webp" },
-  { id: "4", name: "Leather Bag", price: 150, image: "https://xlijah.com/pics/bag.webp" },
-  { id: "5", name: "Sunglasses", price: 50, image: "https://xlijah.com/pics/sunglasses.jpg" },
-  { id: "6", name: "iPhone 12", price: 999, image: "https://xlijah.com/pics/iphone.jpg" },
-];
-
-const updatedProducts: Product[] = [
-  { id: "7", name: "lenovo", price: 70000, image: "https://xlijah.com/pics/pics/lenovo.jpg" },
-  { id: "8", name: "macbook", price: 850, image: "https://xlijah.com/pics/pics/macbook.jpg" },
-  { id: "9", name: "mac", price: 150, image: "https://xlijah.com/pics/pics/mac.jpeg" },
-  { id: "10", name: "MacBook Pro", price: 2400, image: "https://xlijah.com/pics/pics/macbook.jpg" },
-  { id: "11", name: "notebook", price: 1200, image: "https://xlijah.com/pics/pics/notebook.jpeg" },
-  { id: "12", name: "Arms", price: 130, image: "https://xlijah.com/pics/pics/guns.jpeg" },
-];
-
-const callSeller = () => {
-  Linking.openURL(`tel:${phoneNumber}`).catch(() => Alert.alert("Error", "Phone app not available"));
-};
-
-const ProductCard = ({
-  item,
-  onQuantityChange,
-  isDark,
-  qtyInCart,
-}: {
-  item: Product;
-  onQuantityChange: (id: string, qty: number) => void;
-  isDark: boolean;
-  qtyInCart: number;
-}) => {
-  const [quantity, setQuantity] = useState(qtyInCart || 0);
-  const [imageLoading, setImageLoading] = useState(true);
-
-  const updateQuantity = (newQty: number) => {
-    const safeQty = Math.max(newQty, 0);
-    setQuantity(safeQty);
-    onQuantityChange(item.id, safeQty);
-  };
-
-  return (
-    <View style={[styles.card, { backgroundColor: isDark ? "#1c1c1e" : "#fff" }]}>
-      <View style={styles.imageContainer}>
-        {imageLoading && <ActivityIndicator size="small" color={isDark ? "#fff" : "#000"} />}
-        <Image
-          source={{ uri: item.image }}
-          style={[styles.image, imageLoading ? { display: "none" } : {}]}
-          onLoadEnd={() => setImageLoading(false)}
-        />
-      </View>
-      <Text style={[styles.title, { color: isDark ? "#fff" : "#000" }]} numberOfLines={2}>
-        {item.name}
-      </Text>
-      <Text style={[styles.price, { color: isDark ? "#00ff7f" : "#00a650" }]}>${item.price.toFixed(2)}</Text>
-
-      <View style={styles.quantityRow}>
-        <TouchableOpacity
-          style={styles.qtyButton}
-          onPress={() => updateQuantity(quantity - 1)}
-        >
-          <Text style={styles.qtyButtonText}>-</Text>
-        </TouchableOpacity>
-        <Text style={[styles.qtyText, { color: isDark ? "#fff" : "#000" }]}>{quantity}</Text>
-        <TouchableOpacity
-          style={styles.qtyButton}
-          onPress={() => updateQuantity(quantity + 1)}
-        >
-          <Text style={styles.qtyButtonText}>+</Text>
-        </TouchableOpacity>
-      </View>
-
-      <TouchableOpacity
-        style={[styles.addButton, quantity === 0 && { backgroundColor: "#555" }]}
-        onPress={callSeller}
-        disabled={quantity === 0}
-      >
-        <Text style={styles.addButtonText}>+Cart</Text>
-      </TouchableOpacity>
-    </View>
-  );
-};
-
-export default function Marketplace() {
-  const [products, setProducts] = useState<Product[]>([...initialProducts, ...updatedProducts]);
-  const [cart, setCart] = useState<{ [key: string]: number }>({});
-  const [preferences, setPreferences] = useState<Preferences>({});
+export default function MarketplaceApp() {
+  const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
-
+  const [cart, setCart] = useState<{ [key: string]: number }>({});
+  const [productDetail, setProductDetail] = useState<Product | null>(null);
+  const [newProductModal, setNewProductModal] = useState(false);
+  const [paymentVisible, setPaymentVisible] = useState(false);
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
 
-  const [cartReviewVisible, setCartReviewVisible] = useState(false);
-  const [paymentVisible, setPaymentVisible] = useState(false);
+  // New Product Form
+  const [name, setName] = useState("");
+  const [price, setPrice] = useState("");
+  const [image, setImage] = useState("");
+  const [processing, setProcessing] = useState(false);
 
-  // Payment fields
+  // Payment form
   const [cardNumber, setCardNumber] = useState("");
   const [cardName, setCardName] = useState("");
   const [expiry, setExpiry] = useState("");
   const [cvv, setCvv] = useState("");
-  const [processingPayment, setProcessingPayment] = useState(false);
-  const [paymentMessage, setPaymentMessage] = useState<{ type: "error" | "success"; text: string } | null>(null);
-
-  const loadPreferences = async () => {
-    setLoading(true);
-    try {
-      const userRef = doc(db, "users", USER_EMAIL);
-      const userSnap = await getDoc(userRef);
-      let userPrefs: Preferences = {};
-      if (userSnap.exists()) {
-        const data = userSnap.data();
-        if (data.preferences) userPrefs = data.preferences;
-      }
-      setPreferences(userPrefs);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [paymentMessage, setPaymentMessage] = useState<
+    { type: "error" | "success"; text: string } | null
+  >(null);
+  const [showCvv, setShowCvv] = useState(false);
 
   useEffect(() => {
-    loadPreferences();
+    const unsubscribe = onSnapshot(collection(db, "products"), (snapshot) => {
+      const allProducts = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setProducts(allProducts as Product[]);
+      setLoading(false);
+    });
+    return () => unsubscribe();
   }, []);
 
   const handleQuantityChange = (id: string, qty: number) => {
     setCart((prev) => {
       const updated = { ...prev, [id]: qty };
-      if (qty === 0) delete updated[id];
+      if (qty <= 0) delete updated[id];
       return updated;
     });
   };
@@ -175,26 +83,36 @@ export default function Marketplace() {
     return product ? sum + product.price * qty : sum;
   }, 0);
 
-  const cartItems = Object.entries(cart)
-    .map(([id, qty]) => {
-      const product = products.find((p) => p.id === id);
-      if (!product) return null;
-      return { ...product, quantity: qty };
-    })
-    .filter(Boolean) as (Product & { quantity: number })[];
+  const handleSubmitNewProduct = () => {
+    if (!name || !price || !image) return alert("All fields required");
+    setProcessing(true);
+    setPaymentVisible(true);
+  };
 
-  const handlePay = () => {
-    // Simulate payment success
-    setProcessingPayment(true);
-    setTimeout(() => {
-      setProcessingPayment(false);
-      setPaymentMessage({ type: "success", text: `Paid $${totalPrice.toFixed(2)}!` });
-      setCart({});
-      setTimeout(() => {
-        setPaymentVisible(false);
-        setPaymentMessage(null);
-        setCardNumber(""); setCardName(""); setExpiry(""); setCvv("");
-      }, 1500);
+  const handlePayment = () => {
+    setPaymentMessage(null);
+    if (cardNumber.replace(/\s/g, "").length !== 16)
+      return setPaymentMessage({ type: "error", text: "Card number must be 16 digits." });
+    if (!cardName) return setPaymentMessage({ type: "error", text: "Cardholder name required." });
+    if (!/^(0[1-9]|1[0-2])\/\d{2}$/.test(expiry))
+      return setPaymentMessage({ type: "error", text: "Expiry must be MM/YY." });
+    if (cvv.length !== 3) return setPaymentMessage({ type: "error", text: "CVV must be 3 digits." });
+
+    setTimeout(async () => {
+      setPaymentMessage({ type: "success", text: "Listing payment successful!" });
+      try {
+        await addDoc(collection(db, "products"), {
+          name,
+          price: Number(price),
+          image,
+          sellerEmail: "currentUser@example.com",
+          description: "User listed product",
+          createdAt: new Date(),
+        });
+        setName(""); setPrice(""); setImage("");
+        setNewProductModal(false); setPaymentVisible(false);
+      } catch (err) { console.error(err); }
+      setProcessing(false);
     }, 2000);
   };
 
@@ -203,126 +121,133 @@ export default function Marketplace() {
 
   return (
     <View style={[styles.container, { backgroundColor: isDark ? "#121212" : "#f2f2f2" }]}>
-      <Text style={[styles.header, { color: isDark ? "#fff" : "#000" }]}>Jumia Market</Text>
+      <Text style={[styles.header, { color: isDark ? "#fff" : "#000" }]}>Marketplace</Text>
 
+      {/* Sell Button */}
+      <TouchableOpacity
+        style={[styles.button, { marginHorizontal: 20, marginBottom: 10 }]}
+        onPress={() => setNewProductModal(true)}
+      >
+        <Text style={styles.buttonText}>Sell Your Product</Text>
+      </TouchableOpacity>
+
+      {/* Products Grid */}
       <FlatList
         data={products}
-        renderItem={({ item }) => (
-          <ProductCard
-            item={item}
-            onQuantityChange={handleQuantityChange}
-            isDark={isDark}
-            qtyInCart={cart[item.id] || 0}
-          />
-        )}
-        keyExtractor={(item) => item.id}
         numColumns={2}
+        keyExtractor={(item) => item.id}
         contentContainerStyle={styles.list}
-        showsVerticalScrollIndicator={false}
-      />
+        renderItem={({ item }) => (
+          <View style={[styles.card, { backgroundColor: isDark ? "#1c1c1e" : "#fff" }]}>
+            <TouchableOpacity onPress={() => setProductDetail(item)}>
+              <Image source={{ uri: item.image }} style={styles.image} />
+              <Text style={[styles.title, { color: isDark ? "#fff" : "#000" }]} numberOfLines={2}>
+                {item.name}
+              </Text>
+              <Text style={[styles.price, { color: isDark ? "#00ff7f" : "#00a650" }]}>${item.price}</Text>
+            </TouchableOpacity>
 
-      {totalItems > 0 && (
-        <TouchableOpacity
-          style={styles.cartIcon}
-          onPress={() => setCartReviewVisible(true)}
-        >
-          <Ionicons name="cart" size={28} color="#fff" />
-          <View style={styles.cartBadge}>
-            <Text style={styles.cartBadgeText}>{totalItems}</Text>
-          </View>
-        </TouchableOpacity>
-      )}
-
-      {/* Cart Review Modal */}
-      <Modal visible={cartReviewVisible} animationType="slide" transparent>
-        <View style={styles.modalBackground}>
-          <View style={[styles.modalContainer, { backgroundColor: isDark ? "#1c1c1e" : "#fff" }]}>
-            <Text style={[styles.modalHeader, { color: isDark ? "#fff" : "#000" }]}>Cart</Text>
-            <ScrollView>
-              {cartItems.map((item) => (
-                <View key={item.id} style={styles.cartItem}>
-                  <Text style={{ color: isDark ? "#fff" : "#000" }}>
-                    {item.name} x {item.quantity}
-                  </Text>
-                  <Text style={{ color: isDark ? "#00ff7f" : "#00a650" }}>
-                    ${(item.price * item.quantity).toFixed(2)}
-                  </Text>
-                </View>
-              ))}
-            </ScrollView>
-            <Text style={{ marginTop: 10, fontWeight: "700", fontSize: 16, color: isDark ? "#fff" : "#000" }}>
-              Total: ${totalPrice.toFixed(2)}
-            </Text>
-            <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 15 }}>
-              <TouchableOpacity
-                style={[styles.modalButton, { backgroundColor: "#aaa" }]}
-                onPress={() => setCartReviewVisible(false)}
-              >
-                <Text style={{ color: "#fff" }}>Close</Text>
+            <View style={styles.quantityRow}>
+              <TouchableOpacity style={[styles.qtyButton, { backgroundColor: "#007aff" }]} onPress={() => handleQuantityChange(item.id, (cart[item.id] || 0) - 1)}>
+                <Text style={styles.qtyButtonText}>-</Text>
               </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.modalButton, { backgroundColor: "#ff6600" }]}
-                onPress={() => { setPaymentVisible(true); setCartReviewVisible(false); }}
-              >
-                <Text style={{ color: "#fff" }}>Checkout</Text>
+              <Text style={[styles.qtyText, { color: isDark ? "#fff" : "#000" }]}>{cart[item.id] || 0}</Text>
+              <TouchableOpacity style={[styles.qtyButton, { backgroundColor: "#007aff" }]} onPress={() => handleQuantityChange(item.id, (cart[item.id] || 0) + 1)}>
+                <Text style={styles.qtyButtonText}>+</Text>
               </TouchableOpacity>
             </View>
           </View>
-        </View>
-      </Modal>
+        )}
+      />
+
+      {/* Product Detail Modal */}
+      {productDetail && (
+        <Modal visible={!!productDetail} transparent animationType="slide">
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <Image source={{ uri: productDetail.image }} style={{ width: 200, height: 200, borderRadius: 12 }} />
+              <Text style={styles.modalTitle}>{productDetail.name}</Text>
+              <Text style={{ fontWeight: "700", fontSize: 18 }}>${productDetail.price}</Text>
+              <Text style={{ marginVertical: 10 }}>{productDetail.description || "No description"}</Text>
+              <TouchableOpacity style={styles.button} onPress={() => setProductDetail(null)}>
+                <Text style={styles.buttonText}>Close</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
+      )}
+
+      {/* New Product Modal */}
+      {newProductModal && (
+        <Modal visible={true} transparent animationType="slide">
+          <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={styles.modalOverlay}>
+            <ScrollView contentContainerStyle={{ padding: 20 }}>
+              <View style={[styles.modalContent, { maxHeight: "90%" }]}>
+                <Text style={styles.modalTitle}>Sell Your Product</Text>
+                <TextInput placeholder="Name" value={name} onChangeText={setName} style={styles.input} />
+                <TextInput placeholder="Price" value={price} onChangeText={setPrice} style={styles.input} keyboardType="numeric" />
+                <TextInput placeholder="Image URL" value={image} onChangeText={setImage} style={styles.input} />
+
+                <TouchableOpacity style={styles.button} onPress={handleSubmitNewProduct}>
+                  <Text style={styles.buttonText}>Submit & Pay</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity style={[styles.button, { backgroundColor: "#aaa", marginTop: 12 }]} onPress={() => setNewProductModal(false)}>
+                  <Text style={[styles.buttonText, { color: "#333" }]}>Cancel</Text>
+                </TouchableOpacity>
+              </View>
+            </ScrollView>
+          </KeyboardAvoidingView>
+        </Modal>
+      )}
 
       {/* Payment Modal */}
-      <Modal visible={paymentVisible} animationType="slide" transparent>
-        <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : undefined}
-          style={styles.modalBackground}
-        >
-          <View style={[styles.modalContainer, { backgroundColor: isDark ? "#1c1c1e" : "#fff" }]}>
-            <Text style={[styles.modalHeader, { color: isDark ? "#fff" : "#000" }]}>Payment</Text>
+      <Modal visible={paymentVisible} transparent animationType="slide">
+        <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={styles.modalOverlay}>
+          <View style={[styles.modalContent, { maxHeight: "90%" }]}>
             <ScrollView>
+              <Text style={styles.modalTitle}>Payment</Text>
               <TextInput
                 placeholder="Card Number"
                 value={cardNumber}
                 onChangeText={setCardNumber}
-                keyboardType="numeric"
-                style={[styles.input, { backgroundColor: isDark ? "#333" : "#eee", color: isDark ? "#fff" : "#000" }]}
+                keyboardType="number-pad"
+                style={styles.input}
+                maxLength={19}
               />
-              <TextInput
-                placeholder="Card Holder Name"
-                value={cardName}
-                onChangeText={setCardName}
-                style={[styles.input, { backgroundColor: isDark ? "#333" : "#eee", color: isDark ? "#fff" : "#000" }]}
-              />
-              <TextInput
-                placeholder="Expiry MM/YY"
-                value={expiry}
-                onChangeText={setExpiry}
-                style={[styles.input, { backgroundColor: isDark ? "#333" : "#eee", color: isDark ? "#fff" : "#000" }]}
-              />
-              <TextInput
-                placeholder="CVV"
-                value={cvv}
-                onChangeText={setCvv}
-                keyboardType="numeric"
-                style={[styles.input, { backgroundColor: isDark ? "#333" : "#eee", color: isDark ? "#fff" : "#000" }]}
-              />
+              <TextInput placeholder="Cardholder Name" value={cardName} onChangeText={setCardName} style={styles.input} />
+              <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+                <TextInput placeholder="Expiry (MM/YY)" value={expiry} onChangeText={setExpiry} style={[styles.input, { flex: 1, marginRight: 8 }]} maxLength={5} keyboardType="number-pad" />
+                <View style={{ flex: 1 }}>
+                  <View style={{ flexDirection: "row", alignItems: "center" }}>
+                    <TextInput
+                      placeholder="CVV"
+                      value={cvv}
+                      onChangeText={(t) => setCvv(t.replace(/[^\d]/g, "").slice(0, 3))}
+                      style={[styles.input, { flex: 1 }]}
+                      keyboardType="number-pad"
+                      secureTextEntry={!showCvv}
+                      maxLength={3}
+                    />
+                    <TouchableOpacity onPress={() => setShowCvv(!showCvv)} style={{ position: "absolute", right: 10 }}>
+                      <Ionicons name={showCvv ? "eye" : "eye-off"} size={24} color={isDark ? "#fff" : "#000"} />
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </View>
+
               {paymentMessage && (
-                <Text style={{ color: paymentMessage.type === "success" ? "green" : "red", marginVertical: 10 }}>
+                <Text style={{ marginTop: 10, color: paymentMessage.type === "error" ? "red" : "green", fontWeight: "bold", textAlign: "center" }}>
                   {paymentMessage.text}
                 </Text>
               )}
-              <TouchableOpacity
-                style={[styles.modalButton, { backgroundColor: "#ff6600", marginTop: 10 }]}
-                onPress={handlePay}
-                disabled={processingPayment}
-              >
-                <Text style={{ color: "#fff" }}>{processingPayment ? "Processing..." : "Pay"}</Text>
+
+              <TouchableOpacity style={[styles.button, { marginTop: 20 }]} onPress={handlePayment}>
+                {processing ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Pay Listing Fee</Text>}
               </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.modalButton, { backgroundColor: "#aaa", marginTop: 10 }]}
-                onPress={() => setPaymentVisible(false)}
-              >
-                <Text style={{ color: "#fff" }}>Cancel</Text>
+
+              <TouchableOpacity style={[styles.button, { backgroundColor: "#aaa", marginTop: 12 }]} onPress={() => setPaymentVisible(false)}>
+                <Text style={[styles.buttonText, { color: "#333" }]}>Cancel</Text>
               </TouchableOpacity>
             </ScrollView>
           </View>
@@ -334,37 +259,20 @@ export default function Marketplace() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, paddingTop: 40 },
-  header: { fontSize: 28, fontWeight: "900", marginLeft: 20, marginBottom: 10 },
+  header: { fontSize: 32, fontWeight: "900", marginLeft: 20, marginBottom: 10 },
   list: { paddingHorizontal: 12, paddingBottom: 100 },
-  card: {
-    width: CARD_WIDTH,
-    borderRadius: 12,
-    padding: 12,
-    margin: 8,
-    alignItems: "center",
-    shadowColor: "#000",
-    shadowOpacity: 0.1,
-    shadowOffset: { width: 0, height: 1 },
-    shadowRadius: 3,
-    elevation: 4,
-  },
-  imageContainer: { width: CARD_WIDTH - 24, height: CARD_WIDTH - 24, borderRadius: 12, overflow: "hidden", justifyContent: "center", alignItems: "center", backgroundColor: "#f0f0f0" },
-  image: { width: "100%", height: "100%", borderRadius: 12 },
-  title: { marginTop: 8, fontWeight: "700", fontSize: 14, textAlign: "center" },
+  card: { width: CARD_WIDTH, borderRadius: 12, padding: 12, margin: 8, alignItems: "center" },
+  image: { width: "100%", height: CARD_WIDTH - 24, borderRadius: 12 },
+  title: { marginTop: 8, fontWeight: "700", fontSize: 16, textAlign: "center" },
   price: { marginTop: 4, fontWeight: "700", fontSize: 16 },
-  addButton: { marginTop: 12, backgroundColor: "#ff6600", paddingVertical: 10, borderRadius: 8, width: "100%", alignItems: "center" },
-  addButtonText: { color: "#fff", fontWeight: "700", fontSize: 14 },
   quantityRow: { flexDirection: "row", alignItems: "center", marginTop: 8 },
-  qtyButton: { paddingHorizontal: 12, paddingVertical: 4, backgroundColor: "#ddd", borderRadius: 4 },
-  qtyButtonText: { fontWeight: "700" },
-  qtyText: { marginHorizontal: 8, fontWeight: "700", fontSize: 16 },
-  cartIcon: { position: "absolute", bottom: 20, right: 20, backgroundColor: "#ff6600", padding: 14, borderRadius: 30 },
-  cartBadge: { position: "absolute", top: -5, right: -5, backgroundColor: "red", width: 18, height: 18, borderRadius: 9, justifyContent: "center", alignItems: "center" },
-  cartBadgeText: { color: "#fff", fontSize: 10, fontWeight: "700" },
-  modalBackground: { flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "center", alignItems: "center" },
-  modalContainer: { width: "85%", maxHeight: "80%", borderRadius: 12, padding: 20 },
-  modalHeader: { fontSize: 22, fontWeight: "700", marginBottom: 15 },
-  cartItem: { flexDirection: "row", justifyContent: "space-between", marginBottom: 10 },
-  modalButton: { paddingVertical: 12, borderRadius: 8, alignItems: "center" },
-  input: { borderRadius: 8, padding: 12, marginBottom: 10 },
+  qtyButton: { width: 32, height: 32, borderRadius: 16, justifyContent: "center", alignItems: "center" },
+  qtyButtonText: { color: "#fff", fontSize: 22, fontWeight: "600" },
+  qtyText: { marginHorizontal: 12, fontSize: 18, fontWeight: "700" },
+  button: { marginTop: 16, backgroundColor: "#007aff", paddingVertical: 12, borderRadius: 12, alignItems: "center" },
+  buttonText: { color: "#fff", fontWeight: "700", fontSize: 18 },
+  modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "center", alignItems: "center" },
+  modalContent: { width: "90%", borderRadius: 16, padding: 20, backgroundColor: "#fff" },
+  modalTitle: { fontSize: 28, fontWeight: "900", marginBottom: 20, textAlign: "center" },
+  input: { borderRadius: 12, paddingHorizontal: 16, paddingVertical: 12, fontSize: 18, marginBottom: 16, backgroundColor: "#eee" },
 });
