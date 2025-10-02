@@ -1,7 +1,15 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, StyleSheet, ActivityIndicator, ScrollView } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  ActivityIndicator,
+  TouchableOpacity,
+} from "react-native";
 import { db } from "../firebase"; // adjust path
-import { doc, getDoc } from "firebase/firestore";
+import { doc, onSnapshot } from "firebase/firestore";
+import { Ionicons } from "@expo/vector-icons";
 
 interface IUserData {
   email: string;
@@ -12,34 +20,36 @@ interface IUserData {
   createdAt?: string;
 }
 
-export default function AuthAndFetcher(): JSX.Element {
-  const [loading, setLoading] = useState<boolean>(true);
+export default function SettingsScreen() {
+  const [loading, setLoading] = useState(true);
   const [userData, setUserData] = useState<IUserData | null>(null);
-  const [message, setMessage] = useState<string>("");
+  const [error, setError] = useState("");
 
-  const defaultEmail = "elajahn8@gmail.com";
+  const defaultEmail = "elajahn8@gmail.com"; // or fetch dynamically
 
   useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        const userRef = doc(db, "users", defaultEmail);
-        const docSnap = await getDoc(userRef);
+    const userRef = doc(db, "users", defaultEmail);
 
+    const unsubscribe = onSnapshot(
+      userRef,
+      (docSnap) => {
         if (docSnap.exists()) {
-          const data = docSnap.data() as IUserData;
-          setUserData(data);
+          setUserData(docSnap.data() as IUserData);
+          setError("");
         } else {
-          setMessage("User not found in database!");
+          setError("User not found");
+          setUserData(null);
         }
-      } catch (err: any) {
+        setLoading(false);
+      },
+      (err) => {
         console.error(err);
-        setMessage("Error fetching user data: " + err.message);
-      } finally {
+        setError("Error fetching user data: " + err.message);
         setLoading(false);
       }
-    };
+    );
 
-    fetchUserData();
+    return () => unsubscribe(); // clean up listener
   }, []);
 
   if (loading) {
@@ -48,34 +58,82 @@ export default function AuthAndFetcher(): JSX.Element {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      {message ? <Text style={styles.message}>{message}</Text> : null}
+      {error ? <Text style={styles.error}>{error}</Text> : null}
 
       {userData && (
-        <View style={styles.userInfo}>
-          <Text style={styles.userTitle}>User Info:</Text>
-          <Text>Email: {userData.email}</Text>
-          <Text>Name: {userData.name}</Text>
-          <Text>Account: {userData.account}</Text>
-          <Text>Age: {userData.age}</Text>
-          <Text>Transaction: {userData.transaction}</Text>
-        </View>
+        <>
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Account</Text>
+
+            <TouchableOpacity style={styles.row}>
+              <Ionicons name="person-circle-outline" size={28} color="#007aff" />
+              <View style={styles.rowText}>
+                <Text style={styles.label}>Name</Text>
+                <Text style={styles.value}>{userData.name}</Text>
+              </View>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.row}>
+              <Ionicons name="mail-outline" size={28} color="#007aff" />
+              <View style={styles.rowText}>
+                <Text style={styles.label}>Email</Text>
+                <Text style={styles.value}>{userData.email}</Text>
+              </View>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.row}>
+              <Ionicons name="cash-outline" size={28} color="#007aff" />
+              <View style={styles.rowText}>
+                <Text style={styles.label}>Account Balance</Text>
+                <Text style={styles.value}>${userData.account}</Text>
+              </View>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.row}>
+              <Ionicons name="calendar-outline" size={28} color="#007aff" />
+              <View style={styles.rowText}>
+                <Text style={styles.label}>Age</Text>
+                <Text style={styles.value}>{userData.age}</Text>
+              </View>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.row}>
+              <Ionicons name="swap-horizontal-outline" size={28} color="#007aff" />
+              <View style={styles.rowText}>
+                <Text style={styles.label}>Last Transaction</Text>
+                <Text style={styles.value}>{userData.transaction}</Text>
+              </View>
+            </TouchableOpacity>
+          </View>
+        </>
       )}
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flexGrow: 1, justifyContent: "center", padding: 20 },
-  message: { fontSize: 16, color: "red", textAlign: "center", marginBottom: 10 },
-  userInfo: {
+  container: { flexGrow: 1, backgroundColor: "#fff", padding: 10 },
+  error: { color: "red", textAlign: "center", marginVertical: 10 },
+  section: {
     marginTop: 20,
-    padding: 15,
-    backgroundColor: "#f0f0f0",
-    borderRadius: 8,
+    borderTopWidth: 1,
+    borderTopColor: "#eee",
   },
-  userTitle: {
-    fontSize: 18,
+  sectionTitle: {
+    fontSize: 16,
     fontWeight: "bold",
-    marginBottom: 10,
+    color: "#888",
+    marginVertical: 10,
+    paddingHorizontal: 10,
   },
+  row: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "#eee",
+  },
+  rowText: { marginLeft: 12 },
+  label: { fontSize: 14, color: "#888" },
+  value: { fontSize: 16, fontWeight: "500", marginTop: 2 },
 });
