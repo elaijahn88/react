@@ -2,9 +2,9 @@ import React from "react";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 
-import signup from "../signup";
+import SignupScreen from "../signup";
 import login from "../login";
-import home from "../home";
+import HomeScreen from "../home";
 
 export type RootStackParamList = {
   Signup: undefined;
@@ -20,7 +20,7 @@ export default function App() {
       <Stack.Navigator initialRouteName="Signup">
         <Stack.Screen name="Signup" component={signup} />
         <Stack.Screen name="Login" component={login} />
-        <Stack.Screen name="Home" component={home} />
+        <Stack.Screen name="Home" component={HomeScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );
