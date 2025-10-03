@@ -32,11 +32,9 @@ export default function EnhancedAuth() {
   const [age, setAge] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
   const [message, setMessage] = useState<string>("");
-  const [isLogin, setIsLogin] = useState<boolean>(true);
+  const [isLoginMode, setIsLoginMode] = useState<boolean>(true);
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [confirmPassword, setConfirmPassword] = useState<string>("");
-  const [isLoginMode, setIsLoginMode] = useState<boolean>(true);
-  const [secureTextEntry, setSecureTextEntry] = useState<boolean>(true);
   const [showConfirmPassword, setShowConfirmPassword] = useState<boolean>(false);
 
   const validateEmail = (email: string): boolean => {
@@ -56,232 +54,245 @@ export default function EnhancedAuth() {
 
     if (!validateEmail(email)) {
       setMessage("Please enter a valid email address");
-    return false;
-  }
-
-  if (!password.trim()) {
-    setMessage("Password is required");
-    return false;
-  }
-
-  if (!isLoginMode) {
-    if (!name.trim()) {
-      setMessage("Full name is required");
       return false;
-  }
+    }
 
-  if (confirmPassword && password !== confirmPassword) {
-      setMessage("Passwords do not match");
-    return false;
-  }
+    if (!password.trim()) {
+      setMessage("Password is required");
+      return false;
+    }
 
-  return true;
-};
+    if (!isLoginMode) {
+      if (!name.trim()) {
+        setMessage("Full name is required");
+        return false;
+      }
 
-const handleSignUp = async (): Promise<void> => {
-  if (!validateForm()) return;
+      if (confirmPassword && password !== confirmPassword) {
+        setMessage("Passwords do not match");
+        return false;
+      }
+    }
 
-  setLoading(true);
-  setMessage("");
+    return true;
+  };
 
-  try {
-    const userRef = doc(db, "users", email);
-    const docSnap = await getDoc(userRef);
-      
-    if (docSnap.exists()) {
-      setMessage("User with this email already exists!");
-  } catch (err: any) {
-    console.error(err);
-    setMessage("Error creating account: " + err.message);
-  } finally {
-    setLoading(false);
-  }
-};
+  const handleSignUp = async (): Promise<void> => {
+    if (!validateForm()) return;
 
-const handleSignIn = async (): Promise<void> => {
-  if (!validateForm()) return;
+    setLoading(true);
+    setMessage("");
 
-  setLoading(true);
-  setMessage("");
+    try {
+      const userRef = doc(db, "users", email);
+      const docSnap = await getDoc(userRef);
 
-  try {
-    await signInWithEmailAndPassword(auth, email, password);
-    setMessage("✅ Welcome back!");
-  } catch (err: any) {
-    console.error(err);
-    setMessage("Error: " + err.message);
-  } finally {
-    setLoading(false);
-  }
-};
+      if (docSnap.exists()) {
+        setMessage("User with this email already exists!");
+      } else {
+        const userData: IUserData = {
+          email,
+          name,
+          account: Number(account) || 0,
+          age: Number(age) || 0,
+        };
+        await setDoc(userRef, userData);
+        setMessage("✅ Account created successfully!");
+      }
+    } catch (err: any) {
+      console.error(err);
+      setMessage("Error creating account: " + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-return (
-  <KeyboardAvoidingView
-    style={styles.container}
-    behavior={Platform.OS === "ios" ? "padding" : "height"}
-  >
-    <ScrollView contentContainerStyle={styles.scrollContainer}>
-      {/* Header Section */}
-      <View style={styles.header}>
-        <View style={styles.iconContainer}>
-          <Ionicons name="lock-closed" size={48} color="#007AFF" />
-      </View>
-      <Text style={styles.welcomeTitle}>
-      {isLoginMode ? "Welcome Back" : "Create Account"}
-    </Text>
-    <Text style={styles.welcomeSubtitle}>
-      {isLoginMode ? "Sign in to continue to your account" : "Create your account to get started"}
-      </Text>
+  const handleSignIn = async (): Promise<void> => {
+    if (!validateForm()) return;
 
-      {/* Form Container */}
-      <View style={styles.formContainer}>
-        {/* Email Input */}
-        <View style={styles.inputWrapper}>
-          <View style={styles.inputContainer}>
-            <Ionicons name="mail-outline" size={20} color="#666" />
-      </View>
+    setLoading(true);
+    setMessage("");
 
-      {/* Email Input */}
-      <View style={styles.inputWrapper}>
-        <Text style={styles.inputLabel}>Email Address</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="you@example.com"
-            placeholderTextColor="#999"
-            value={email}
-            onChangeText={(text) => {
-          setEmail(text);
-          setMessage("");
-        }}
-        autoCapitalize="none"
-        keyboardType="email-address"
-      />
-      </View>
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      setMessage("✅ Welcome back!");
+    } catch (err: any) {
+      console.error(err);
+      setMessage("Error: " + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-      {/* Password Input */}
-      <View style={styles.inputWrapper}>
-        <Text style={styles.inputLabel}>Password</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Enter your password"
-            placeholderTextColor="#999"
-            value={password}
-            onChangeText={(text) => {
-          setPassword(text);
-          setMessage("");
-        }}
-        secureTextEntry={!showPassword}
-      />
-      <TouchableOpacity
-        style={styles.passwordToggle}
-        onPress={() => setShowPassword(!showPassword)}
-        >
-          <Ionicons 
-            name={showPassword ? "eye-off-outline" : "eye-outline"}
-            size={20}
-            color="#666"
-          />
-      </View>
+  return (
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+    >
+      <ScrollView contentContainerStyle={styles.scrollContainer}>
+        {/* Header Section */}
+        <View style={styles.header}>
+          <View style={styles.iconContainer}>
+            <Ionicons name="lock-closed" size={48} color="#007AFF" />
+          </View>
+          <Text style={styles.welcomeTitle}>
+            {isLoginMode ? "Welcome Back" : "Create Account"}
+          </Text>
+          <Text style={styles.welcomeSubtitle}>
+            {isLoginMode
+              ? "Sign in to continue to your account"
+              : "Create your account to get started"}
+          </Text>
+        </View>
 
-      {/* Confirm Password (only for sign up) */}
-      {!isLoginMode && (
-        <View style={styles.inputWrapper}>
-          <Text style={styles.inputLabel}>Confirm Password</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Confirm your password"
-            placeholderTextColor="#999"
-            value={confirmPassword}
-            onChangeText={(text) => {
-        setConfirmPassword(text);
-        setMessage("");
-      }}
-          secureTextEntry={!showConfirmPassword}
-        />
-        <TouchableOpacity
-          style={styles.passwordToggle}
-          onPress={() => setShowConfirmPassword(!showConfirmPassword)}
-          secureTextEntry={!showConfirmPassword}
-        />
-      </View>
-      )}
-
-      {/* Additional Fields for Sign Up */}
-      {!isLoginMode && (
-        <>
-          {/* Name Input */}
+        {/* Form Container */}
+        <View style={styles.formContainer}>
+          {/* Email Input */}
           <View style={styles.inputWrapper}>
-          <Text style={styles.inputLabel}>Full Name</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Enter your full name"
-            placeholderTextColor="#999"
-            value={name}
-            onChangeText={(text) => {
-        setName(text);
-        setMessage("");
-      }}
-        />
-      </View>
+            <Text style={styles.inputLabel}>Email Address</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="you@example.com"
+              placeholderTextColor="#999"
+              value={email}
+              onChangeText={text => {
+                setEmail(text);
+                setMessage("");
+              }}
+              autoCapitalize="none"
+              keyboardType="email-address"
+            />
+          </View>
 
-      {/* Submit Button */}
-      <TouchableOpacity
-        style={[styles.submitButton, loading && styles.submitButtonDisabled]}
-          onPress={isLoginMode ? handleSignIn : handleSignUp)}
-          disabled={loading}
-        >
-          <Text style={styles.submitButtonText}>
-            {isLoginMode ? "Sign In" : "Create Account"}
-        </Text>
-      </TouchableOpacity>
+          {/* Password Input */}
+          <View style={styles.inputWrapper}>
+            <Text style={styles.inputLabel}>Password</Text>
+            <View style={{ flexDirection: "row", alignItems: "center" }}>
+              <TextInput
+                style={[styles.input, { flex: 1 }]}
+                placeholder="Enter your password"
+                placeholderTextColor="#999"
+                value={password}
+                onChangeText={text => {
+                  setPassword(text);
+                  setMessage("");
+                }}
+                secureTextEntry={!showPassword}
+              />
+              <TouchableOpacity
+                style={styles.passwordToggle}
+                onPress={() => setShowPassword(!showPassword)}
+              >
+                <Ionicons
+                  name={showPassword ? "eye-off-outline" : "eye-outline"}
+                  size={20}
+                  color="#666"
+                />
+              </TouchableOpacity>
+            </View>
+          </View>
 
-      {/* Toggle between Login and Sign Up */}
-      <TouchableOpacity
-        style={styles.switchModeButton}
-        onPress={() => {
-          setIsLoginMode(!isLoginMode);
-          setMessage("");
-        }}
-      >
-        <Text style={styles.switchModeText}>
-          {isLoginMode ? "Don't have an account? Sign Up" : "Already have an account? Sign In"}
-      </Text>
-      </TouchableOpacity>
+          {/* Confirm Password (only for sign up) */}
+          {!isLoginMode && (
+            <View style={styles.inputWrapper}>
+              <Text style={styles.inputLabel}>Confirm Password</Text>
+              <View style={{ flexDirection: "row", alignItems: "center" }}>
+                <TextInput
+                  style={[styles.input, { flex: 1 }]}
+                  placeholder="Confirm your password"
+                  placeholderTextColor="#999"
+                  value={confirmPassword}
+                  onChangeText={text => {
+                    setConfirmPassword(text);
+                    setMessage("");
+                  }}
+                  secureTextEntry={!showConfirmPassword}
+                />
+                <TouchableOpacity
+                  style={styles.passwordToggle}
+                  onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+                >
+                  <Ionicons
+                    name={showConfirmPassword ? "eye-off-outline" : "eye-outline"}
+                    size={20}
+                    color="#666"
+                  />
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
 
-      {loading && (
-        <View style={styles.loadingOverlay}>
-          <ActivityIndicator size="large" color="#007AFF" />
+          {/* Name Input for Sign Up */}
+          {!isLoginMode && (
+            <View style={styles.inputWrapper}>
+              <Text style={styles.inputLabel}>Full Name</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Enter your full name"
+                placeholderTextColor="#999"
+                value={name}
+                onChangeText={text => {
+                  setName(text);
+                  setMessage("");
+                }}
+              />
+            </View>
+          )}
+
+          {/* Submit Button */}
+          <TouchableOpacity
+            style={[styles.submitButton, loading && styles.submitButtonDisabled]}
+            onPress={isLoginMode ? handleSignIn : handleSignUp}
+            disabled={loading}
+          >
+            <Text style={styles.submitButtonText}>
+              {isLoginMode ? "Sign In" : "Create Account"}
+            </Text>
+          </TouchableOpacity>
+
+          {/* Toggle Login/Sign Up */}
+          <TouchableOpacity
+            style={styles.switchModeButton}
+            onPress={() => {
+              setIsLoginMode(!isLoginMode);
+              setMessage("");
+            }}
+          >
+            <Text style={styles.switchModeText}>
+              {isLoginMode
+                ? "Don't have an account? Sign Up"
+                : "Already have an account? Sign In"}
+            </Text>
+          </TouchableOpacity>
+
+          {/* Loading Overlay */}
+          {loading && (
+            <View style={styles.loadingOverlay}>
+              <ActivityIndicator size="large" color="#007AFF" />
+            </View>
+          )}
+
+          {/* Message Display */}
+          {message ? (
+            <View
+              style={[
+                styles.messageContainer,
+                message.includes("✅") ? styles.successMessage : styles.errorMessage,
+              ]}
+            >
+              <Text style={styles.messageText}>{message}</Text>
+            </View>
+          ) : null}
         </View>
-      )}
-
-      {/* Message Display */}
-      {message ? (
-        <View style={[
-          styles.messageContainer,
-          message.includes("✅") ? styles.successMessage : styles.errorMessage
-        ]}>
-          <Text style={styles.messageText}>{message}</Text>
-        </View>
-      ) : null}
-    </ScrollView>
-  </KeyboardAvoidingView>
-);
+      </ScrollView>
+    </KeyboardAvoidingView>
+  );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#f8fafc",
-  },
-  scrollContainer: {
-    flexGrow: 1,
-    justifyContent: "center",
-    padding: 20,
-  },
-  header: {
-    alignItems: "center",
-    marginBottom: 30,
-  },
+  container: { flex: 1, backgroundColor: "#f8fafc" },
+  scrollContainer: { flexGrow: 1, justifyContent: "center", padding: 20 },
+  header: { alignItems: "center", marginBottom: 30 },
   iconContainer: {
     width: 80,
     height: 80,
@@ -296,25 +307,8 @@ const styles = StyleSheet.create({
     elevation: 3,
     marginBottom: 20,
   },
-  welcomeTitle: {
-    fontSize: 28,
-    fontWeight: "700",
-    color: "#1a1a1a",
-    textAlign: "center",
-    marginBottom: 8,
-  },
-  inputLabel: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#374151",
-    marginBottom: 8,
-  },
-  welcomeSubtitle: {
-    fontSize: 16,
-    color: "#6b7280",
-    textAlign: "center",
-    marginBottom: 20,
-  },
+  welcomeTitle: { fontSize: 28, fontWeight: "700", color: "#1a1a1a", textAlign: "center", marginBottom: 8 },
+  welcomeSubtitle: { fontSize: 16, color: "#6b7280", textAlign: "center", marginBottom: 20 },
   formContainer: {
     backgroundColor: "#fff",
     borderRadius: 20,
@@ -326,79 +320,18 @@ const styles = StyleSheet.create({
     elevation: 4,
     marginBottom: 20,
   },
-  inputWrapper: {
-    marginBottom: 16,
-  },
-  inputContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: "#d1d5db",
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderWidth: 1,
-    borderColor: "#e5e7eb",
-    backgroundColor: "#f9fafb",
-  },
-  input: {
-    flex: 1,
-    fontSize: 16,
-    color: "#1a1a1a",
-  },
-  passwordToggle: {
-    padding: 4,
-  },
-  inputLabel: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#374151",
-    marginBottom: 4,
-  },
-  submitButton: {
-    backgroundColor: "#007AFF",
-    paddingVertical: 16,
-    borderRadius: 12,
-    alignItems: "center",
-  },
-  submitButtonDisabled: {
-    opacity: 0.6,
-  },
-  submitButtonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  switchModeButton: {
-    paddingVertical: 12,
-    alignItems: "center",
-  },
-  switchModeText: {
-    color: "#007AFF",
-    fontSize: 14,
-    fontWeight: "500",
-  },
-  loadingOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(255,255,255,0.8)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  messageContainer: {
-    padding: 12,
-    borderRadius: 8,
-    marginTop: 16,
-  },
-  successMessage: {
-    backgroundColor: "#d1fae5",
-    borderColor: "#a7f3d0",
-  },
-  errorMessage: {
-    backgroundColor: "#fee2e2",
-    borderColor: "#fecaca",
-  },
-  messageText: {
-    fontSize: 14,
-    textAlign: "center",
-  },
+  inputWrapper: { marginBottom: 16 },
+  inputLabel: { fontSize: 14, fontWeight: "600", color: "#374151", marginBottom: 4 },
+  input: { flex: 1, fontSize: 16, color: "#1a1a1a" },
+  passwordToggle: { padding: 4 },
+  submitButton: { backgroundColor: "#007AFF", paddingVertical: 16, borderRadius: 12, alignItems: "center" },
+  submitButtonDisabled: { opacity: 0.6 },
+  submitButtonText: { color: "#fff", fontSize: 16, fontWeight: "600" },
+  switchModeButton: { paddingVertical: 12, alignItems: "center" },
+  switchModeText: { color: "#007AFF", fontSize: 14, fontWeight: "500" },
+  loadingOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(255,255,255,0.8)", justifyContent: "center", alignItems: "center" },
+  messageContainer: { padding: 12, borderRadius: 8, marginTop: 16 },
+  successMessage: { backgroundColor: "#d1fae5", borderColor: "#a7f3d0" },
+  errorMessage: { backgroundColor: "#fee2e2", borderColor: "#fecaca" },
+  messageText: { fontSize: 14, textAlign: "center" },
 });
