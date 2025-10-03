@@ -73,16 +73,13 @@ export default function FinanceDashboard() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [receiver, setReceiver] = useState("");
   const [amount, setAmount] = useState("");
-
   const [selectedFinanceCategory, setSelectedFinanceCategory] = useState<string | null>(null);
   const [expandedItem, setExpandedItem] = useState<string | null>(null);
   const [searchText, setSearchText] = useState("");
-
   const [accountBalance, setAccountBalance] = useState(0);
   const [loading, setLoading] = useState(false);
   const [userLoading, setUserLoading] = useState(false);
 
-  // Map for animated flashes
   const animMap = useRef<{ [key: string]: Animated.Value }>({}).current;
 
   // Fetch user info from Firebase
@@ -100,13 +97,12 @@ export default function FinanceDashboard() {
       } else {
         // Create default user profile if doesn't exist
         const defaultUserInfo: UserInfo = {
-          name: userEmail.split('@')[0], // Default name from email
+          name: userEmail.split('@')[0],
           email: userEmail,
           phone: "+256 XXX XXX XXX",
           accountNumber: `ACC${Math.random().toString().slice(2, 10)}`,
           joinedDate: new Date().toISOString(),
         };
-        
         await setDoc(userDocRef, defaultUserInfo);
         setUserInfo(defaultUserInfo);
         Alert.alert("Welcome!", "New profile created for you.");
@@ -156,24 +152,22 @@ export default function FinanceDashboard() {
         }
       });
 
-      setTransactions(txs.sort((a, b) => (a.timestamp < b.timestamp ? 1 : -1));
+      setTransactions(
+        txs.sort((a, b) => (a.timestamp < b.timestamp ? 1 : -1))
+      );
 
-      // Update balance
       const balance = txs.reduce((acc, t) => acc + t.amount, 0);
       setAccountBalance(balance);
     });
 
     return () => {
       unsubscribe();
-      // Clean up animations
       Object.values(animMap).forEach(anim => anim.stopAnimation());
     };
   }, [email]);
 
-  // Update user profile
   const updateUserProfile = async (field: keyof UserInfo, value: string) => {
     if (!email.trim() || !userInfo) return;
-    
     setLoading(true);
     try {
       const userDocRef = doc(db, "users", email);
@@ -189,18 +183,15 @@ export default function FinanceDashboard() {
   };
 
   const sendMoney = async () => {
-    // Input validation
     if (!receiver?.trim() || !amount || !email?.trim()) {
       Alert.alert("Error", "Please fill all fields");
       return;
     }
-
     const amountNum = Number(amount);
     if (isNaN(amountNum) || amountNum === 0) {
       Alert.alert("Error", "Please enter a valid amount");
       return;
     }
-
     if (amountNum < 0 && Math.abs(amountNum) > accountBalance) {
       Alert.alert("Error", "Insufficient balance");
       return;
@@ -233,7 +224,6 @@ export default function FinanceDashboard() {
     setExpandedItem(expandedItem === name ? null : name);
   };
 
-  // Memoized filtered finance items
   const filteredFinanceItems = useMemo(() => {
     return (category: string) => {
       if (!searchText.trim()) return financeItems[category];
@@ -278,12 +268,11 @@ export default function FinanceDashboard() {
         <Text style={styles.txText}>
           {new Date(item.timestamp).toLocaleDateString()} at {new Date(item.timestamp).toLocaleTimeString()}
         </Text>
-        {item.proof && <Text style={styles.txProof}>Proof: {item.proof}</Text>
+        {item.proof && <Text style={styles.txProof}>Proof: {item.proof}</Text>}
       </Animated.View>
     );
   };
 
-  // Memoized Finance Item Component
   const FinanceItemComponent = React.memo(({ 
     item, 
     isExpanded, 
@@ -301,14 +290,13 @@ export default function FinanceDashboard() {
       {isExpanded && (
         <View style={styles.itemDetailsContainer}>
           <Text style={styles.itemDetails}>{item.details}</Text>
-      </View>
-    )}
-  </View>
+        </View>
+      )}
+    </View>
   ));
 
   return (
     <ScrollView style={styles.container} keyboardShouldPersistTaps="handled">
-      {/* User Email Input */}
       <TextInput
         style={styles.input}
         placeholder="Enter your email"
@@ -319,7 +307,6 @@ export default function FinanceDashboard() {
         keyboardType="email-address"
       />
 
-      {/* User Profile Section */}
       {userLoading ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#0f0" />
@@ -329,14 +316,16 @@ export default function FinanceDashboard() {
         <View style={styles.profileSection}>
           <Text style={styles.sectionTitle}>Profile Information</Text>
           <View style={styles.profileCard}>
-            <View style={styles.profileRow}>
-              <Text style={styles.profileLabel}>Name:</Text>
-            </View>
+            <Text style={styles.profileLabel}>Name:</Text>
+            <Text style={styles.profileValue}>{userInfo.name}</Text>
+            <Text style={styles.profileLabel}>Phone:</Text>
+            <Text style={styles.profileValue}>{userInfo.phone}</Text>
+            <Text style={styles.profileLabel}>Account Number:</Text>
+            <Text style={styles.profileValue}>{userInfo.accountNumber}</Text>
           </View>
         </View>
-      )}
+      ) : null}
 
-      {/* Send Money Section */}
       <View style={styles.sendMoneySection}>
         <Text style={styles.sectionTitle}>Send Money</Text>
         <View style={{ flexDirection: "row", marginBottom: 10 }}>
@@ -358,10 +347,7 @@ export default function FinanceDashboard() {
         </View>
 
         <TouchableOpacity 
-          style={[
-            styles.sendButton, 
-            loading && styles.sendButtonDisabled
-          ]} 
+          style={[styles.sendButton, loading && styles.sendButtonDisabled]} 
           onPress={sendMoney}
           disabled={loading}
         >
@@ -371,18 +357,13 @@ export default function FinanceDashboard() {
         </TouchableOpacity>
       </View>
 
-      {/* Account Summary */}
-      <View style={[
-        styles.summaryCard, 
-        { backgroundColor: accountBalance >= 0 ? "#0a0" : "#a00" }
-      ]}>
+      <View style={[styles.summaryCard, { backgroundColor: accountBalance >= 0 ? "#0a0" : "#a00" }]}>
         <Text style={styles.summaryLabel}>Current Balance</Text>
         <Text style={styles.summaryAmount}>
           {accountBalance >= 0 ? '+' : ''}{accountBalance.toLocaleString()} UGX
         </Text>
       </View>
 
-      {/* Finance Categories */}
       <TextInput
         style={styles.searchInput}
         placeholder="Search Banks, Sacco, etc..."
@@ -395,22 +376,14 @@ export default function FinanceDashboard() {
         {Object.keys(financeItems).map((cat) => (
           <TouchableOpacity
             key={cat}
-            style={[
-              styles.categoryButton,
-              selectedFinanceCategory === cat && styles.categoryButtonActive,
-            ]}
+            style={[styles.categoryButton, selectedFinanceCategory === cat && styles.categoryButtonActive]}
             onPress={() => {
               LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
               setSelectedFinanceCategory(selectedFinanceCategory === cat ? null : cat);
               setExpandedItem(null);
             }}
           >
-            <Text
-              style={[
-                styles.categoryText,
-                selectedFinanceCategory === cat && styles.categoryTextActive,
-              ]}
-            >
+            <Text style={[styles.categoryText, selectedFinanceCategory === cat && styles.categoryTextActive]}>
               {cat}
             </Text>
           </TouchableOpacity>
@@ -420,9 +393,9 @@ export default function FinanceDashboard() {
       {selectedFinanceCategory && (
         <View style={{ marginTop: 10 }}>
           {filteredFinanceItems(selectedFinanceCategory).length === 0 ? (
-              <Text style={styles.noResultsText}>No results found.</Text>
-            ) : (
-              filteredFinanceItems(selectedFinanceCategory).map((item) => (
+            <Text style={styles.noResultsText}>No results found.</Text>
+          ) : (
+            filteredFinanceItems(selectedFinanceCategory).map((item) => (
               <FinanceItemComponent
                 key={item.name}
                 item={item}
@@ -434,10 +407,7 @@ export default function FinanceDashboard() {
         </View>
       )}
 
-      {/* Transaction History */}
-      <Text style={styles.sectionTitle}>
-        Transaction History ({transactions.length})
-      </Text>
+      <Text style={styles.sectionTitle}>Transaction History ({transactions.length})</Text>
       {transactions.length === 0 ? (
         <Text style={styles.noTransactionsText}>
           No transactions yet. Send or receive money to see them here.
@@ -446,7 +416,7 @@ export default function FinanceDashboard() {
         <FlatList
           data={transactions}
           renderItem={renderTransaction}
-          keyExtractor={(item) => item.id || Math.random().toString()}
+          keyExtractor={(item) => item.id || String(Math.random())}
           scrollEnabled={false}
           contentContainerStyle={{ paddingBottom: 20 }}
         />
@@ -473,117 +443,38 @@ const styles = StyleSheet.create({
     alignItems: "center", 
     marginBottom: 15 
   },
-  sendButtonDisabled: {
-    backgroundColor: "#1a472a",
-    opacity: 0.7,
-  },
+  sendButtonDisabled: { backgroundColor: "#1a472a", opacity: 0.7 },
   sendButtonText: { color: "#121212", fontWeight: "bold", fontSize: 16 },
-  summaryCard: { 
-    borderRadius: 12, 
-    padding: 20, 
-    alignItems: "center", 
-    marginBottom: 15,
-    shadowColor: "#0f0",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 5,
-    elevation: 5,
+  summaryCard: { borderRadius: 12, padding: 20, alignItems: "center", marginBottom: 15,
+    shadowColor: "#0f0", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.3, shadowRadius: 5, elevation: 5,
   },
   summaryLabel: { color: "#fff", fontSize: 16 },
   summaryAmount: { color: "#fff", fontSize: 24, fontWeight: "bold", marginTop: 5 },
-  searchInput: { 
-    backgroundColor: "#222", 
-    color: "#fff", 
-    borderRadius: 10, 
-    paddingHorizontal: 15, 
-    paddingVertical: 8, 
-    fontSize: 16, 
-    marginVertical: 10,
-    borderWidth: 1,
-    borderColor: "#333",
-  },
+  searchInput: { backgroundColor: "#222", color: "#fff", borderRadius: 10, paddingHorizontal: 15, paddingVertical: 8, fontSize: 16, marginVertical: 10, borderWidth: 1, borderColor: "#333" },
   categories: { flexDirection: "row", flexWrap: "wrap", marginVertical: 5 },
-  categoryButton: { 
-    backgroundColor: "#222", 
-    paddingVertical: 8, 
-    paddingHorizontal: 12, 
-    borderRadius: 10, 
-    marginRight: 10, 
-    marginBottom: 10,
-    borderWidth: 1,
-    borderColor: "#333",
-  },
+  categoryButton: { backgroundColor: "#222", paddingVertical: 8, paddingHorizontal: 12, borderRadius: 10, marginRight: 10, marginBottom: 10, borderWidth: 1, borderColor: "#333" },
   categoryButtonActive: { backgroundColor: "#0f0" },
   categoryText: { color: "#fff", fontWeight: "600" },
   categoryTextActive: { color: "#000" },
-  itemContainer: { 
-    backgroundColor: "#111", 
-    borderRadius: 10, 
-    marginBottom: 10, 
-    overflow: "hidden",
-    borderWidth: 1,
-    borderColor: "#222",
-  },
-  itemHeader: { 
-    flexDirection: "row", 
-    justifyContent: "space-between", 
-    paddingHorizontal: 15, 
-    paddingVertical: 12,
-  },
+  itemContainer: { backgroundColor: "#111", borderRadius: 10, marginBottom: 10, overflow: "hidden", borderWidth: 1, borderColor: "#222" },
+  itemHeader: { flexDirection: "row", justifyContent: "space-between", paddingHorizontal: 15, paddingVertical: 12 },
   itemTitle: { fontSize: 16, color: "#fff", fontWeight: "600" },
   itemToggle: { fontSize: 20, color: "#0f0" },
-  itemDetailsContainer: { 
-    backgroundColor: "#222", 
-    paddingHorizontal: 15, 
-    paddingVertical: 10,
-  },
+  itemDetailsContainer: { backgroundColor: "#222", paddingHorizontal: 15, paddingVertical: 10 },
   itemDetails: { color: "#ccc", fontSize: 14 },
   noResultsText: { color: "#aaa", fontStyle: "italic", paddingHorizontal: 15 },
-  sectionTitle: { 
-    fontSize: 18, 
-    fontWeight: "bold", 
-    marginVertical: 10, 
-    color: "#fff" },
-  txCard: { 
-    borderRadius: 12, 
-    padding: 12, 
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: "#333",
-  },
+  sectionTitle: { fontSize: 18, fontWeight: "bold", marginVertical: 10, color: "#fff" },
+  txCard: { borderRadius: 12, padding: 12, marginBottom: 12, borderWidth: 1, borderColor: "#333" },
   txText: { color: "#fff", fontSize: 14, marginBottom: 4 },
   txAmount: { fontSize: 16, fontWeight: "bold", marginBottom: 4 },
   incomeText: { color: "#0f0" },
   expenseText: { color: "#f00" },
   txProof: { color: "#aaa", fontSize: 12 },
-  loadingContainer: { 
-    alignItems: "center", 
-    padding: 20, 
-    backgroundColor: "#111", 
-    borderRadius: 10,
-    marginBottom: 15,
-  },
+  loadingContainer: { alignItems: "center", padding: 20, backgroundColor: "#111", borderRadius: 10, marginBottom: 15 },
   loadingText: { color: "#0f0", marginTop: 10 },
-  noTransactionsText: { 
-    color: "#aaa", 
-    fontStyle: "italic", 
-    textAlign: "center",
-    marginVertical: 20,
-  },
+  noTransactionsText: { color: "#aaa", fontStyle: "italic", textAlign: "center", marginVertical: 20 },
   profileSection: { marginBottom: 15 },
-  profileCard: { 
-    backgroundColor: "#111", 
-    borderRadius: 10, 
-    padding: 15,
-    borderWidth: 1,
-    borderColor: "#222",
-  },
-  profileRow: { 
-    flexDirection: "row", 
-    justifyContent: "space-between", 
-    alignItems: "center",
-    marginBottom: 10,
-  },
+  profileCard: { backgroundColor: "#111", borderRadius: 10, padding: 15, borderWidth: 1, borderColor: "#222" },
   profileLabel: { color: "#ccc", fontSize: 14 },
   profileValue: { color: "#fff", fontSize: 16, fontWeight: "600" },
   sendMoneySection: { marginBottom: 15 },
