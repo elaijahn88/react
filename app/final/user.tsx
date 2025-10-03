@@ -102,7 +102,9 @@ export default function EmailLoginMarketplace() {
         combinedScores[p.id] = (userPrefs[p.id] || 0) + (allPrefs[p.id] || 0);
       });
 
-      return [...initialProducts].sort((a, b) => (combinedScores[b.id] || 0) - (combinedScores[a.id] || 0));
+      return [...initialProducts].sort(
+        (a, b) => (combinedScores[b.id] || 0) - (combinedScores[a.id] || 0)
+      );
     } catch (err) {
       console.error(err);
       return initialProducts;
@@ -135,7 +137,10 @@ export default function EmailLoginMarketplace() {
           numColumns={2}
           contentContainerStyle={{ padding: 10 }}
           renderItem={({ item }) => (
-            <TouchableOpacity style={styles.card} onPress={() => handleProductClick(item)}>
+            <TouchableOpacity
+              style={styles.card}
+              onPress={() => handleProductClick(item)}
+            >
               <Image source={{ uri: item.image }} style={styles.image} />
               <Text style={styles.name}>{item.name}</Text>
               <Text style={styles.price}>${item.price}</Text>
@@ -146,26 +151,40 @@ export default function EmailLoginMarketplace() {
     );
   }
 
-  // Login UI
+  // Updated concise + intuitive Login UI
   return (
     <KeyboardAvoidingView
       style={styles.container}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
-      <View style={styles.card}>
-        <Text style={styles.title}>Login with Email</Text>
+      <View style={styles.loginCard}>
+        <Text style={styles.loginTitle}>Welcome 👋</Text>
+        <Text style={styles.loginSubtitle}>
+          Sign in with your email to continue
+        </Text>
+
         <TextInput
           style={styles.input}
-          placeholder="Enter your email"
-          placeholderTextColor="#888"
+          placeholder="you@example.com"
+          placeholderTextColor="#aaa"
           value={email}
           onChangeText={setEmail}
           autoCapitalize="none"
           keyboardType="email-address"
         />
-        <TouchableOpacity style={styles.button} onPress={fetchUser} disabled={loading}>
-          {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Login</Text>}
+
+        <TouchableOpacity
+          style={[styles.button, loading && { opacity: 0.7 }]}
+          onPress={fetchUser}
+          disabled={loading}
+        >
+          {loading ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={styles.buttonText}>Continue</Text>
+          )}
         </TouchableOpacity>
+
         {error ? <Text style={styles.error}>{error}</Text> : null}
       </View>
     </KeyboardAvoidingView>
@@ -173,16 +192,73 @@ export default function EmailLoginMarketplace() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#f0f3f7", padding: 20 },
-  card: { width: "100%", backgroundColor: "#fff", borderRadius: 16, padding: 24, alignItems: "center", shadowColor: "#000", shadowOpacity: 0.1, shadowOffset: { width: 0, height: 5 }, shadowRadius: 10, elevation: 5 },
-  title: { fontSize: 22, fontWeight: "700", marginBottom: 20, color: "#333" },
-  input: { width: "100%", borderWidth: 1, borderColor: "#ddd", borderRadius: 12, paddingHorizontal: 16, paddingVertical: 12, marginBottom: 20, fontSize: 16, color: "#333", backgroundColor: "#f9f9f9" },
-  button: { width: "100%", backgroundColor: "#007aff", paddingVertical: 14, borderRadius: 12, alignItems: "center" },
-  buttonText: { color: "#fff", fontWeight: "700", fontSize: 16 },
-  error: { color: "#dc3545", marginTop: 12, fontSize: 16, textAlign: "center" },
+  container: {
+    flex: 1,
+    justifyContent: "center",
+    backgroundColor: "#f9fafc",
+    padding: 20,
+  },
+  loginCard: {
+    backgroundColor: "#fff",
+    borderRadius: 16,
+    padding: 24,
+    shadowColor: "#000",
+    shadowOpacity: 0.05,
+    shadowOffset: { width: 0, height: 4 },
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  loginTitle: {
+    fontSize: 26,
+    fontWeight: "700",
+    color: "#111",
+    marginBottom: 6,
+    textAlign: "center",
+  },
+  loginSubtitle: {
+    fontSize: 15,
+    color: "#666",
+    marginBottom: 20,
+    textAlign: "center",
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: "#ddd",
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    fontSize: 16,
+    marginBottom: 16,
+    backgroundColor: "#fafafa",
+  },
+  button: {
+    backgroundColor: "#007aff",
+    paddingVertical: 14,
+    borderRadius: 10,
+    alignItems: "center",
+    marginTop: 4,
+  },
+  buttonText: {
+    color: "#fff",
+    fontWeight: "600",
+    fontSize: 16,
+  },
+  error: {
+    color: "#dc3545",
+    marginTop: 12,
+    fontSize: 14,
+    textAlign: "center",
+  },
   marketContainer: { flex: 1, backgroundColor: "#f0f3f7" },
   marketTitle: { fontSize: 24, fontWeight: "700", margin: 16 },
-  card: { flex: 1, margin: 8, backgroundColor: "#fff", borderRadius: 12, padding: 10, alignItems: "center" },
+  card: {
+    flex: 1,
+    margin: 8,
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    padding: 10,
+    alignItems: "center",
+  },
   image: { width: 120, height: 120, borderRadius: 8 },
   name: { marginTop: 8, fontWeight: "600", fontSize: 16, textAlign: "center" },
   price: { marginTop: 4, fontWeight: "700", fontSize: 16, color: "#007aff" },
