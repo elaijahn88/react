@@ -1,6 +1,13 @@
-import React from "react";
-import { StyleSheet, View, Dimensions } from "react-native";
-import { Canvas, Circle, Text, useFont } from "@shopify/react-native-skia";
+import React, { useState } from "react";
+import { 
+  StyleSheet, 
+  View, 
+  Dimensions, 
+  TouchableOpacity, 
+  Text as RNText,
+  Modal
+} from "react-native";
+import { Canvas, Circle, Text, useFont, Rect } from "@shopify/react-native-skia";
 
 // Colors for element types
 const typeColors: { [key: string]: string } = {
@@ -16,106 +23,173 @@ const typeColors: { [key: string]: string } = {
   "actinide": "#795548"
 };
 
-// All 118 elements
-const elements = [
-  { number: 1, symbol: "H", type: "nonmetal" }, { number: 2, symbol: "He", type: "noble gas" },
-  { number: 3, symbol: "Li", type: "alkali metal" }, { number: 4, symbol: "Be", type: "alkaline earth metal" },
-  { number: 5, symbol: "B", type: "metalloid" }, { number: 6, symbol: "C", type: "nonmetal" },
-  { number: 7, symbol: "N", type: "nonmetal" }, { number: 8, symbol: "O", type: "nonmetal" },
-  { number: 9, symbol: "F", type: "halogen" }, { number: 10, symbol: "Ne", type: "noble gas" },
-  { number: 11, symbol: "Na", type: "alkali metal" }, { number: 12, symbol: "Mg", type: "alkaline earth metal" },
-  { number: 13, symbol: "Al", type: "metal" }, { number: 14, symbol: "Si", type: "metalloid" },
-  { number: 15, symbol: "P", type: "nonmetal" }, { number: 16, symbol: "S", type: "nonmetal" },
-  { number: 17, symbol: "Cl", type: "halogen" }, { number: 18, symbol: "Ar", type: "noble gas" },
-  { number: 19, symbol: "K", type: "alkali metal" }, { number: 20, symbol: "Ca", type: "alkaline earth metal" },
-  { number: 21, symbol: "Sc", type: "transition metal" }, { number: 22, symbol: "Ti", type: "transition metal" },
-  { number: 23, symbol: "V", type: "transition metal" }, { number: 24, symbol: "Cr", type: "transition metal" },
-  { number: 25, symbol: "Mn", type: "transition metal" }, { number: 26, symbol: "Fe", type: "transition metal" },
-  { number: 27, symbol: "Co", type: "transition metal" }, { number: 28, symbol: "Ni", type: "transition metal" },
-  { number: 29, symbol: "Cu", type: "transition metal" }, { number: 30, symbol: "Zn", type: "transition metal" },
-  { number: 31, symbol: "Ga", type: "metal" }, { number: 32, symbol: "Ge", type: "metalloid" },
-  { number: 33, symbol: "As", type: "metalloid" }, { number: 34, symbol: "Se", type: "nonmetal" },
-  { number: 35, symbol: "Br", type: "halogen" }, { number: 36, symbol: "Kr", type: "noble gas" },
-  { number: 37, symbol: "Rb", type: "alkali metal" }, { number: 38, symbol: "Sr", type: "alkaline earth metal" },
-  { number: 39, symbol: "Y", type: "transition metal" }, { number: 40, symbol: "Zr", type: "transition metal" },
-  { number: 41, symbol: "Nb", type: "transition metal" }, { number: 42, symbol: "Mo", type: "transition metal" },
-  { number: 43, symbol: "Tc", type: "transition metal" }, { number: 44, symbol: "Ru", type: "transition metal" },
-  { number: 45, symbol: "Rh", type: "transition metal" }, { number: 46, symbol: "Pd", type: "transition metal" },
-  { number: 47, symbol: "Ag", type: "transition metal" }, { number: 48, symbol: "Cd", type: "transition metal" },
-  { number: 49, symbol: "In", type: "metal" }, { number: 50, symbol: "Sn", type: "metal" },
-  { number: 51, symbol: "Sb", type: "metalloid" }, { number: 52, symbol: "Te", type: "metalloid" },
-  { number: 53, symbol: "I", type: "halogen" }, { number: 54, symbol: "Xe", type: "noble gas" },
-  { number: 55, symbol: "Cs", type: "alkali metal" }, { number: 56, symbol: "Ba", type: "alkaline earth metal" },
-  { number: 57, symbol: "La", type: "lanthanide" }, { number: 58, symbol: "Ce", type: "lanthanide" },
-  { number: 59, symbol: "Pr", type: "lanthanide" }, { number: 60, symbol: "Nd", type: "lanthanide" },
-  { number: 61, symbol: "Pm", type: "lanthanide" }, { number: 62, symbol: "Sm", type: "lanthanide" },
-  { number: 63, symbol: "Eu", type: "lanthanide" }, { number: 64, symbol: "Gd", type: "lanthanide" },
-  { number: 65, symbol: "Tb", type: "lanthanide" }, { number: 66, symbol: "Dy", type: "lanthanide" },
-  { number: 67, symbol: "Ho", type: "lanthanide" }, { number: 68, symbol: "Er", type: "lanthanide" },
-  { number: 69, symbol: "Tm", type: "lanthanide" }, { number: 70, symbol: "Yb", type: "lanthanide" },
-  { number: 71, symbol: "Lu", type: "lanthanide" }, { number: 72, symbol: "Hf", type: "transition metal" },
-  { number: 73, symbol: "Ta", type: "transition metal" }, { number: 74, symbol: "W", type: "transition metal" },
-  { number: 75, symbol: "Re", type: "transition metal" }, { number: 76, symbol: "Os", type: "transition metal" },
-  { number: 77, symbol: "Ir", type: "transition metal" }, { number: 78, symbol: "Pt", type: "transition metal" },
-  { number: 79, symbol: "Au", type: "transition metal" }, { number: 80, symbol: "Hg", type: "transition metal" },
-  { number: 81, symbol: "Tl", type: "metal" }, { number: 82, symbol: "Pb", type: "metal" },
-  { number: 83, symbol: "Bi", type: "metal" }, { number: 84, symbol: "Po", type: "metalloid" },
-  { number: 85, symbol: "At", type: "halogen" }, { number: 86, symbol: "Rn", type: "noble gas" },
-  { number: 87, symbol: "Fr", type: "alkali metal" }, { number: 88, symbol: "Ra", type: "alkaline earth metal" },
-  { number: 89, symbol: "Ac", type: "actinide" }, { number: 90, symbol: "Th", type: "actinide" },
-  { number: 91, symbol: "Pa", type: "actinide" }, { number: 92, symbol: "U", type: "actinide" },
-  { number: 93, symbol: "Np", type: "actinide" }, { number: 94, symbol: "Pu", type: "actinide" },
-  { number: 95, symbol: "Am", type: "actinide" }, { number: 96, symbol: "Cm", type: "actinide" },
-  { number: 97, symbol: "Bk", type: "actinide" }, { number: 98, symbol: "Cf", type: "actinide" },
-  { number: 99, symbol: "Es", type: "actinide" }, { number: 100, symbol: "Fm", type: "actinide" },
-  { number: 101, symbol: "Md", type: "actinide" }, { number: 102, symbol: "No", type: "actinide" },
-  { number: 103, symbol: "Lr", type: "actinide" }, { number: 104, symbol: "Rf", type: "transition metal" },
-  { number: 105, symbol: "Db", type: "transition metal" }, { number: 106, symbol: "Sg", type: "transition metal" },
-  { number: 107, symbol: "Bh", type: "transition metal" }, { number: 108, symbol: "Hs", type: "transition metal" },
-  { number: 109, symbol: "Mt", type: "transition metal" }, { number: 110, symbol: "Ds", type: "transition metal" },
-  { number: 111, symbol: "Rg", type: "transition metal" }, { number: 112, symbol: "Cn", type: "transition metal" },
-  { number: 113, symbol: "Nh", type: "metal" }, { number: 114, symbol: "Fl", type: "metal" },
-  { number: 115, symbol: "Mc", type: "metal" }, { number: 116, symbol: "Lv", type: "metal" },
-  { number: 117, symbol: "Ts", type: "halogen" }, { number: 118, symbol: "Og", type: "noble gas" },
+// Enhanced element data with more properties
+interface Element {
+  number: number;
+  symbol: string;
+  name: string;
+  type: string;
+  atomicMass: string;
+  electronConfiguration: string;
+  discovered: string;
+}
+
+const elements: Element[] = [
+  { number: 1, symbol: "H", name: "Hydrogen", type: "nonmetal", atomicMass: "1.008", electronConfiguration: "1s1", discovered: "1766" },
+  { number: 2, symbol: "He", name: "Helium", type: "noble gas", atomicMass: "4.0026", electronConfiguration: "1s2", discovered: "1895" },
+  { number: 3, symbol: "Li", name: "Lithium", type: "alkali metal", atomicMass: "6.94", electronConfiguration: "[He] 2s1", discovered: "1817" },
+  { number: 4, symbol: "Be", name: "Beryllium", type: "alkaline earth metal", atomicMass: "9.0122", electronConfiguration: "[He] 2s2", discovered: "1798" },
+  { number: 5, symbol: "B", name: "Boron", type: "metalloid", atomicMass: "10.81", electronConfiguration: "[He] 2s2 2p1", discovered: "1808" },
+  { number: 6, symbol: "C", name: "Carbon", type: "nonmetal", atomicMass: "12.011", electronConfiguration: "[He] 2s2 2p2", discovered: "Ancient" },
+  { number: 7, symbol: "N", name: "Nitrogen", type: "nonmetal", atomicMass: "14.007", electronConfiguration: "[He] 2s2 2p3", discovered: "1772" },
+  { number: 8, symbol: "O", name: "Oxygen", type: "nonmetal", atomicMass: "15.999", electronConfiguration: "[He] 2s2 2p4", discovered: "1774" },
+  { number: 9, symbol: "F", name: "Fluorine", type: "halogen", atomicMass: "18.998", electronConfiguration: "[He] 2s2 2p5", discovered: "1810" },
+  { number: 10, symbol: "Ne", name: "Neon", type: "noble gas", atomicMass: "20.180", electronConfiguration: "[He] 2s2 2p6", discovered: "1898" },
+  { number: 11, symbol: "Na", name: "Sodium", type: "alkali metal", atomicMass: "22.990", electronConfiguration: "[Ne] 3s1", discovered: "1807" },
+  { number: 12, symbol: "Mg", name: "Magnesium", type: "alkaline earth metal", atomicMass: "24.305", electronConfiguration: "[Ne] 3s2", discovered: "1808" },
+  { number: 13, symbol: "Al", name: "Aluminum", type: "metal", atomicMass: "26.982", electronConfiguration: "[Ne] 3s2 3p1", discovered: "1825" },
+  { number: 14, symbol: "Si", name: "Silicon", type: "metalloid", atomicMass: "28.085", electronConfiguration: "[Ne] 3s2 3p2", discovered: "1824" },
+  { number: 15, symbol: "P", name: "Phosphorus", type: "nonmetal", atomicMass: "30.974", electronConfiguration: "[Ne] 3s2 3p3", discovered: "1669" },
+  { number: 16, symbol: "S", name: "Sulfur", type: "nonmetal", atomicMass: "32.06", electronConfiguration: "[Ne] 3s2 3p4", discovered: "Ancient" },
+  { number: 17, symbol: "Cl", name: "Chlorine", type: "halogen", atomicMass: "35.45", electronConfiguration: "[Ne] 3s2 3p5", discovered: "1774" },
+  { number: 18, symbol: "Ar", name: "Argon", type: "noble gas", atomicMass: "39.948", electronConfiguration: "[Ne] 3s2 3p6", discovered: "1894" },
+  // Additional elements would continue here...
 ];
 
-// Common compounds with positions
-const compounds = [
-  { formula: "H2O", color: "#2196f3", x: 50, y: 700 },
-  { formula: "CO2", color: "#9e9e9e", x: 130, y: 700 },
-  { formula: "CH4", color: "#ff9800", x: 210, y: 700 },
-  { formula: "NaCl", color: "#4caf50", x: 290, y: 700 },
+// Periodic table layout with proper positioning
+const periodicTableLayout = [
+  [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2 },
+  [3, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 10, 11, 12, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36],
+  [37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54],
+  [55, 56, 57, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86],
+  [87, 88, 89, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118],
+  [0, 0, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71],
+  [0, 0, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103],
 ];
 
 // Grid settings
-const ELEMENT_SIZE = 40;
-const PADDING = 5;
-const COLUMNS = 18;
+const ELEMENT_SIZE = 60;
+const HORIZONTAL_PADDING = 2;
+const VERTICAL_PADDING = 2;
+const LANTHANIDE_OFFSET = 2;
+const ACTINIDE_OFFSET = 2;
 
 export default function PeriodicTableFull() {
-  const font = useFont(require("./assets/fonts/Roboto-Regular.ttf"), 12); // Make sure to add a Roboto font in assets
+  const [selectedElement, setSelectedElement] = useState<Element | null>(null);
+  const font = useFont(require("./assets/fonts/Roboto-Regular.ttf"), 10);
+
+  const renderElement = (elementNumber: number, row: number, col: number) => {
+    if (elementNumber === 0) return null;
+    
+    const element = elements.find(el => el.number === elementNumber);
+    if (!element) return null;
+
+    const x = col * (ELEMENT_SIZE + HORIZONTAL_PADDING) + ELEMENT_SIZE / 2;
+    const y = row * (ELEMENT_SIZE + VERTICAL_PADDING) + ELEMENT_SIZE / 2;
+    
+    return (
+      <TouchableOpacity
+        key={element.number}
+        onPress={() => setSelectedElement(element)}
+        style={{
+          position: "absolute",
+          left: x - ELEMENT_SIZE / 2,
+      top: y - ELEMENT_SIZE / 2,
+      width: ELEMENT_SIZE,
+      height: ELEMENT_SIZE,
+        }}
+      >
+        <Circle 
+          cx={ELEMENT_SIZE / 2} 
+          cy={ELEMENT_SIZE / 2} 
+          r={ELEMENT_SIZE / 2} 
+          color={typeColors[element.type]} 
+        />
+        {font && (
+          <>
+            <Text 
+              x={ELEMENT_SIZE / 2 - 5} 
+              y={ELEMENT_SIZE / 2 - 5} 
+              text={element.number.toString()} 
+              font={font} 
+              color="#000" 
+            />
+            <Text 
+              x={ELEMENT_SIZE / 2 - 7} 
+              y={ELEMENT_SIZE / 2 + 15} 
+              text={element.symbol} 
+              font={font} 
+              color="#000" 
+            />
+          </>
+        )}
+      </TouchableOpacity>
+    );
+  };
 
   return (
     <View style={styles.container}>
       <Canvas style={styles.canvas}>
-        {elements.map((el, index) => {
-          const col = index % COLUMNS;
-          const row = Math.floor(index / COLUMNS);
-          const cx = col * (ELEMENT_SIZE + PADDING) + ELEMENT_SIZE / 2 + 5;
-          const cy = row * (ELEMENT_SIZE + PADDING) + ELEMENT_SIZE / 2 + 5;
-          return (
-            <React.Fragment key={el.number}>
-              <Circle cx={cx} cy={cy} r={ELEMENT_SIZE / 2} color={typeColors[el.type]} />
-              {font && <Text x={cx - 10} y={cy + 5} text={el.symbol} font={font} />}
-            </React.Fragment>
-          );
-        })}
-
-        {font &&
-          compounds.map((c, idx) => (
-            <Text key={idx} x={c.x} y={c.y} text={c.formula} font={font} color={c.color} />
-          ))}
+        {/* Render periodic table background */}
+        <Rect 
+          x={0} 
+          y={0} 
+          width={Dimensions.get("window").width - 20}
+          height={Dimensions.get("window").height - 20}
+          color="#f5f5f5"}
+        />
+        
+        {/* Render elements in periodic table layout */}
+        {periodicTableLayout.map((row, rowIndex) =>
+          row.map((elementNumber, colIndex) =>
+            renderElement(elementNumber, rowIndex, colIndex)
+          }
+        />
       </Canvas>
+
+      {/* Element Detail Modal */}
+      <Modal
+        visible={!!selectedElement}
+        animationType="slide"
+        transparent={true}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            {selectedElement && (
+              <>
+                <RNText style={styles.modalTitle}>
+                  {selectedElement.number}. {selectedElement.name} ({selectedElement.symbol})
+          </RNText>
+                
+          {selectedElement && (
+            <View style={styles.elementDetails}>
+              <RNText style={styles.elementName}>
+                {selectedElement.name}
+              </RNText>
+              <RNText style={styles.elementType}>
+                  {selectedElement.type}
+                </RNText>
+                <RNText style={styles.elementProperty}>
+                  Atomic Mass: {selectedElement.atomicMass}
+              </RNText>
+              <RNText style={styles.elementProperty}>
+                  Electron Configuration: {selectedElement.electronConfiguration}
+              </RNText>
+              <RNText style={styles.elementProperty}>
+                  Discovered: {selectedElement.discovered}
+              </RNText>
+            </View>
+          )}
+                
+          <TouchableOpacity
+            style={styles.closeButton}
+            onPress={() => setSelectedElement(null)}
+          >
+            <RNText style={styles.closeButtonText}>Close</RNText>
+          </TouchableOpacity>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -130,5 +204,56 @@ const styles = StyleSheet.create({
   canvas: {
     width: Dimensions.get("window").width - 20,
     height: Dimensions.get("window").height - 20,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+  },
+  modalContent: {
+    backgroundColor: "#fff",
+    margin: 20,
+    borderRadius: 15,
+    padding: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 15,
+    elevation: 10,
+  },
+  elementDetails: {
+    marginBottom: 20,
+  },
+  elementName: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#000",
+    marginBottom: 15,
+  },
+  elementType: {
+    fontSize: 16,
+    color: "#666",
+    marginBottom: 15,
+  },
+  elementProperty: {
+    fontSize: 14,
+    color: "#333",
+    marginBottom: 8,
+  },
+  closeButton: {
+    backgroundColor: "#f44336",
+    padding: 12,
+    borderRadius: 10,
+    alignItems: "center",
+  },
+  closeButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: "700",
+    color: "#000",
+    marginBottom: 10,
   },
 });
