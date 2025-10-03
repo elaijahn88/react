@@ -6,9 +6,10 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
+  ActivityIndicator,
 } from "react-native";
 import { db } from "../firebase";
-import { collection, onSnapshot, query, where } from "firebase/firestore";
+import { collection, onSnapshot, query } from "firebase/firestore";
 import { Ionicons } from "@expo/vector-icons";
 
 interface IUserData {
@@ -28,19 +29,25 @@ export default function SettingsScreen() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Query all users and get the first one (or modify based on your auth system)
     const usersQuery = query(collection(db, "users"));
-    
+
     const unsubscribe = onSnapshot(
       usersQuery,
       (querySnapshot) => {
         if (!querySnapshot.empty) {
-          // Get the first user document (you can modify this logic based on your auth system)
           const doc = querySnapshot.docs[0];
+          const data = doc.data();
           setUserData({
             id: doc.id,
-            ...doc.data()
-          } as IUserData);
+            email: data.email ?? "N/A",
+            name: data.name ?? "No Name",
+            account: data.account ?? 0,
+            age: data.age ?? 0,
+            transaction: data.transaction ?? "None",
+            phone: data.phone,
+            location: data.location,
+            createdAt: data.createdAt,
+          });
         } else {
           Alert.alert("Info", "No user data found in database");
         }
@@ -64,25 +71,25 @@ export default function SettingsScreen() {
           icon: "key-outline" as const,
           label: "Privacy",
           value: "Last seen, profile info",
-          onPress: () => Alert.alert("Privacy", "Manage your privacy settings")
+          onPress: () => Alert.alert("Privacy", "Manage your privacy settings"),
         },
         {
           icon: "shield-checkmark-outline" as const,
           label: "Security",
           value: "Two-step verification",
-          onPress: () => Alert.alert("Security", "Security settings")
+          onPress: () => Alert.alert("Security", "Security settings"),
         },
         {
           icon: "phone-portrait-outline" as const,
           label: "Change Number",
-          value: userData?.phone || "Not set",
-          onPress: () => Alert.alert("Change Number", "Update your phone number")
+          value: userData?.phone ?? "Not set",
+          onPress: () => Alert.alert("Change Number", "Update your phone number"),
         },
         {
           icon: "document-text-outline" as const,
           label: "Request Account Info",
           value: "Download your data",
-          onPress: () => Alert.alert("Account Info", "Request your account data")
+          onPress: () => Alert.alert("Account Info", "Request your account data"),
         },
       ],
     },
@@ -93,19 +100,19 @@ export default function SettingsScreen() {
           icon: "card-outline" as const,
           label: "Payment Methods",
           value: "Bank accounts, cards",
-          onPress: () => Alert.alert("Payment Methods", "Manage payment options")
+          onPress: () => Alert.alert("Payment Methods", "Manage payment options"),
         },
         {
           icon: "trending-up-outline" as const,
           label: "Transaction History",
           value: "View all transactions",
-          onPress: () => Alert.alert("Transactions", "View your transaction history")
+          onPress: () => Alert.alert("Transactions", "View your transaction history"),
         },
         {
           icon: "notifications-outline" as const,
           label: "Alerts & Notifications",
           value: "Transaction alerts",
-          onPress: () => Alert.alert("Notifications", "Manage your alerts")
+          onPress: () => Alert.alert("Notifications", "Manage your alerts"),
         },
       ],
     },
@@ -116,19 +123,19 @@ export default function SettingsScreen() {
           icon: "cloud-upload-outline" as const,
           label: "Chat Backup",
           value: "Last backup: Never",
-          onPress: () => Alert.alert("Backup", "Backup your chats")
+          onPress: () => Alert.alert("Backup", "Backup your chats"),
         },
         {
           icon: "archive-outline" as const,
           label: "Archive All Chats",
           value: "",
-          onPress: () => Alert.alert("Archive", "Archive all chats")
+          onPress: () => Alert.alert("Archive", "Archive all chats"),
         },
         {
           icon: "time-outline" as const,
           label: "Chat History",
           value: "Keep chats archived",
-          onPress: () => Alert.alert("Chat History", "Manage chat history")
+          onPress: () => Alert.alert("Chat History", "Manage chat history"),
         },
       ],
     },
@@ -139,19 +146,19 @@ export default function SettingsScreen() {
           icon: "help-circle-outline" as const,
           label: "Help Center",
           value: "FAQs and support",
-          onPress: () => Alert.alert("Help", "Visit help center")
+          onPress: () => Alert.alert("Help", "Visit help center"),
         },
         {
           icon: "headset-outline" as const,
           label: "Contact Us",
           value: "Get help from support",
-          onPress: () => Alert.alert("Contact", "Contact support team")
+          onPress: () => Alert.alert("Contact", "Contact support team"),
         },
         {
           icon: "information-circle-outline" as const,
           label: "App Info",
           value: "Version 2.22.25.76",
-          onPress: () => Alert.alert("App Info", "Finance App v2.22.25.76")
+          onPress: () => Alert.alert("App Info", "Finance App v2.22.25.76"),
         },
       ],
     },
@@ -160,7 +167,7 @@ export default function SettingsScreen() {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <Ionicons name="refresh-outline" size={40} color="#007AFF" />
+        <ActivityIndicator size="large" color="#007AFF" />
         <Text style={styles.loadingText}>Loading user data...</Text>
       </View>
     );
@@ -168,14 +175,13 @@ export default function SettingsScreen() {
 
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      {/* Profile Header - WhatsApp style */}
+      {/* Profile Header */}
       <View style={styles.profileHeader}>
         <View style={styles.avatarContainer}>
           <View style={styles.avatar}>
             <Ionicons name="person" size={40} color="#666" />
           </View>
         </View>
-        
         <View style={styles.profileInfo}>
           <Text style={styles.userName}>{userData?.name || "No User Found"}</Text>
           <Text style={styles.userStatus}>
@@ -184,7 +190,7 @@ export default function SettingsScreen() {
         </View>
       </View>
 
-      {/* User Information Section */}
+      {/* User Info */}
       {userData && (
         <View style={styles.section}>
           <TouchableOpacity style={styles.row}>
@@ -229,18 +235,14 @@ export default function SettingsScreen() {
         </View>
       )}
 
-      {/* Settings Options */}
-      {settingsSections.map((section, index) => (
+      {/* Settings Sections */}
+      {settingsSections.map((section) => (
         <View key={section.title} style={styles.section}>
           <Text style={styles.sectionTitle}>{section.title}</Text>
-          
-          {section.items.map((item, itemIndex) => (
-            <TouchableOpacity 
+          {section.items.map((item, index) => (
+            <TouchableOpacity
               key={item.label}
-              style={[
-                styles.row,
-                itemIndex === section.items.length - 1 && styles.lastRow,
-              ]}
+              style={[styles.row, index === section.items.length - 1 && styles.lastRow]}
               onPress={item.onPress}
             >
               <Ionicons name={item.icon} size={28} color="#666" />
@@ -254,8 +256,8 @@ export default function SettingsScreen() {
         </View>
       ))}
 
-      {/* Logout Button */}
-      <TouchableOpacity 
+      {/* Logout */}
+      <TouchableOpacity
         style={styles.logoutButton}
         onPress={() => Alert.alert("Logout", "Are you sure you want to logout?")}
       >
@@ -266,98 +268,22 @@ export default function SettingsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#fff",
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#fff",
-  },
-  loadingText: {
-    marginTop: 10,
-    fontSize: 16,
-    color: "#666",
-  },
-  profileHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: 20,
-    backgroundColor: "#f6f6f6",
-    borderBottomWidth: 1,
-    borderBottomColor: "#e5e5e5",
-  },
-  avatarContainer: {
-    position: "relative",
-    marginRight: 15,
-  },
-  avatar: {
-    width: 70,
-    height: 70,
-    borderRadius: 35,
-    backgroundColor: "#e1e1e1",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  profileInfo: {
-    flex: 1,
-  },
-  userName: {
-    fontSize: 22,
-    fontWeight: "bold",
-    color: "#000",
-  },
-  userStatus: {
-    fontSize: 16,
-    color: "#666",
-    marginTop: 5,
-  },
-  section: {
-    marginTop: 20,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#666",
-    marginBottom: 5,
-    paddingHorizontal: 20,
-  },
-  row: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    backgroundColor: "#fff",
-  },
-  lastRow: {
-    borderBottomWidth: 0,
-  },
-  rowContent: {
-    flex: 1,
-    marginLeft: 15,
-  },
-  rowLabel: {
-    fontSize: 16,
-    fontWeight: "500",
-    color: "#000",
-  },
-  rowValue: {
-    fontSize: 14,
-    color: "#666",
-    marginTop: 2,
-  },
-  logoutButton: {
-    margin: 20,
-    padding: 15,
-    backgroundColor: "#FF3B30",
-    borderRadius: 10,
-    alignItems: "center",
-  },
-  logoutText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "600",
-  },
+  container: { flex: 1, backgroundColor: "#fff" },
+  loadingContainer: { flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#fff" },
+  loadingText: { marginTop: 10, fontSize: 16, color: "#666" },
+  profileHeader: { flexDirection: "row", alignItems: "center", padding: 20, backgroundColor: "#f6f6f6", borderBottomWidth: 1, borderBottomColor: "#e5e5e5" },
+  avatarContainer: { marginRight: 15 },
+  avatar: { width: 70, height: 70, borderRadius: 35, backgroundColor: "#e1e1e1", justifyContent: "center", alignItems: "center" },
+  profileInfo: { flex: 1 },
+  userName: { fontSize: 22, fontWeight: "bold", color: "#000" },
+  userStatus: { fontSize: 16, color: "#666", marginTop: 5 },
+  section: { marginTop: 20 },
+  sectionTitle: { fontSize: 16, fontWeight: "600", color: "#666", marginBottom: 5, paddingHorizontal: 20 },
+  row: { flexDirection: "row", alignItems: "center", paddingVertical: 12, paddingHorizontal: 20, backgroundColor: "#fff" },
+  lastRow: { borderBottomWidth: 0 },
+  rowContent: { flex: 1, marginLeft: 15 },
+  rowLabel: { fontSize: 16, fontWeight: "500", color: "#000" },
+  rowValue: { fontSize: 14, color: "#666", marginTop: 2 },
+  logoutButton: { margin: 20, padding: 15, backgroundColor: "#FF3B30", borderRadius: 10, alignItems: "center" },
+  logoutText: { color: "#fff", fontSize: 16, fontWeight: "600" },
 });
