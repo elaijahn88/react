@@ -5,11 +5,15 @@ import {
   Dimensions, 
   TouchableOpacity, 
   Text as RNText,
-  Modal
+  Modal,
+  ScrollView
 } from "react-native";
 import { Canvas, Circle, Text, useFont, Rect } from "@shopify/react-native-skia";
 
-// Colors for element types
+const ELEMENT_SIZE = 60;
+const HORIZONTAL_PADDING = 2;
+const VERTICAL_PADDING = 2;
+
 const typeColors: { [key: string]: string } = {
   "nonmetal": "#f44336",
   "noble gas": "#9c27b0",
@@ -23,7 +27,6 @@ const typeColors: { [key: string]: string } = {
   "actinide": "#795548"
 };
 
-// Enhanced element data with more properties
 interface Element {
   number: number;
   symbol: string;
@@ -45,149 +48,119 @@ const elements: Element[] = [
   { number: 8, symbol: "O", name: "Oxygen", type: "nonmetal", atomicMass: "15.999", electronConfiguration: "[He] 2s2 2p4", discovered: "1774" },
   { number: 9, symbol: "F", name: "Fluorine", type: "halogen", atomicMass: "18.998", electronConfiguration: "[He] 2s2 2p5", discovered: "1810" },
   { number: 10, symbol: "Ne", name: "Neon", type: "noble gas", atomicMass: "20.180", electronConfiguration: "[He] 2s2 2p6", discovered: "1898" },
-  { number: 11, symbol: "Na", name: "Sodium", type: "alkali metal", atomicMass: "22.990", electronConfiguration: "[Ne] 3s1", discovered: "1807" },
-  { number: 12, symbol: "Mg", name: "Magnesium", type: "alkaline earth metal", atomicMass: "24.305", electronConfiguration: "[Ne] 3s2", discovered: "1808" },
-  { number: 13, symbol: "Al", name: "Aluminum", type: "metal", atomicMass: "26.982", electronConfiguration: "[Ne] 3s2 3p1", discovered: "1825" },
-  { number: 14, symbol: "Si", name: "Silicon", type: "metalloid", atomicMass: "28.085", electronConfiguration: "[Ne] 3s2 3p2", discovered: "1824" },
-  { number: 15, symbol: "P", name: "Phosphorus", type: "nonmetal", atomicMass: "30.974", electronConfiguration: "[Ne] 3s2 3p3", discovered: "1669" },
-  { number: 16, symbol: "S", name: "Sulfur", type: "nonmetal", atomicMass: "32.06", electronConfiguration: "[Ne] 3s2 3p4", discovered: "Ancient" },
-  { number: 17, symbol: "Cl", name: "Chlorine", type: "halogen", atomicMass: "35.45", electronConfiguration: "[Ne] 3s2 3p5", discovered: "1774" },
-  { number: 18, symbol: "Ar", name: "Argon", type: "noble gas", atomicMass: "39.948", electronConfiguration: "[Ne] 3s2 3p6", discovered: "1894" },
-  // Additional elements would continue here...
+  // Add more elements as needed
 ];
 
-// Periodic table layout with proper positioning
+// Proper layout as 2D array
 const periodicTableLayout = [
-  [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2 },
-  [3, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 10, 11, 12, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-  [19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36],
-  [37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54],
-  [55, 56, 57, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86],
-  [87, 88, 89, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118],
-  [0, 0, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71],
-  [0, 0, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103],
+  [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2],
+  [3,4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,10,11,12],
+  [5,6,7,8,9,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
 ];
-
-// Grid settings
-const ELEMENT_SIZE = 60;
-const HORIZONTAL_PADDING = 2;
-const VERTICAL_PADDING = 2;
-const LANTHANIDE_OFFSET = 2;
-const ACTINIDE_OFFSET = 2;
 
 export default function PeriodicTableFull() {
   const [selectedElement, setSelectedElement] = useState<Element | null>(null);
-  const font = useFont(require("./assets/fonts/Roboto-Regular.ttf"), 10);
+  const font = useFont(require("./assets/fonts/Roboto-Regular.ttf"), 12);
 
-  const renderElement = (elementNumber: number, row: number, col: number) => {
-    if (elementNumber === 0) return null;
-    
-    const element = elements.find(el => el.number === elementNumber);
-    if (!element) return null;
-
-    const x = col * (ELEMENT_SIZE + HORIZONTAL_PADDING) + ELEMENT_SIZE / 2;
-    const y = row * (ELEMENT_SIZE + VERTICAL_PADDING) + ELEMENT_SIZE / 2;
-    
-    return (
-      <TouchableOpacity
-        key={element.number}
-        onPress={() => setSelectedElement(element)}
-        style={{
-          position: "absolute",
-          left: x - ELEMENT_SIZE / 2,
-      top: y - ELEMENT_SIZE / 2,
-      width: ELEMENT_SIZE,
-      height: ELEMENT_SIZE,
-        }}
-      >
-        <Circle 
-          cx={ELEMENT_SIZE / 2} 
-          cy={ELEMENT_SIZE / 2} 
-          r={ELEMENT_SIZE / 2} 
-          color={typeColors[element.type]} 
-        />
-        {font && (
-          <>
-            <Text 
-              x={ELEMENT_SIZE / 2 - 5} 
-              y={ELEMENT_SIZE / 2 - 5} 
-              text={element.number.toString()} 
-              font={font} 
-              color="#000" 
-            />
-            <Text 
-              x={ELEMENT_SIZE / 2 - 7} 
-              y={ELEMENT_SIZE / 2 + 15} 
-              text={element.symbol} 
-              font={font} 
-              color="#000" 
-            />
-          </>
-        )}
-      </TouchableOpacity>
-    );
-  };
+  const windowWidth = Dimensions.get("window").width;
 
   return (
     <View style={styles.container}>
-      <Canvas style={styles.canvas}>
-        {/* Render periodic table background */}
-        <Rect 
-          x={0} 
-          y={0} 
-          width={Dimensions.get("window").width - 20}
-          height={Dimensions.get("window").height - 20}
-          color="#f5f5f5"}
-        />
-        
-        {/* Render elements in periodic table layout */}
+      <Canvas style={{ width: windowWidth, height: 400 }}>
+        <Rect x={0} y={0} width={windowWidth} height={400} color="#f5f5f5" />
         {periodicTableLayout.map((row, rowIndex) =>
-          row.map((elementNumber, colIndex) =>
-            renderElement(elementNumber, rowIndex, colIndex)
-          }
-        />
+          row.map((num, colIndex) => {
+            if (num === 0) return null;
+            const element = elements.find(e => e.number === num);
+            if (!element) return null;
+            const x = colIndex * (ELEMENT_SIZE + HORIZONTAL_PADDING) + ELEMENT_SIZE/2;
+            const y = rowIndex * (ELEMENT_SIZE + VERTICAL_PADDING) + ELEMENT_SIZE/2;
+            return (
+              <Circle
+                key={element.number}
+                cx={x}
+                cy={y}
+                r={ELEMENT_SIZE/2}
+                color={typeColors[element.type]}
+              />
+            );
+          })
+        )}
+        {font && periodicTableLayout.map((row, rowIndex) =>
+          row.map((num, colIndex) => {
+            if (num === 0) return null;
+            const element = elements.find(e => e.number === num);
+            if (!element) return null;
+            const x = colIndex * (ELEMENT_SIZE + HORIZONTAL_PADDING) + ELEMENT_SIZE/2;
+            const y = rowIndex * (ELEMENT_SIZE + VERTICAL_PADDING) + ELEMENT_SIZE/2;
+            return (
+              <Text
+                key={"text"+element.number}
+                x={x-10}
+                y={y-5}
+                text={element.symbol}
+                font={font}
+                color="#000"
+              />
+            );
+          })
+        )}
       </Canvas>
 
-      {/* Element Detail Modal */}
-      <Modal
-        visible={!!selectedElement}
-        animationType="slide"
-        transparent={true}
-      >
+      {/* Overlay touchables */}
+      <View style={[StyleSheet.absoluteFillObject, { top: 0, left: 0 }]}>
+        {periodicTableLayout.map((row, rowIndex) =>
+          row.map((num, colIndex) => {
+            if (num === 0) return null;
+            const element = elements.find(e => e.number === num);
+            if (!element) return null;
+            const x = colIndex * (ELEMENT_SIZE + HORIZONTAL_PADDING);
+            const y = rowIndex * (ELEMENT_SIZE + VERTICAL_PADDING);
+            return (
+              <TouchableOpacity
+                key={"touch"+element.number}
+                style={{
+                  position: "absolute",
+                  left: x,
+                  top: y,
+                  width: ELEMENT_SIZE,
+                  height: ELEMENT_SIZE,
+                }}
+                onPress={() => setSelectedElement(element)}
+              />
+            );
+          })
+        )}
+      </View>
+
+      {/* Modal */}
+      <Modal visible={!!selectedElement} transparent animationType="slide">
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             {selectedElement && (
-              <>
+              <ScrollView>
                 <RNText style={styles.modalTitle}>
                   {selectedElement.number}. {selectedElement.name} ({selectedElement.symbol})
-          </RNText>
-                
-          {selectedElement && (
-            <View style={styles.elementDetails}>
-              <RNText style={styles.elementName}>
-                {selectedElement.name}
-              </RNText>
-              <RNText style={styles.elementType}>
-                  {selectedElement.type}
                 </RNText>
+                <RNText style={styles.elementType}>{selectedElement.type}</RNText>
                 <RNText style={styles.elementProperty}>
                   Atomic Mass: {selectedElement.atomicMass}
-              </RNText>
-              <RNText style={styles.elementProperty}>
+                </RNText>
+                <RNText style={styles.elementProperty}>
                   Electron Configuration: {selectedElement.electronConfiguration}
-              </RNText>
-              <RNText style={styles.elementProperty}>
+                </RNText>
+                <RNText style={styles.elementProperty}>
                   Discovered: {selectedElement.discovered}
-              </RNText>
-            </View>
-          )}
-                
-          <TouchableOpacity
-            style={styles.closeButton}
-            onPress={() => setSelectedElement(null)}
-          >
-            <RNText style={styles.closeButtonText}>Close</RNText>
-          </TouchableOpacity>
+                </RNText>
+                <TouchableOpacity
+                  style={styles.closeButton}
+                  onPress={() => setSelectedElement(null)}
+                >
+                  <RNText style={styles.closeButtonText}>Close</RNText>
+                </TouchableOpacity>
+              </ScrollView>
+            )}
+          </View>
         </View>
       </Modal>
     </View>
@@ -195,65 +168,12 @@ export default function PeriodicTableFull() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#fff",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  canvas: {
-    width: Dimensions.get("window").width - 20,
-    height: Dimensions.get("window").height - 20,
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.5)",
-  },
-  modalContent: {
-    backgroundColor: "#fff",
-    margin: 20,
-    borderRadius: 15,
-    padding: 20,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 15,
-    elevation: 10,
-  },
-  elementDetails: {
-    marginBottom: 20,
-  },
-  elementName: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#000",
-    marginBottom: 15,
-  },
-  elementType: {
-    fontSize: 16,
-    color: "#666",
-    marginBottom: 15,
-  },
-  elementProperty: {
-    fontSize: 14,
-    color: "#333",
-    marginBottom: 8,
-  },
-  closeButton: {
-    backgroundColor: "#f44336",
-    padding: 12,
-    borderRadius: 10,
-    alignItems: "center",
-  },
-  closeButtonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: "700",
-    color: "#000",
-    marginBottom: 10,
-  },
+  container: { flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: "#fff" },
+  modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "center", padding: 20 },
+  modalContent: { backgroundColor: "#fff", borderRadius: 15, padding: 20 },
+  modalTitle: { fontSize: 20, fontWeight: "700", marginBottom: 10 },
+  elementType: { fontSize: 16, color: "#666", marginBottom: 10 },
+  elementProperty: { fontSize: 14, color: "#333", marginBottom: 8 },
+  closeButton: { backgroundColor: "#f44336", padding: 12, borderRadius: 10, alignItems: "center", marginTop: 10 },
+  closeButtonText: { color: "#fff", fontSize: 16, fontWeight: "600" },
 });
