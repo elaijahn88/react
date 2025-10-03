@@ -2,161 +2,403 @@ import React, { useState } from "react";
 import {
   View,
   TextInput,
-  Button,
+  TouchableOpacity,
   StyleSheet,
   Text,
   ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
 } from "react-native";
-import { auth, db } from "../firebase"; // adjust path
+import { auth, db } from "../firebase";
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth";
 import { doc, setDoc, getDoc } from "firebase/firestore";
+import { Ionicons } from "@expo/vector-icons";
 
 interface IUserData {
   email: string;
   name: string;
   account: number;
-  password: string;
   age: number;
-  transaction: string;
-  photoUrl: string;
-  updatedUrl: string;
-  videoUrl: string;
-  createdAt?: string;
+  phone?: string;
+  address?: string;
 }
 
-export default function AuthAndFetcher(): JSX.Element {
+export default function EnhancedAuth() {
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [name, setName] = useState<string>("");
   const [account, setAccount] = useState<string>("");
   const [age, setAge] = useState<string>("");
-
   const [loading, setLoading] = useState<boolean>(false);
   const [message, setMessage] = useState<string>("");
+  const [isLogin, setIsLogin] = useState<boolean>(true);
+  const [showPassword, setShowPassword] = useState<boolean>(false);
+  const [confirmPassword, setConfirmPassword] = useState<string>("");
+  const [isLoginMode, setIsLoginMode] = useState<boolean>(true);
+  const [secureTextEntry, setSecureTextEntry] = useState<boolean>(true);
+  const [showConfirmPassword, setShowConfirmPassword] = useState<boolean>(false);
 
-  // SIGN UP
-  const signUp = async (): Promise<void> => {
-    if (!email || !password || !name || !account || !age) {
-      setMessage("All required fields must be filled");
-      return;
-    }
-
-    setLoading(true);
-    setMessage("");
-
-    try {
-      const userRef = doc(db, "users", email);
-      const docSnap = await getDoc(userRef);
-      if (docSnap.exists()) {
-        setMessage("User with this email already exists!");
-        setLoading(false);
-        return;
-      }
-
-      // Create Firebase Auth user
-      await createUserWithEmailAndPassword(auth, email, password);
-
-      // Add user data in Firestore with empty fields for future transactions and URLs
-      const userData: IUserData = {
-        email,
-        name,
-        account: parseInt(account, 10),
-        password, // plain text for demo; hash in production
-        age: parseInt(age, 10),
-        transaction: "",   // placeholder label
-        photoUrl: "",      // placeholder label
-        updatedUrl: "",    // placeholder label
-        videoUrl: "",      // placeholder label
-        createdAt: new Date().toISOString(),
-      };
-
-      await setDoc(userRef, userData);
-      setMessage("✅ User registered successfully!");
-    } catch (err: any) {
-      console.error(err);
-      setMessage("Error: " + err.message);
-    } finally {
-      setLoading(false);
-    }
+  const validateEmail = (email: string): boolean => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
   };
 
-  // SIGN IN
-  const signIn = async (): Promise<void> => {
-    if (!email || !password) {
-      setMessage("Email & Password required");
-      return;
-    }
-
-    setLoading(true);
-    setMessage("");
-
-    try {
-      await signInWithEmailAndPassword(auth, email, password);
-      setMessage("✅ Signed in successfully!");
-    } catch (err: any) {
-      console.error(err);
-      setMessage("Error: " + err.message);
-    } finally {
-      setLoading(false);
-    }
+  const validatePassword = (password: string): boolean => {
+    return password.length >= 6;
   };
 
-  return (
-    <View style={styles.container}>
-      <TextInput
-        style={styles.input}
-        placeholder="Email"
-        value={email}
-        onChangeText={setEmail}
-        keyboardType="email-address"
+  const validateForm = (): boolean => {
+    if (!email.trim()) {
+      setMessage("Email is required");
+      return false;
+    }
+
+    if (!validateEmail(email)) {
+      setMessage("Please enter a valid email address");
+    return false;
+  }
+
+  if (!password.trim()) {
+    setMessage("Password is required");
+    return false;
+  }
+
+  if (!isLoginMode) {
+    if (!name.trim()) {
+      setMessage("Full name is required");
+      return false;
+  }
+
+  if (confirmPassword && password !== confirmPassword) {
+      setMessage("Passwords do not match");
+    return false;
+  }
+
+  return true;
+};
+
+const handleSignUp = async (): Promise<void> => {
+  if (!validateForm()) return;
+
+  setLoading(true);
+  setMessage("");
+
+  try {
+    const userRef = doc(db, "users", email);
+    const docSnap = await getDoc(userRef);
+      
+    if (docSnap.exists()) {
+      setMessage("User with this email already exists!");
+  } catch (err: any) {
+    console.error(err);
+    setMessage("Error creating account: " + err.message);
+  } finally {
+    setLoading(false);
+  }
+};
+
+const handleSignIn = async (): Promise<void> => {
+  if (!validateForm()) return;
+
+  setLoading(true);
+  setMessage("");
+
+  try {
+    await signInWithEmailAndPassword(auth, email, password);
+    setMessage("✅ Welcome back!");
+  } catch (err: any) {
+    console.error(err);
+    setMessage("Error: " + err.message);
+  } finally {
+    setLoading(false);
+  }
+};
+
+return (
+  <KeyboardAvoidingView
+    style={styles.container}
+    behavior={Platform.OS === "ios" ? "padding" : "height"}
+  >
+    <ScrollView contentContainerStyle={styles.scrollContainer}>
+      {/* Header Section */}
+      <View style={styles.header}>
+        <View style={styles.iconContainer}>
+          <Ionicons name="lock-closed" size={48} color="#007AFF" />
+      </View>
+      <Text style={styles.welcomeTitle}>
+      {isLoginMode ? "Welcome Back" : "Create Account"}
+    </Text>
+    <Text style={styles.welcomeSubtitle}>
+      {isLoginMode ? "Sign in to continue to your account" : "Create your account to get started"}
+      </Text>
+
+      {/* Form Container */}
+      <View style={styles.formContainer}>
+        {/* Email Input */}
+        <View style={styles.inputWrapper}>
+          <View style={styles.inputContainer}>
+            <Ionicons name="mail-outline" size={20} color="#666" />
+      </View>
+
+      {/* Email Input */}
+      <View style={styles.inputWrapper}>
+        <Text style={styles.inputLabel}>Email Address</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="you@example.com"
+            placeholderTextColor="#999"
+            value={email}
+            onChangeText={(text) => {
+          setEmail(text);
+          setMessage("");
+        }}
         autoCapitalize="none"
+        keyboardType="email-address"
       />
-      <TextInput
-        style={styles.input}
-        placeholder="Password"
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Name"
-        value={name}
-        onChangeText={setName}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Account Number"
-        value={account}
-        onChangeText={setAccount}
-        keyboardType="numeric"
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Age"
-        value={age}
-        onChangeText={setAge}
-        keyboardType="numeric"
-      />
+      </View>
 
-      <Button title="Sign Up" onPress={signUp} />
-      <View style={{ height: 10 }} />
-      <Button title="Login" onPress={signIn} />
+      {/* Password Input */}
+      <View style={styles.inputWrapper}>
+        <Text style={styles.inputLabel}>Password</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Enter your password"
+            placeholderTextColor="#999"
+            value={password}
+            onChangeText={(text) => {
+          setPassword(text);
+          setMessage("");
+        }}
+        secureTextEntry={!showPassword}
+      />
+      <TouchableOpacity
+        style={styles.passwordToggle}
+        onPress={() => setShowPassword(!showPassword)}
+        >
+          <Ionicons 
+            name={showPassword ? "eye-off-outline" : "eye-outline"}
+            size={20}
+            color="#666"
+          />
+      </View>
 
-      {loading && <ActivityIndicator style={{ marginTop: 10 }} />}
-      {message ? <Text style={styles.message}>{message}</Text> : null}
-    </View>
-  );
+      {/* Confirm Password (only for sign up) */}
+      {!isLoginMode && (
+        <View style={styles.inputWrapper}>
+          <Text style={styles.inputLabel}>Confirm Password</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Confirm your password"
+            placeholderTextColor="#999"
+            value={confirmPassword}
+            onChangeText={(text) => {
+        setConfirmPassword(text);
+        setMessage("");
+      }}
+          secureTextEntry={!showConfirmPassword}
+        />
+        <TouchableOpacity
+          style={styles.passwordToggle}
+          onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+          secureTextEntry={!showConfirmPassword}
+        />
+      </View>
+      )}
+
+      {/* Additional Fields for Sign Up */}
+      {!isLoginMode && (
+        <>
+          {/* Name Input */}
+          <View style={styles.inputWrapper}>
+          <Text style={styles.inputLabel}>Full Name</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Enter your full name"
+            placeholderTextColor="#999"
+            value={name}
+            onChangeText={(text) => {
+        setName(text);
+        setMessage("");
+      }}
+        />
+      </View>
+
+      {/* Submit Button */}
+      <TouchableOpacity
+        style={[styles.submitButton, loading && styles.submitButtonDisabled]}
+          onPress={isLoginMode ? handleSignIn : handleSignUp)}
+          disabled={loading}
+        >
+          <Text style={styles.submitButtonText}>
+            {isLoginMode ? "Sign In" : "Create Account"}
+        </Text>
+      </TouchableOpacity>
+
+      {/* Toggle between Login and Sign Up */}
+      <TouchableOpacity
+        style={styles.switchModeButton}
+        onPress={() => {
+          setIsLoginMode(!isLoginMode);
+          setMessage("");
+        }}
+      >
+        <Text style={styles.switchModeText}>
+          {isLoginMode ? "Don't have an account? Sign Up" : "Already have an account? Sign In"}
+      </Text>
+      </TouchableOpacity>
+
+      {loading && (
+        <View style={styles.loadingOverlay}>
+          <ActivityIndicator size="large" color="#007AFF" />
+        </View>
+      )}
+
+      {/* Message Display */}
+      {message ? (
+        <View style={[
+          styles.messageContainer,
+          message.includes("✅") ? styles.successMessage : styles.errorMessage
+        ]}>
+          <Text style={styles.messageText}>{message}</Text>
+        </View>
+      ) : null}
+    </ScrollView>
+  </KeyboardAvoidingView>
+);
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: "center", padding: 20 },
-  input: {
-    height: 50,
-    borderWidth: 1,
-    marginBottom: 15,
-    paddingHorizontal: 10,
-    borderRadius: 5,
+  container: {
+    flex: 1,
+    backgroundColor: "#f8fafc",
   },
-  message: { marginTop: 10, fontSize: 16, color: "green", textAlign: "center" },
+  scrollContainer: {
+    flexGrow: 1,
+    justifyContent: "center",
+    padding: 20,
+  },
+  header: {
+    alignItems: "center",
+    marginBottom: 30,
+  },
+  iconContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: "#fff",
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: 4 },
+    shadowRadius: 8,
+    elevation: 3,
+    marginBottom: 20,
+  },
+  welcomeTitle: {
+    fontSize: 28,
+    fontWeight: "700",
+    color: "#1a1a1a",
+    textAlign: "center",
+    marginBottom: 8,
+  },
+  inputLabel: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#374151",
+    marginBottom: 8,
+  },
+  welcomeSubtitle: {
+    fontSize: 16,
+    color: "#6b7280",
+    textAlign: "center",
+    marginBottom: 20,
+  },
+  formContainer: {
+    backgroundColor: "#fff",
+    borderRadius: 20,
+    padding: 24,
+    shadowColor: "#000",
+    shadowOpacity: 0.08,
+    shadowOffset: { width: 0, height: 4 },
+    shadowRadius: 12,
+    elevation: 4,
+    marginBottom: 20,
+  },
+  inputWrapper: {
+    marginBottom: 16,
+  },
+  inputContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#d1d5db",
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
+    backgroundColor: "#f9fafb",
+  },
+  input: {
+    flex: 1,
+    fontSize: 16,
+    color: "#1a1a1a",
+  },
+  passwordToggle: {
+    padding: 4,
+  },
+  inputLabel: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#374151",
+    marginBottom: 4,
+  },
+  submitButton: {
+    backgroundColor: "#007AFF",
+    paddingVertical: 16,
+    borderRadius: 12,
+    alignItems: "center",
+  },
+  submitButtonDisabled: {
+    opacity: 0.6,
+  },
+  submitButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  switchModeButton: {
+    paddingVertical: 12,
+    alignItems: "center",
+  },
+  switchModeText: {
+    color: "#007AFF",
+    fontSize: 14,
+    fontWeight: "500",
+  },
+  loadingOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(255,255,255,0.8)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  messageContainer: {
+    padding: 12,
+    borderRadius: 8,
+    marginTop: 16,
+  },
+  successMessage: {
+    backgroundColor: "#d1fae5",
+    borderColor: "#a7f3d0",
+  },
+  errorMessage: {
+    backgroundColor: "#fee2e2",
+    borderColor: "#fecaca",
+  },
+  messageText: {
+    fontSize: 14,
+    textAlign: "center",
+  },
 });
