@@ -62,7 +62,7 @@ export default function MultiUserChat({ roomId, email }: Props) {
 
   // Offline persistence
   useEffect(() => {
-    firestore().settings({ persistence: true });
+    firestore().setPersistenceEnabled(true);
   }, []);
 
   // Network listener
@@ -81,7 +81,7 @@ export default function MultiUserChat({ roomId, email }: Props) {
       .collection("users")
       .onSnapshot(snapshot => {
         const u: { [email: string]: IUser } = {};
-        snapshot.forEach(doc => u[doc.id] = doc.data() as IUser);
+        snapshot.forEach(doc => (u[doc.id] = doc.data() as IUser));
         setUsers(u);
       });
     return () => unsubscribe();
@@ -139,7 +139,7 @@ export default function MultiUserChat({ roomId, email }: Props) {
       .doc(email)
       .set({
         isTyping: true,
-        lastUpdated: firestore.Timestamp.now(),
+        lastUpdated: firestore.FieldValue.serverTimestamp(),
         userEmail: email,
       });
 
@@ -152,7 +152,7 @@ export default function MultiUserChat({ roomId, email }: Props) {
         .doc(email)
         .set({
           isTyping: false,
-          lastUpdated: firestore.Timestamp.now(),
+          lastUpdated: firestore.FieldValue.serverTimestamp(),
           userEmail: email,
         });
     }, 3000);
@@ -168,7 +168,7 @@ export default function MultiUserChat({ roomId, email }: Props) {
       id: tempId,
       body: input,
       sender: email,
-      receivedAt: firestore.Timestamp.fromDate(new Date()),
+      receivedAt: FirebaseFirestoreTypes.Timestamp.fromDate(new Date()),
       status: { [email]: isConnected ? "sent" : "local" },
       mentions,
     };
