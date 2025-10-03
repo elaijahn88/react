@@ -226,7 +226,7 @@ const EnhancedMarketplace: React.FC = () => {
             }}
           >
             <Image
-              source={item.image ? { uri: item.image } : require("../assets/placeholder-image.png")}
+              source={{ uri: item.image || "https://xlijah.com/pics/iphone.jpg" }}
               style={styles.image}
             />
             <View style={styles.productInfo}>
