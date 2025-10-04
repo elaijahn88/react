@@ -8,7 +8,7 @@ import {
   Modal,
   ScrollView
 } from "react-native";
-import { Canvas, Circle, Text, useFont, Rect } from "@shopify/react-native-skia";
+import { Canvas, Circle, Text, Rect } from "@shopify/react-native-skia";
 
 const ELEMENT_SIZE = 60;
 const HORIZONTAL_PADDING = 2;
@@ -48,10 +48,8 @@ const elements: Element[] = [
   { number: 8, symbol: "O", name: "Oxygen", type: "nonmetal", atomicMass: "15.999", electronConfiguration: "[He] 2s2 2p4", discovered: "1774" },
   { number: 9, symbol: "F", name: "Fluorine", type: "halogen", atomicMass: "18.998", electronConfiguration: "[He] 2s2 2p5", discovered: "1810" },
   { number: 10, symbol: "Ne", name: "Neon", type: "noble gas", atomicMass: "20.180", electronConfiguration: "[He] 2s2 2p6", discovered: "1898" },
-  // Add more elements as needed
 ];
 
-// Proper layout as 2D array
 const periodicTableLayout = [
   [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2],
   [3,4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,10,11,12],
@@ -60,8 +58,6 @@ const periodicTableLayout = [
 
 export default function PeriodicTableFull() {
   const [selectedElement, setSelectedElement] = useState<Element | null>(null);
-  const font = useFont(require("./assets/fonts/Roboto-Regular.ttf"), 12);
-
   const windowWidth = Dimensions.get("window").width;
 
   return (
@@ -86,7 +82,7 @@ export default function PeriodicTableFull() {
             );
           })
         )}
-        {font && periodicTableLayout.map((row, rowIndex) =>
+        {periodicTableLayout.map((row, rowIndex) =>
           row.map((num, colIndex) => {
             if (num === 0) return null;
             const element = elements.find(e => e.number === num);
@@ -99,15 +95,14 @@ export default function PeriodicTableFull() {
                 x={x-10}
                 y={y-5}
                 text={element.symbol}
-                font={font}
                 color="#000"
+                size={12}
               />
             );
           })
         )}
       </Canvas>
 
-      {/* Overlay touchables */}
       <View style={[StyleSheet.absoluteFillObject, { top: 0, left: 0 }]}>
         {periodicTableLayout.map((row, rowIndex) =>
           row.map((num, colIndex) => {
@@ -133,7 +128,6 @@ export default function PeriodicTableFull() {
         )}
       </View>
 
-      {/* Modal */}
       <Modal visible={!!selectedElement} transparent animationType="slide">
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
