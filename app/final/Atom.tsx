@@ -6,11 +6,13 @@ import {
   TouchableOpacity,
   TextInput,
   Image,
-  Modal,
   StyleSheet,
-  Alert,
   Animated,
   ScrollView,
+  Dimensions,
+  Alert,
+  SafeAreaView,
+  StatusBar,
 } from "react-native";
 import {
   collection,
@@ -22,7 +24,9 @@ import {
   orderBy,
   serverTimestamp,
 } from "firebase/firestore";
-import { db, auth } from "../firebase";  // ✅ Your firebase file
+import { db, auth } from "../firebase";
+
+const { width } = Dimensions.get("window");
 
 // Types
 type User = { email: string; name: string; uid: string };
@@ -54,19 +58,7 @@ const EnhancedMarketplace: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [modalVisible, setModalVisible] = useState(false);
   const [productDetail, setProductDetail] = useState<Product | null>(null);
-  const [paymentModalVisible, setPaymentModalVisible] = useState(false);
-  const [cardNumber, setCardNumber] = useState("");
-  const [address, setAddress] = useState("");
   const [cartModalVisible, setCartModalVisible] = useState(false);
-
-  // Product creation states
-  const [name, setName] = useState("");
-  const [price, setPrice] = useState("");
-  const [image, setImage] = useState("");
-  const [description, setDescription] = useState("");
-  const [category, setCategory] = useState("Other");
-  const [condition, setCondition] = useState("New");
-  const [location, setLocation] = useState("");
 
   const cartAnimation = useRef(new Animated.Value(0)).current;
 
@@ -124,38 +116,6 @@ const EnhancedMarketplace: React.FC = () => {
     setFilteredProducts(filtered);
   }, [search, selectedCategory, products]);
 
-  // Add product
-  const addProduct = async () => {
-    if (!name.trim() || !price.trim() || !description.trim()) {
-      Alert.alert("Error", "Please fill all required fields");
-      return;
-    }
-    try {
-      await addDoc(collection(db, "products"), {
-        name: name.trim(),
-        price: Number(price),
-        image: image.trim(),
-        description: description.trim(),
-        category,
-        condition,
-        location: location.trim(),
-        sellerEmail: user?.email,
-        sellerName: user?.name,
-        createdAt: serverTimestamp(),
-        status: "active",
-      });
-      Alert.alert("Success", "Product added!");
-      setName("");
-      setPrice("");
-      setImage("");
-      setDescription("");
-      setLocation("");
-    } catch (error) {
-      console.error("Error adding product:", error);
-      Alert.alert("Error", "Failed to add product");
-    }
-  };
-
   // Cart
   const addToCart = (productId: string) => {
     setCart((prev) => ({ ...prev, [productId]: (prev[productId] || 0) + 1 }));
@@ -174,100 +134,219 @@ const EnhancedMarketplace: React.FC = () => {
     });
   };
 
-  // Checkout
-  const checkout = () => {
-    if (!cardNumber || !address) {
-      Alert.alert("Error", "Enter payment and shipping details");
-      return;
-    }
-    Alert.alert("Success", "Order placed!");
-    setCart({});
-    setPaymentModalVisible(false);
-    setCartModalVisible(false);
-  };
-
   const totalItems = Object.values(cart).reduce((a, b) => a + b, 0);
 
+  // 🧱 UI
   return (
-    <View style={styles.container}>
-      <Text style={styles.header}>Marketplace</Text>
+    <SafeAreaView style={styles.safeArea}>
+      <StatusBar barStyle="dark-content" />
+      <View style={styles.container}>
+        {/* 🛍️ Header */}
+        <Text style={styles.header}>Marketplace</Text>
 
-      {/* 🔎 Search */}
-      <TextInput
-        style={styles.search}
-        placeholder="Search products..."
-        value={search}
-        onChangeText={setSearch}
-      />
+        {/* 🔎 Search */}
+        <TextInput
+          style={styles.search}
+          placeholder="Search products..."
+          value={search}
+          onChangeText={setSearch}
+          placeholderTextColor="#888"
+        />
 
-      {/* 🏷️ Categories */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.categories}>
-        {categories.map((cat) => (
-          <TouchableOpacity
-            key={cat}
-            style={[styles.category, selectedCategory === cat && styles.categorySelected]}
-            onPress={() => setSelectedCategory(cat)}
-          >
-            <Text style={styles.categoryText}>{cat}</Text>
+        {/* 🏷️ Categories */}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.categories}
+        >
+          {categories.map((cat) => (
+            <TouchableOpacity
+              key={cat}
+              style={[
+                styles.category,
+                selectedCategory === cat && styles.categorySelected,
+              ]}
+              onPress={() => setSelectedCategory(cat)}
+              activeOpacity={0.7}
+            >
+              <Text
+                style={[
+                  styles.categoryText,
+                  selectedCategory === cat && styles.categoryTextSelected,
+                ]}
+              >
+                {cat}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+
+        {/* 📦 Product List */}
+        <FlatList
+          data={filteredProducts}
+          keyExtractor={(item) => item.id}
+          showsVerticalScrollIndicator={false}
+          renderItem={({ item }) => (
+            <TouchableOpacity
+              style={styles.productCard}
+              onPress={() => {
+                setProductDetail(item);
+                setModalVisible(true);
+              }}
+              activeOpacity={0.8}
+            >
+              <Image
+                source={{
+                  uri: item.image || "https://xlijah.com/pics/iphone.jpg",
+                }}
+                style={styles.image}
+              />
+              <View style={styles.infoContainer}>
+                <Text style={styles.productName}>{item.name}</Text>
+                <Text style={styles.productPrice}>${item.price}</Text>
+                <TouchableOpacity
+                  style={styles.addToCartBtn}
+                  onPress={() => addToCart(item.id)}
+                >
+                  <Text style={styles.addToCartText}>Add to Cart</Text>
+                </TouchableOpacity>
+              </View>
+            </TouchableOpacity>
+          )}
+        />
+
+        {/* 🛒 Floating Cart */}
+        <Animated.View
+          style={[
+            styles.cartButton,
+            {
+              transform: [
+                {
+                  scale: cartAnimation.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [1, 1.2],
+                  }),
+                },
+              ],
+            },
+          ]}
+        >
+          <TouchableOpacity onPress={() => setCartModalVisible(true)}>
+            <Text style={styles.cartText}>🛒 {totalItems}</Text>
           </TouchableOpacity>
-        ))}
-      </ScrollView>
-
-      {/* 📦 Product List */}
-      <FlatList
-        data={filteredProducts}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <TouchableOpacity
-            style={styles.product}
-            onPress={() => {
-              setProductDetail(item);
-              setModalVisible(true);
-            }}
-          >
-            <Image
-              source={{ uri: item.image || "https://xlijah.com/pics/iphone.jpg" }}
-              style={styles.image}
-            />
-            <View style={styles.productInfo}>
-              <Text style={styles.productName}>{item.name}</Text>
-              <Text style={styles.productPrice}>${item.price}</Text>
-            </View>
-          </TouchableOpacity>
-        )}
-      />
-
-      {/* 🛒 Floating Cart */}
-      <Animated.View
-        style={[
-          styles.cart,
-          { transform: [{ scale: cartAnimation.interpolate({ inputRange: [0, 1], outputRange: [1, 1.3] }) }] },
-        ]}
-      >
-        <TouchableOpacity onPress={() => setCartModalVisible(true)}>
-          <Text style={styles.cartText}>🛒 {totalItems}</Text>
-        </TouchableOpacity>
-      </Animated.View>
-    </View>
+        </Animated.View>
+      </View>
+    </SafeAreaView>
   );
 };
 
-// Styles
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 10, backgroundColor: "#fff" },
-  header: { fontSize: 24, fontWeight: "bold", marginVertical: 10, textAlign: "center" },
-  search: { borderWidth: 1, borderColor: "#ccc", borderRadius: 8, padding: 8, marginBottom: 10 },
-  categories: { flexDirection: "row", marginBottom: 10 },
-  category: { padding: 8, borderWidth: 1, borderColor: "#ccc", borderRadius: 20, marginRight: 8 },
-  categorySelected: { backgroundColor: "#007BFF" },
-  categoryText: { color: "#000" },
-  product: { flexDirection: "row", alignItems: "center", padding: 10, borderBottomWidth: 1, borderColor: "#eee" },
-  image: { width: 60, height: 60, borderRadius: 8, marginRight: 10 },
-  productInfo: { flex: 1 },
-  productName: { fontSize: 16, fontWeight: "bold" },
-  productPrice: { fontSize: 14, color: "green" },
-  cart: { position: "absolute", bottom: 20, right: 20, backgroundColor: "#007BFF", padding: 10, borderRadius: 30 },
-  cartText: { color: "#fff", fontWeight: "bold" },
+  safeArea: { flex: 1, backgroundColor: "#f9f9f9" },
+  container: {
+    flex: 1,
+    paddingHorizontal: 12,
+    backgroundColor: "#f9f9f9",
+  },
+  header: {
+    fontSize: 26,
+    fontWeight: "700",
+    textAlign: "center",
+    marginVertical: 12,
+    color: "#333",
+  },
+  search: {
+    borderWidth: 1,
+    borderColor: "#ddd",
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    backgroundColor: "#fff",
+    fontSize: 16,
+    marginBottom: 10,
+  },
+  categories: {
+    marginBottom: 10,
+  },
+  category: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 20,
+    marginRight: 8,
+    backgroundColor: "#fff",
+  },
+  categorySelected: {
+    backgroundColor: "#007BFF",
+    borderColor: "#007BFF",
+  },
+  categoryText: {
+    color: "#333",
+    fontSize: 14,
+  },
+  categoryTextSelected: {
+    color: "#fff",
+    fontWeight: "600",
+  },
+  productCard: {
+    backgroundColor: "#fff",
+    borderRadius: 10,
+    marginVertical: 6,
+    padding: 10,
+    flexDirection: "row",
+    alignItems: "center",
+    elevation: 2,
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: 1 },
+    shadowRadius: 2,
+  },
+  image: {
+    width: width * 0.25,
+    height: width * 0.25,
+    borderRadius: 8,
+    marginRight: 10,
+  },
+  infoContainer: {
+    flex: 1,
+  },
+  productName: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#222",
+  },
+  productPrice: {
+    fontSize: 15,
+    color: "green",
+    marginVertical: 4,
+  },
+  addToCartBtn: {
+    backgroundColor: "#007BFF",
+    paddingVertical: 6,
+    borderRadius: 6,
+    alignSelf: "flex-start",
+    paddingHorizontal: 10,
+  },
+  addToCartText: {
+    color: "#fff",
+    fontWeight: "bold",
+    fontSize: 13,
+  },
+  cartButton: {
+    position: "absolute",
+    bottom: 25,
+    right: 25,
+    backgroundColor: "#007BFF",
+    paddingVertical: 10,
+    paddingHorizontal: 18,
+    borderRadius: 30,
+    elevation: 5,
+  },
+  cartText: {
+    color: "#fff",
+    fontWeight: "bold",
+    fontSize: 16,
+  },
 });
 
 export default EnhancedMarketplace;
