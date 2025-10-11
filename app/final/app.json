@@ -15,8 +15,8 @@
       "package": "com.xlijah.Atom",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./android-icon-foreground.png",
-        "backgroundImage": "./android-icon-background.png",
+        "foregroundImage": "./android-icon-foreground.png.png",
+        "backgroundImage": "./android-icon-background.png.png",
         "monochromeImage": "./android-icon-monochrome.png"
       },
       "edgeToEdgeEnabled": true,
