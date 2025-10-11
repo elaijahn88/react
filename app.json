@@ -12,6 +12,7 @@
       "supportsTablet": true
     },
     "android": {
+      "package": "com.elijah.app",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -48,6 +49,9 @@
       "eas": {
         "projectId": "ca7447b1-90f1-45dd-9763-40a27b5f27fe"
       }
+    },
+    "cli": {
+      "appVersionSource": "appJson"
     }
   }
 }
