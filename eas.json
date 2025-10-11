@@ -5,9 +5,4 @@
         "buildType": "apk",
        
       },
-      "ios": {
-        "buildType": "simulator"
-      }
-    }
-  }
-}
+     
