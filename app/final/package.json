@@ -39,7 +39,7 @@
 
     "@react-native-firebase/app": "^20.5.0",
     "@react-native-firebase/messaging": "^20.5.0",
-    "@shopify/react-native-skia": "^1.3.2",
+    "@shopify/react-native-skia": "^1.3.2"
   },
   "devDependencies": {
     "@types/react": "~19.1.0",
