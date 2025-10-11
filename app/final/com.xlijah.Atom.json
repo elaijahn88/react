@@ -3,7 +3,7 @@
   "expo": {
     "android": {
       "googleServicesFile": "./google-services.json",
-      "package": "com.mycorp.myapp"
+      "package": "com.xlijah.Atom"
     },
     "ios": {
       "googleServicesFile": "./GoogleService-Info.plist",
