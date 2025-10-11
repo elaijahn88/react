@@ -34,16 +34,16 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="explore"
+        name="atom"
         options={{
-          title: 'Explore',
+          title: 'atom',
           tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
         }}
       />
       <Tabs.Screen
-        name="details"
+        name="chat"
         options={{
-          title: 'video',
+          title: 'chat',
           tabBarIcon: ({ color }) => <IconSymbol size={28} name="tv.fill" color={color} />,
         }}
       />
