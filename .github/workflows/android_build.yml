@@ -18,11 +18,7 @@ jobs:
           node-version: 20
       - name: Install Expo CLI
         run: npm install -g expo-cli
-      - name: CREATE PROJECT
-        run: npx create-expo-app elijah
-
-      - name: Install react-native-video
-        run: cd elijah && expo install react-native-video
+      
       
 
       - name: Install dependencies
@@ -32,11 +28,7 @@ jobs:
       - name: Install EAS CLI
         run: npm install -g eas-cli
 
-      - name: Run EAS Build
-  
-        working-directory: ./app 
-  
-
+   
        
       - name: ........login eas user..........
        
