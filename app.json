@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "elijah",
-    "slug": "elijah",
+    "name": "jovan",
+    "slug": "jovan",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -12,7 +12,7 @@
       "supportsTablet": true
     },
     "android": {
-      "package": "com.elijah.app",
+      "package": "com.xlijah.Atom",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
