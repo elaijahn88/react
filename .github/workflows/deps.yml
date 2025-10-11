@@ -3,10 +3,10 @@ name: CI - Install Subfolder Dependencies
 on:
   push:
     branches:
-      - main
+      - elijah
   pull_request:
     branches:
-      - main
+      - elijah
 
 jobs:
   install-subfolder-deps:
