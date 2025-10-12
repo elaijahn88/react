@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet } from "react-native";
 import { doc, getDoc, collection, getDocs, addDoc } from "firebase/firestore";
-import { db } from "../firebase"; // adjust path
+import { db } from "./firebase"; // adjust path
 
 export default function App() {
   const [email, setEmail] = useState(""); 
