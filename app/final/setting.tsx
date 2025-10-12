@@ -8,7 +8,7 @@ import {
   Alert,
   ActivityIndicator,
 } from "react-native";
-import { db } from "../firebase";
+import { db } from "./firebase";
 import { collection, onSnapshot, query } from "firebase/firestore";
 import { Ionicons } from "@expo/vector-icons";
 
