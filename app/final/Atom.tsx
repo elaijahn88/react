@@ -24,7 +24,7 @@ import {
   orderBy,
   serverTimestamp,
 } from "firebase/firestore";
-import { db, auth } from "../firebase";
+import { db, auth } from "./firebase";
 
 const { width } = Dimensions.get("window");
 
