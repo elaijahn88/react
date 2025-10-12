@@ -15,7 +15,7 @@ import {
   useColorScheme,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { db } from "../firebase"; // Firestore config
+import { db } from "./firebase"; // Firestore config
 import { collection, onSnapshot, addDoc, deleteDoc, doc, updateDoc, query, where } from "firebase/firestore";
 
 const { width } = Dimensions.get("window");
